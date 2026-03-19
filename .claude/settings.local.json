@@ -15,7 +15,9 @@
       "Bash(findstr -i \"voting\\\\|register\\\\|witness\\\\|signature\")",
       "Bash(findstr -i \"march\\\\|walden\\\\|restated\\\\|declaration\")",
       "Bash(rm -f sig-*.png)",
-      "Bash(ls *.png)"
+      "Bash(ls *.png)",
+      "Bash(rm -f voting-register.html voting-register-full.png)",
+      "Bash(rm -rf signatures/)"
     ]
   }
 }
