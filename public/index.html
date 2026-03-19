@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Walden's Revisited</title>
+  <meta name="description" content="Walden's Revisited - A small rural community centered around a pond in Scioto Township, Delaware County, Ohio.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#home" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#community">Community</a></li>
+        <li><a href="#common-areas">Common Areas</a></li>
+        <li><a href="#covenants">Covenants</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero" id="home">
+    <div class="hero-bg">
+      <div class="pond-scene">
+        <!-- Animated SVG pond scene -->
+        <svg class="pond-svg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#b8cec4"/>
+              <stop offset="40%" stop-color="#d4ddd6"/>
+              <stop offset="100%" stop-color="#e8efe6"/>
+            </linearGradient>
+            <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#8aab9a"/>
+              <stop offset="100%" stop-color="#6b8f7a"/>
+            </linearGradient>
+            <linearGradient id="treeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a6741"/>
+              <stop offset="100%" stop-color="#3d5636"/>
+            </linearGradient>
+            <filter id="waterRipple">
+              <feTurbulence type="fractalNoise" baseFrequency="0.015 0.08" numOctaves="3" seed="2">
+                <animate attributeName="baseFrequency" values="0.015 0.08;0.018 0.09;0.015 0.08" dur="8s" repeatCount="indefinite"/>
+              </feTurbulence>
+              <feDisplacementMap in="SourceGraphic" scale="6"/>
+            </filter>
+          </defs>
+          <!-- Sky -->
+          <rect width="1200" height="600" fill="url(#skyGrad)"/>
+          <!-- Distant treeline -->
+          <path d="M0,280 Q50,260 100,270 Q150,250 200,265 Q250,240 300,255 Q350,235 400,250 Q450,230 500,248 Q550,228 600,245 Q650,225 700,242 Q750,228 800,240 Q850,225 900,250 Q950,235 1000,255 Q1050,240 1100,260 Q1150,250 1200,270 L1200,350 L0,350 Z" fill="#5a7a52" opacity="0.6"/>
+          <!-- Mid treeline -->
+          <path d="M0,300 Q80,275 150,290 Q200,270 280,285 Q340,265 420,282 Q480,268 560,280 Q620,260 700,278 Q780,265 840,280 Q920,260 1000,278 Q1060,270 1120,285 Q1160,275 1200,290 L1200,360 L0,360 Z" fill="#4a6741" opacity="0.8"/>
+          <!-- Near trees (left) -->
+          <path d="M-20,360 L60,200 L140,360 Z" fill="url(#treeGrad)"/>
+          <path d="M40,360 L110,220 L180,360 Z" fill="#3d5636"/>
+          <path d="M100,360 L160,240 L220,360 Z" fill="url(#treeGrad)"/>
+          <!-- Near trees (right) -->
+          <path d="M980,360 L1050,210 L1120,360 Z" fill="url(#treeGrad)"/>
+          <path d="M1040,360 L1100,230 L1160,360 Z" fill="#3d5636"/>
+          <path d="M1100,360 L1170,220 L1240,360 Z" fill="url(#treeGrad)"/>
+          <!-- Pond / water -->
+          <ellipse cx="600" cy="420" rx="480" ry="100" fill="url(#waterGrad)" opacity="0.9"/>
+          <!-- Water reflection ripples -->
+          <g filter="url(#waterRipple)" opacity="0.3">
+            <ellipse cx="600" cy="420" rx="460" ry="90" fill="#ffffff"/>
+          </g>
+          <!-- Grass shoreline -->
+          <path d="M0,360 Q100,350 200,358 Q300,345 400,355 Q500,340 600,350 Q700,338 800,352 Q900,342 1000,355 Q1100,348 1200,358 L1200,380 Q1100,372 1000,378 Q900,368 800,376 Q700,365 600,375 Q500,362 400,374 Q300,365 200,378 Q100,370 0,380 Z" fill="#6b8f5a"/>
+          <!-- Cattails / reeds -->
+          <g stroke="#5a7040" stroke-width="2" fill="none">
+            <line x1="180" y1="360" x2="185" y2="320"><animate attributeName="x2" values="185;183;185" dur="4s" repeatCount="indefinite"/></line>
+            <ellipse cx="185" cy="318" rx="3" ry="8" fill="#6b5030"/>
+            <line x1="200" y1="355" x2="198" y2="310"><animate attributeName="x2" values="198;200;198" dur="5s" repeatCount="indefinite"/></line>
+            <ellipse cx="198" cy="308" rx="3" ry="8" fill="#6b5030"/>
+            <line x1="1010" y1="358" x2="1015" y2="315"><animate attributeName="x2" values="1015;1013;1015" dur="4.5s" repeatCount="indefinite"/></line>
+            <ellipse cx="1015" cy="313" rx="3" ry="8" fill="#6b5030"/>
+            <line x1="1030" y1="362" x2="1028" y2="322"><animate attributeName="x2" values="1028;1030;1028" dur="3.8s" repeatCount="indefinite"/></line>
+            <ellipse cx="1028" cy="320" rx="3" ry="8" fill="#6b5030"/>
+          </g>
+          <!-- Subtle mist -->
+          <ellipse cx="400" cy="380" rx="200" ry="20" fill="#ffffff" opacity="0.08">
+            <animate attributeName="opacity" values="0.08;0.15;0.08" dur="6s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="800" cy="390" rx="180" ry="15" fill="#ffffff" opacity="0.06">
+            <animate attributeName="opacity" values="0.06;0.12;0.06" dur="7s" repeatCount="indefinite"/>
+          </ellipse>
+        </svg>
+      </div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-subtitle">A Community Centered Around Nature</p>
+      <h1 class="hero-title">Walden's Revisited</h1>
+      <p class="hero-desc">A quiet, rural neighborhood nestled around a peaceful pond in the rolling hills of Delaware County, Ohio.</p>
+      <a href="#about" class="hero-cta">Discover Our Community</a>
+    </div>
+    <div class="hero-scroll">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Our Story</span>
+        <h2 class="section-title">Inspired by Walden</h2>
+      </div>
+      <div class="about-grid">
+        <div class="about-text">
+          <p class="lead">Like Thoreau's retreat to Walden Pond, our community embraces the idea that the richest life is one lived close to nature.</p>
+          <p>Walden's Revisited is a small, covenant-protected neighborhood located in Scioto Township, Delaware County, Ohio. Our community is built around a central pond and shared common areas that connect neighbors to the land and to each other.</p>
+          <p>Situated along Brindle Road (Township Road 170) near Slocum Road, our tracts of land offer the space, quiet, and natural beauty that define rural Ohio living&mdash;while being just a short drive from the amenities of Delaware and Columbus.</p>
+        </div>
+        <div class="about-quote">
+          <blockquote>
+            <p>&ldquo;I went to the woods because I wished to live deliberately, to front only the essential facts of life.&rdquo;</p>
+            <cite>&mdash; Henry David Thoreau, <em>Walden</em></cite>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community Features -->
+  <section class="section section-alt" id="community">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Life Here</span>
+        <h2 class="section-title">A Place to Call Home</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 8C24 8 12 16 12 28C12 34.6274 17.3726 40 24 40C30.6274 40 36 34.6274 36 28C36 16 24 8 24 8Z" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+              <circle cx="24" cy="28" r="4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>Central Pond</h3>
+          <p>Our community is built around a peaceful pond&mdash;a shared natural treasure that provides beauty, wildlife habitat, and a gathering point for neighbors.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 40L24 8L40 40H8Z" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+              <path d="M16 40L24 20L32 40" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
+              <line x1="24" y1="32" x2="24" y2="40" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>Rural Acreage</h3>
+          <p>Generous tracts ranging from 3 to 7 acres give each homeowner privacy, space for gardens, and room to enjoy the natural landscape.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 24C6 24 14 14 24 14C34 14 42 24 42 24C42 24 34 34 24 34C14 34 6 24 6 24Z" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+              <circle cx="24" cy="24" r="6" stroke="currentColor" stroke-width="2"/>
+              <circle cx="24" cy="24" r="2" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3>Protected Views</h3>
+          <p>Our covenants preserve the rural character of the neighborhood, ensuring that the natural beauty and open vistas remain for generations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 36V20L24 12L36 20V36H28V28H20V36H12Z" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+              <path d="M8 22L24 10L40 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Small Community</h3>
+          <p>With just a handful of homesteads, Walden's Revisited offers the close-knit feel of a true neighborhood where everyone knows their neighbors.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 6V12M36.7 11.3L32.5 15.5M42 24H36M36.7 36.7L32.5 32.5M24 42V36M11.3 36.7L15.5 32.5M6 24H12M11.3 11.3L15.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="8" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+            </svg>
+          </div>
+          <h3>Four Seasons</h3>
+          <p>Experience the full beauty of Ohio's seasons&mdash;from wildflower springs and golden summers to crimson autumns and serene snowy winters.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 38C10 38 14 30 24 30C34 30 38 38 38 38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="18" r="8" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+              <path d="M20 16L22 20L26 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Wildlife Haven</h3>
+          <p>Deer, herons, songbirds, and countless other species share our landscape, making every day a reminder of the world beyond our walls.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Common Areas Section -->
+  <section class="section" id="common-areas">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Shared Spaces</span>
+        <h2 class="section-title">Common Areas</h2>
+      </div>
+      <div class="common-areas-content">
+        <div class="common-areas-text">
+          <p>Our community includes approximately 31 acres of common use easement areas shared among the residents. These areas encompass the central pond, surrounding meadows, and natural corridors that connect the individual tracts.</p>
+          <div class="tract-list">
+            <h4>Community Tracts</h4>
+            <ul>
+              <li><strong>Tract 1</strong> &mdash; 5.002 acres</li>
+              <li><strong>Tract 2</strong> &mdash; 5.102 acres</li>
+              <li><strong>Tract 3</strong> &mdash; 7.244 acres</li>
+              <li><strong>Tract 4</strong> &mdash; 3.094 acres</li>
+              <li><strong>Tract 5</strong> &mdash; 5.069 acres</li>
+              <li><strong>Tract 6</strong> &mdash; 5.817 acres</li>
+            </ul>
+          </div>
+          <p class="text-muted">The common areas are maintained collectively by the property owners and are subject to the community's protective covenants and restrictions.</p>
+        </div>
+        <div class="common-areas-map">
+          <!-- Stylized SVG map based on the plat -->
+          <svg viewBox="0 0 500 500" class="plat-map" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="pondGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8aab9a"/>
+                <stop offset="100%" stop-color="#6b8f7a"/>
+              </linearGradient>
+              <pattern id="grassPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                <rect width="10" height="10" fill="#e8efe6"/>
+                <circle cx="3" cy="7" r="0.5" fill="#c8d8c0"/>
+                <circle cx="8" cy="3" r="0.5" fill="#c8d8c0"/>
+              </pattern>
+            </defs>
+            <!-- Background -->
+            <rect width="500" height="500" rx="12" fill="url(#grassPattern)"/>
+            <!-- Tract boundaries -->
+            <g stroke="#8b7355" stroke-width="1.5" fill="none" stroke-dasharray="6,3">
+              <!-- Tract 1 -->
+              <path d="M80,100 L250,80 L280,200 L100,220 Z"/>
+              <!-- Tract 2 -->
+              <path d="M100,220 L280,200 L290,320 L110,340 Z"/>
+              <!-- Tract 3 -->
+              <path d="M280,80 L440,100 L430,320 L290,320 L280,200 Z"/>
+              <!-- Tract 4 -->
+              <path d="M60,340 L110,340 L130,440 L60,440 Z"/>
+              <!-- Tract 5 -->
+              <path d="M110,340 L290,320 L280,440 L130,440 Z"/>
+              <!-- Tract 6 -->
+              <path d="M290,320 L430,320 L420,440 L280,440 Z"/>
+            </g>
+            <!-- Common area / pond -->
+            <ellipse cx="260" cy="280" rx="80" ry="50" fill="url(#pondGrad)" opacity="0.7">
+              <animate attributeName="ry" values="50;52;50" dur="4s" repeatCount="indefinite"/>
+            </ellipse>
+            <text x="260" y="285" text-anchor="middle" font-size="11" fill="#2d4a3e" font-family="Inter, sans-serif" font-weight="500">Pond</text>
+            <!-- Common use easement label -->
+            <text x="200" y="370" text-anchor="middle" font-size="9" fill="#6b5030" font-family="Inter, sans-serif" font-style="italic">Common Use Easement</text>
+            <!-- Tract labels -->
+            <g font-family="Inter, sans-serif" font-size="12" fill="#3d5636" text-anchor="middle" font-weight="500">
+              <text x="170" y="160">Tract 1</text>
+              <text x="10" y="170" font-size="9" fill="#6b6b6b">5.0 ac</text>
+              <text x="185" y="280">Tract 2</text>
+              <text x="370" y="200">Tract 3</text>
+              <text x="85" y="400">Tract 4</text>
+              <text x="200" y="420">Tract 5</text>
+              <text x="360" y="400">Tract 6</text>
+            </g>
+            <!-- Tract acreage -->
+            <g font-family="Inter, sans-serif" font-size="9" fill="#8b7355" text-anchor="middle">
+              <text x="170" y="175">5.002 ac</text>
+              <text x="185" y="295">5.102 ac</text>
+              <text x="370" y="215">7.244 ac</text>
+              <text x="85" y="415">3.094 ac</text>
+              <text x="200" y="435">5.069 ac</text>
+              <text x="360" y="415">5.817 ac</text>
+            </g>
+            <!-- Roads -->
+            <g stroke="#b8a88a" stroke-width="3" fill="none" opacity="0.6">
+              <line x1="40" y1="460" x2="460" y2="460"/>
+              <line x1="40" y1="80" x2="40" y2="460"/>
+            </g>
+            <g font-family="Inter, sans-serif" font-size="9" fill="#8b7355">
+              <text x="250" y="480" text-anchor="middle">Slocum Road (Twp Rd 168)</text>
+              <text x="25" y="280" text-anchor="middle" transform="rotate(-90, 25, 280)">Brindle Road (Twp Rd 170)</text>
+            </g>
+            <!-- North arrow -->
+            <g transform="translate(440, 50)">
+              <line x1="0" y1="30" x2="0" y2="0" stroke="#3d5636" stroke-width="2" marker-end="url(#arrowhead)"/>
+              <polygon points="0,0 -5,10 5,10" fill="#3d5636"/>
+              <text x="0" y="42" text-anchor="middle" font-size="10" fill="#3d5636" font-family="Inter, sans-serif" font-weight="600">N</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Covenants Section -->
+  <section class="section section-alt" id="covenants">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Guidelines</span>
+        <h2 class="section-title">Covenants &amp; Restrictions</h2>
+      </div>
+      <div class="covenants-content">
+        <p class="lead">Our community is guided by the <em>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</em>, filed in 2019 with Delaware County.</p>
+        <p>These covenants exist to preserve the rural character, natural beauty, and peaceful atmosphere that make our community special. They cover topics including:</p>
+        <div class="covenants-grid">
+          <div class="covenant-item">
+            <h4>Land Use</h4>
+            <p>Guidelines for residential use, agriculture, and maintaining the rural character of the community.</p>
+          </div>
+          <div class="covenant-item">
+            <h4>Building Standards</h4>
+            <p>Requirements for structures to ensure they complement the natural landscape and maintain property values.</p>
+          </div>
+          <div class="covenant-item">
+            <h4>Common Areas</h4>
+            <p>Rules for the shared use and maintenance of common easement areas, including the pond and surrounding land.</p>
+          </div>
+          <div class="covenant-item">
+            <h4>Environmental Stewardship</h4>
+            <p>Provisions to protect the water quality of the pond, preserve native vegetation, and support local wildlife.</p>
+          </div>
+        </div>
+        <div class="covenants-note">
+          <p>For the complete text of the covenants, property owners may reference the filed documents at the Delaware County Recorder's Office (Book 1372, Pages 1033-1064 for the original; restated version filed 2019).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Get in Touch</span>
+        <h2 class="section-title">Contact Us</h2>
+      </div>
+      <div class="contact-content">
+        <div class="contact-info">
+          <p>Walden's Revisited is located in Scioto Township, Delaware County, Ohio, along Brindle Road (Township Road 170) near the intersection with Slocum Road (Township Road 168).</p>
+          <div class="contact-details">
+            <div class="contact-detail">
+              <h4>Location</h4>
+              <p>Scioto Township<br>Delaware County, Ohio</p>
+            </div>
+            <div class="contact-detail">
+              <h4>Roads</h4>
+              <p>Brindle Road (Twp Rd 170)<br>Slocum Road (Twp Rd 168)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#community">Community</a>
+          <a href="#common-areas">Common Areas</a>
+          <a href="#covenants">Covenants</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
