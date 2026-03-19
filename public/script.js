@@ -64,7 +64,7 @@
   // Observe all animatable elements
   var animatable = document.querySelectorAll(
     '.section-header, .about-text, .about-quote, .feature-card, ' +
-    '.common-areas-text, .common-areas-map, .covenants-content, .contact-content'
+    '.common-areas-text, .common-areas-map, .covenants-content, .ccr-section, .contact-content'
   );
 
   animatable.forEach(function (el) {
