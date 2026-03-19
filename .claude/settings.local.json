@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(pip install:*)",
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx wrangler:*)",
+      "Bash(dir \"C:\\\\Users\\\\kabro\\\\Downloads\\\\drive-download-20260319T004314Z-1-001\"\")",
+      "Bash(dir \"C:\\\\Users\\\\kabro\\\\Downloads\\\\drive-download-20260319T004314Z-1-001\")",
+      "Bash(dir \"C:\\\\Users\\\\kabro\\\\Downloads\" /b)",
+      "Bash(findstr -i \"voting\\\\|register\\\\|witness\\\\|signature\")",
+      "Bash(findstr -i \"march\\\\|walden\\\\|restated\\\\|declaration\")",
+      "Bash(rm -f sig-*.png)",
+      "Bash(ls *.png)"
+    ]
+  }
+}
