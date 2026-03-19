@@ -41,72 +41,7 @@
   <!-- Hero Section -->
   <header class="hero" id="home">
     <div class="hero-bg">
-      <div class="pond-scene">
-        <!-- Animated SVG pond scene -->
-        <svg class="pond-svg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#b8cec4"/>
-              <stop offset="40%" stop-color="#d4ddd6"/>
-              <stop offset="100%" stop-color="#e8efe6"/>
-            </linearGradient>
-            <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#8aab9a"/>
-              <stop offset="100%" stop-color="#6b8f7a"/>
-            </linearGradient>
-            <linearGradient id="treeGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#4a6741"/>
-              <stop offset="100%" stop-color="#3d5636"/>
-            </linearGradient>
-            <!-- Simple water shimmer, no heavy filters -->
-          </defs>
-          <!-- Sky -->
-          <rect width="1200" height="600" fill="url(#skyGrad)"/>
-          <!-- Distant treeline -->
-          <path d="M0,280 Q50,260 100,270 Q150,250 200,265 Q250,240 300,255 Q350,235 400,250 Q450,230 500,248 Q550,228 600,245 Q650,225 700,242 Q750,228 800,240 Q850,225 900,250 Q950,235 1000,255 Q1050,240 1100,260 Q1150,250 1200,270 L1200,350 L0,350 Z" fill="#5a7a52" opacity="0.6"/>
-          <!-- Mid treeline -->
-          <path d="M0,300 Q80,275 150,290 Q200,270 280,285 Q340,265 420,282 Q480,268 560,280 Q620,260 700,278 Q780,265 840,280 Q920,260 1000,278 Q1060,270 1120,285 Q1160,275 1200,290 L1200,360 L0,360 Z" fill="#4a6741" opacity="0.8"/>
-          <!-- Near trees (left) -->
-          <path d="M-20,360 L60,200 L140,360 Z" fill="url(#treeGrad)"/>
-          <path d="M40,360 L110,220 L180,360 Z" fill="#3d5636"/>
-          <path d="M100,360 L160,240 L220,360 Z" fill="url(#treeGrad)"/>
-          <!-- Near trees (right) -->
-          <path d="M980,360 L1050,210 L1120,360 Z" fill="url(#treeGrad)"/>
-          <path d="M1040,360 L1100,230 L1160,360 Z" fill="#3d5636"/>
-          <path d="M1100,360 L1170,220 L1240,360 Z" fill="url(#treeGrad)"/>
-          <!-- Pond / water -->
-          <ellipse cx="600" cy="420" rx="480" ry="100" fill="url(#waterGrad)" opacity="0.9"/>
-          <!-- Water reflection shimmer -->
-          <ellipse cx="500" cy="410" rx="120" ry="8" fill="#ffffff" opacity="0.12">
-            <animate attributeName="opacity" values="0.12;0.2;0.12" dur="5s" repeatCount="indefinite"/>
-            <animate attributeName="rx" values="120;130;120" dur="6s" repeatCount="indefinite"/>
-          </ellipse>
-          <ellipse cx="700" cy="425" rx="100" ry="6" fill="#ffffff" opacity="0.1">
-            <animate attributeName="opacity" values="0.1;0.18;0.1" dur="7s" repeatCount="indefinite"/>
-            <animate attributeName="rx" values="100;110;100" dur="5s" repeatCount="indefinite"/>
-          </ellipse>
-          <!-- Grass shoreline -->
-          <path d="M0,360 Q100,350 200,358 Q300,345 400,355 Q500,340 600,350 Q700,338 800,352 Q900,342 1000,355 Q1100,348 1200,358 L1200,380 Q1100,372 1000,378 Q900,368 800,376 Q700,365 600,375 Q500,362 400,374 Q300,365 200,378 Q100,370 0,380 Z" fill="#6b8f5a"/>
-          <!-- Cattails / reeds -->
-          <g stroke="#5a7040" stroke-width="2" fill="none">
-            <line x1="180" y1="360" x2="185" y2="320"><animate attributeName="x2" values="185;183;185" dur="4s" repeatCount="indefinite"/></line>
-            <ellipse cx="185" cy="318" rx="3" ry="8" fill="#6b5030"/>
-            <line x1="200" y1="355" x2="198" y2="310"><animate attributeName="x2" values="198;200;198" dur="5s" repeatCount="indefinite"/></line>
-            <ellipse cx="198" cy="308" rx="3" ry="8" fill="#6b5030"/>
-            <line x1="1010" y1="358" x2="1015" y2="315"><animate attributeName="x2" values="1015;1013;1015" dur="4.5s" repeatCount="indefinite"/></line>
-            <ellipse cx="1015" cy="313" rx="3" ry="8" fill="#6b5030"/>
-            <line x1="1030" y1="362" x2="1028" y2="322"><animate attributeName="x2" values="1028;1030;1028" dur="3.8s" repeatCount="indefinite"/></line>
-            <ellipse cx="1028" cy="320" rx="3" ry="8" fill="#6b5030"/>
-          </g>
-          <!-- Subtle mist -->
-          <ellipse cx="400" cy="380" rx="200" ry="20" fill="#ffffff" opacity="0.08">
-            <animate attributeName="opacity" values="0.08;0.15;0.08" dur="6s" repeatCount="indefinite"/>
-          </ellipse>
-          <ellipse cx="800" cy="390" rx="180" ry="15" fill="#ffffff" opacity="0.06">
-            <animate attributeName="opacity" values="0.06;0.12;0.06" dur="7s" repeatCount="indefinite"/>
-          </ellipse>
-        </svg>
-      </div>
+      <canvas id="pondCanvas"></canvas>
     </div>
     <div class="hero-content">
       <p class="hero-subtitle">A Community Centered Around Nature</p>
@@ -473,7 +408,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2025 Walden's Revisited. All rights reserved.</p>
+        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
       </div>
     </div>
   </footer>
