@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voting Register &mdash; Walden's Revisited</title>
+  <meta name="description" content="Official voting register for the 2019 Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, showing all lot owners and signatures.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* Voting Register Page Styles */
+    .vr-hero {
+      padding: calc(var(--space-xl) * 2) 0 var(--space-xl);
+      background: var(--mist);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
+    }
+
+    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
+
+    .vr-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-sm);
+    }
+
+    .vr-hero p {
+      max-width: 700px;
+      color: var(--stone);
+      line-height: 1.8;
+    }
+
+    .vr-hero .filed-info {
+      margin-top: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--parchment);
+      border-left: 3px solid var(--pond-reflect);
+      border-radius: 0 4px 4px 0;
+      display: inline-block;
+    }
+
+    .vr-hero .filed-info p {
+      font-size: 0.85rem;
+      color: var(--earth);
+      margin: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--forest-mid);
+      margin-bottom: var(--space-md);
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: var(--forest-deep); }
+
+    /* Original Document Image */
+    .original-doc {
+      padding: var(--space-xl) 0;
+    }
+
+    .original-doc h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--forest-deep);
+      margin-bottom: var(--space-md);
+    }
+
+    .doc-image-wrapper {
+      background: var(--parchment);
+      border: 1px solid rgba(139, 115, 85, 0.15);
+      border-radius: 4px;
+      padding: var(--space-sm);
+      overflow-x: auto;
+    }
+
+    .doc-image-wrapper img {
+      width: 100%;
+      max-width: 1100px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .doc-caption {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--stone);
+      margin-top: var(--space-xs);
+      font-style: italic;
+    }
+
+    /* Digitized Table */
+    .vr-table-section {
+      padding: var(--space-xl) 0;
+    }
+
+    .vr-table-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+
+    .vr-table-section > p {
+      color: var(--stone);
+      margin-bottom: var(--space-md);
+      font-size: 0.9rem;
+    }
+
+    .vr-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(139, 115, 85, 0.15);
+      border-radius: 4px;
+    }
+
+    .vr-table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .vr-table thead {
+      background: var(--forest-deep);
+      color: var(--parchment);
+    }
+
+    .vr-table thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .vr-table tbody tr {
+      border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+      transition: background 0.15s;
+    }
+
+    .vr-table tbody tr:hover {
+      background: rgba(139, 115, 85, 0.04);
+    }
+
+    .vr-table tbody tr.signed {
+      background: rgba(46, 80, 56, 0.03);
+    }
+
+    .vr-table tbody tr.signed:hover {
+      background: rgba(46, 80, 56, 0.07);
+    }
+
+    .vr-table td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      color: var(--charcoal);
+    }
+
+    .vr-table td.tract-col {
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .vr-table td.parcel-col {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--stone);
+    }
+
+    .vr-table td.sig-col {
+      min-width: 200px;
+    }
+
+    .sig-img {
+      height: 32px;
+      width: auto;
+      max-width: 200px;
+      display: block;
+      filter: contrast(1.3) brightness(1.05);
+    }
+
+    .sig-none {
+      font-size: 0.75rem;
+      color: var(--clay);
+      font-style: italic;
+    }
+
+    .signed-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--forest-deep);
+      color: var(--parchment);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 2px;
+    }
+
+    .not-signed-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--clay);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 2px;
+    }
+
+    /* Current Ownership */
+    .ownership-section {
+      padding: var(--space-xl) 0;
+      border-top: 1px solid rgba(139, 115, 85, 0.12);
+    }
+
+    .ownership-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+
+    .ownership-section > p {
+      color: var(--stone);
+      margin-bottom: var(--space-md);
+      font-size: 0.9rem;
+      max-width: 800px;
+    }
+
+    .own-table {
+      width: 100%;
+      min-width: 800px;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .own-table thead {
+      background: var(--forest-deep);
+      color: var(--parchment);
+    }
+
+    .own-table thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .own-table tbody tr {
+      border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+      transition: background 0.15s;
+    }
+
+    .own-table tbody tr:hover {
+      background: rgba(139, 115, 85, 0.04);
+    }
+
+    .own-table td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      color: var(--charcoal);
+    }
+
+    .own-table td.parcel-col {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--stone);
+    }
+
+    .changed { color: var(--forest-mid); font-weight: 500; }
+
+    /* Parcel Notes */
+    .parcel-notes {
+      margin-top: var(--space-lg);
+      padding: var(--space-md);
+      background: var(--linen);
+      border-radius: 4px;
+      border-left: 3px solid var(--clay);
+    }
+
+    .parcel-notes h4 {
+      font-size: 0.95rem;
+      color: var(--forest-deep);
+      margin-bottom: var(--space-sm);
+    }
+
+    .parcel-notes p {
+      font-size: 0.85rem;
+      color: var(--earth);
+      margin-bottom: var(--space-xs);
+      line-height: 1.7;
+    }
+
+    .parcel-notes p:last-child { margin-bottom: 0; }
+
+    /* Vote Summary */
+    .vote-summary {
+      display: flex;
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+      flex-wrap: wrap;
+    }
+
+    .vote-stat {
+      flex: 1;
+      min-width: 160px;
+      padding: var(--space-md);
+      background: var(--parchment);
+      border: 1px solid rgba(139, 115, 85, 0.12);
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .vote-stat .stat-num {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      line-height: 1;
+    }
+
+    .vote-stat .stat-label {
+      font-size: 0.8rem;
+      color: var(--stone);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .vote-summary { flex-direction: column; }
+      .vote-stat { min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 6C16 6 10 11 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 11 16 6 16 6Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14V20M14 16L16 14L18 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/#covenants">Covenants</a>
+        <a href="/#common-areas">Common Areas</a>
+        <a href="/#contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="vr-hero">
+    <div class="container">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Home
+      </a>
+      <span class="section-tag">Official Record</span>
+      <h1>Voting Register</h1>
+      <p>This page reproduces the official voting register from the <em>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</em>, executed on March 9, 2019. The register documents which lot owners signed and approved the restated declaration.</p>
+      <div class="filed-info">
+        <p><strong>Instrument #2019-00009690</strong> &mdash; Filed with the Delaware County Recorder's Office, April 25, 2019</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vote Summary -->
+  <section class="section">
+    <div class="container">
+      <div class="vote-summary">
+        <div class="vote-stat">
+          <div class="stat-num">27</div>
+          <div class="stat-label">Total Original Lots</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">21</div>
+          <div class="stat-label">Lots Signed</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">77.8%</div>
+          <div class="stat-label">Approval Rate</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">66.7%</div>
+          <div class="stat-label">Required to Amend</div>
+        </div>
+      </div>
+
+      <div class="ccr-section">
+        <h3>How This Vote Was Validated</h3>
+        <p>The original Declaration (Section 1.10) provides that it may be amended by a two-thirds (66.7%) vote when six or more lots have homes constructed upon them which are occupied. With owners of 21 out of 27 lots signing&mdash;representing 77.78% of lots&mdash;the Restated Declaration exceeded the required threshold and is the currently effective governing document for Walden's Revisited.</p>
+        <p>Under the Declaration, there is <strong>one vote per lot</strong>, regardless of how many individuals are listed as owners on a given parcel. In the absence of a dispute by co-owners, a lot's vote can be made by any one co-owner.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Original Document Image -->
+  <section class="original-doc section-alt">
+    <div class="container">
+      <h2>Original Filed Document</h2>
+      <p style="color: var(--stone); margin-bottom: var(--space-md); font-size: 0.9rem;">The image below is reproduced directly from the recorded instrument filed with the Delaware County Recorder's Office. It shows the voting register with original signatures as they appear in the public record.</p>
+      <div class="doc-image-wrapper">
+        <img src="/voting-register-full.png" alt="Original voting register from the Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, showing lot owner names, parcel numbers, addresses, and original signatures, dated March 9, 2019"/>
+      </div>
+      <p class="doc-caption">Restated Declaration of Protective Covenants and Restrictions &mdash; Voting Register, Page 30 of 52 &mdash; Book 1037, Page 2716</p>
+    </div>
+  </section>
+
+  <!-- Digitized Voting Table -->
+  <section class="vr-table-section section">
+    <div class="container">
+      <h2>Digitized Voting Record</h2>
+      <p>The following table digitizes the voting register and shows the signature of each lot owner as extracted from the filed document. Owners who signed approved the Restated Declaration.</p>
+
+      <div class="vr-table-wrap">
+        <table class="vr-table">
+          <thead>
+            <tr>
+              <th>Tract/Lot</th>
+              <th>#</th>
+              <th>Parcel #</th>
+              <th>Address</th>
+              <th>Last Name</th>
+              <th>First Name</th>
+              <th>Status</th>
+              <th>Signature</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="signed">
+              <td class="tract-col">Lot</td>
+              <td>1</td>
+              <td class="parcel-col">20040001060002</td>
+              <td>423 Brindle Road</td>
+              <td>Snyder</td>
+              <td>David &amp; Corey</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-lot-1.png" alt="Signature of David &amp; Corey Snyder" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>1</td>
+              <td class="parcel-col">20040001061016</td>
+              <td>475 Brindle Road</td>
+              <td>Mull</td>
+              <td>Jim &amp; Stacia</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-1.png" alt="Signature of Jim &amp; Stacia Mull" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Lot</td>
+              <td>2/3</td>
+              <td class="parcel-col">20040001060004</td>
+              <td>427 Brindle Road</td>
+              <td>Boles</td>
+              <td>Ryan &amp; Betsy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-lot-2-3.png" alt="Signature of Ryan &amp; Betsy Boles" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>2</td>
+              <td class="parcel-col">20040001061002</td>
+              <td>497 Brindle Road</td>
+              <td>Heider</td>
+              <td>Chris &amp; Christine</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>3</td>
+              <td class="parcel-col">20040001061003</td>
+              <td>505 Brindle Road</td>
+              <td>Tryon</td>
+              <td>Steve &amp; Tammy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-3.png" alt="Signature of Steve &amp; Tammy Tryon" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Lot</td>
+              <td>4</td>
+              <td class="parcel-col">20040001060003</td>
+              <td>431 Brindle Road</td>
+              <td>Gregory</td>
+              <td>Scott &amp; Kimberly</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-lot-4.png" alt="Signature of Scott &amp; Kimberly Gregory" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>4</td>
+              <td class="parcel-col">20010001061004</td>
+              <td>541 Brindle Road</td>
+              <td>Smart</td>
+              <td>Brad &amp; Jean</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>5</td>
+              <td class="parcel-col">20040001061005</td>
+              <td>Brindle Road</td>
+              <td>Potts</td>
+              <td>Mark</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-5.png" alt="Signature of Mark Potts" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>6</td>
+              <td class="parcel-col">20040001061006</td>
+              <td>Brindle Road</td>
+              <td>Rosser</td>
+              <td>Steve &amp; Diana</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-6.png" alt="Signature of Steve &amp; Diana Rosser" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>7</td>
+              <td class="parcel-col">20040001061007</td>
+              <td>Brindle Road</td>
+              <td>Dye</td>
+              <td>Greg &amp; Kim (Isaly)<br>Craig &amp; Kathy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-7.png" alt="Signature of Greg &amp; Kim Dye / Craig &amp; Kathy" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>8</td>
+              <td class="parcel-col">20040001061008</td>
+              <td>623 Brindle Road</td>
+              <td>Heath (Anderson)</td>
+              <td>Craig &amp; Kathy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-8.png" alt="Signature of Craig &amp; Kathy Heath" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>9</td>
+              <td class="parcel-col">20040001061009</td>
+              <td>661 Brindle Road</td>
+              <td>Towers</td>
+              <td>Ken &amp; Mary Lynn</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-9.png" alt="Signature of Ken &amp; Mary Lynn Towers" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>10/11</td>
+              <td class="parcel-col">20040001061010</td>
+              <td>675 Brindle Road</td>
+              <td>Sieger</td>
+              <td>Brian &amp; Mandy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-10-11.png" alt="Signature of Brian &amp; Mandy Sieger" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>12</td>
+              <td class="parcel-col">20040001061012</td>
+              <td>6810 Houseman Rd</td>
+              <td>Childers</td>
+              <td>Clayton &amp; Leah</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-12.png" alt="Signature of Clayton &amp; Leah Childers" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>13</td>
+              <td class="parcel-col">20040001061013</td>
+              <td>6724 Houseman Rd</td>
+              <td>Colvin</td>
+              <td>Ben &amp; Joy</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>14</td>
+              <td class="parcel-col">20040001061014</td>
+              <td>6720 Houseman Rd</td>
+              <td>Upper</td>
+              <td>Jake &amp; Tammy</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-14.png" alt="Signature of Jake &amp; Tammy Upper" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>15</td>
+              <td class="parcel-col">20040001061015</td>
+              <td>Houseman Rd</td>
+              <td>Pauly</td>
+              <td>Ken</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-15.png" alt="Signature of Ken Pauly" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>20</td>
+              <td class="parcel-col">20040002003005</td>
+              <td>7070 Slocum Road</td>
+              <td>Rickard</td>
+              <td>Larry &amp; Danielle</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-20.png" alt="Signature of Larry &amp; Danielle Rickard" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>21</td>
+              <td class="parcel-col">20040002003006</td>
+              <td>7058 Slocum Road</td>
+              <td>Wolford</td>
+              <td>Brian &amp; Janet</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-21.png" alt="Signature of Brian &amp; Janet Wolford" class="sig-img"/></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>22</td>
+              <td class="parcel-col">20040002003007</td>
+              <td>554 Brindle Road</td>
+              <td>Fussichen</td>
+              <td>Bobbie</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-22.png" alt="Signature of Bobbie Fussichen" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>23</td>
+              <td class="parcel-col">20040002003008</td>
+              <td>510 Brindle Road</td>
+              <td>Gourley</td>
+              <td>Dan &amp; Rachel</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>24</td>
+              <td class="parcel-col">20040002003002</td>
+              <td>494 Brindle Road</td>
+              <td>Dranschak</td>
+              <td>John &amp; Paula</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-24.png" alt="Signature of John &amp; Paula Dranschak" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>25</td>
+              <td class="parcel-col">20040002003003</td>
+              <td>480 Brindle Road</td>
+              <td>Mambourg</td>
+              <td>Gregg</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+            <tr class="signed">
+              <td class="tract-col">Tract</td>
+              <td>26</td>
+              <td class="parcel-col">20040002003004</td>
+              <td>440 Brindle Road</td>
+              <td>Walton</td>
+              <td>Spencer &amp; Melissa</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td class="sig-col"><img src="/signatures/sig-tract-26.png" alt="Signature of Spencer &amp; Melissa Walton" class="sig-img"/></td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract</td>
+              <td>27</td>
+              <td class="parcel-col">20040002003001</td>
+              <td>420 Brindle Road</td>
+              <td>Avner</td>
+              <td>Stacie &amp; Sean</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td class="sig-col"><span class="sig-none">No signature on file</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Current Ownership Cross-Reference -->
+  <section class="ownership-section section-alt">
+    <div class="container">
+      <h2>Current Ownership Cross-Reference</h2>
+      <p>The following table cross-references the 2019 voting register with current property ownership records from the Delaware County Auditor (as of 2026). Properties that have changed hands since the declaration was signed are highlighted. <strong>The covenants, restrictions, and easements run with the land and are binding on all current and future owners regardless of when they purchased.</strong></p>
+
+      <div class="vr-table-wrap">
+        <table class="own-table">
+          <thead>
+            <tr>
+              <th>Lot/Tract</th>
+              <th>Parcel #</th>
+              <th>Address</th>
+              <th>2019 Owner</th>
+              <th>Current Owner (2026)</th>
+              <th>Last Conveyance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tract-col">Lot 1</td>
+              <td class="parcel-col">20040001060002</td>
+              <td>423 Brindle Rd</td>
+              <td>David &amp; Corey Snyder</td>
+              <td>David G. &amp; Cristine Ada Snyder</td>
+              <td>03/2025</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Lot 2/3 *</td>
+              <td class="parcel-col">20040001060004</td>
+              <td>427 Brindle Rd</td>
+              <td>Ryan &amp; Betsy Boles</td>
+              <td>John Ryan &amp; Elizabeth A. Boles</td>
+              <td>08/2016</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Lot 4</td>
+              <td class="parcel-col">20040001060003</td>
+              <td>431 Brindle Rd</td>
+              <td>Scott &amp; Kimberly Gregory</td>
+              <td>Scott Thomas &amp; Kimberly Marie Gregory</td>
+              <td>07/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 1</td>
+              <td class="parcel-col">20040001061016</td>
+              <td>475 Brindle Rd</td>
+              <td>Jim &amp; Stacia Mull</td>
+              <td class="changed">James M. Mull</td>
+              <td>11/2021</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 2</td>
+              <td class="parcel-col">20040001061002</td>
+              <td>497 Brindle Rd</td>
+              <td>Chris &amp; Christine Heider</td>
+              <td>George Christopher &amp; Christine Evonne Heider</td>
+              <td>07/2018</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 3</td>
+              <td class="parcel-col">20040001061003</td>
+              <td>505 Brindle Rd</td>
+              <td>Steve &amp; Tammy Tryon</td>
+              <td>Stephen &amp; Tamara Tryon</td>
+              <td>01/2018</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 4</td>
+              <td class="parcel-col">20010001061004</td>
+              <td>541 Brindle Rd</td>
+              <td>Brad &amp; Jean Smart</td>
+              <td class="changed">James C. Smart (Trustee)</td>
+              <td>04/2021</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 5</td>
+              <td class="parcel-col">20040001061005</td>
+              <td>Brindle Rd</td>
+              <td>Mark Potts</td>
+              <td>Mark E. Potts</td>
+              <td>03/2019</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 6</td>
+              <td class="parcel-col">20040001061006</td>
+              <td>Brindle Rd</td>
+              <td>Steve &amp; Diana Rosser</td>
+              <td class="changed">Conveyed 07/2021</td>
+              <td>07/2021</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 7</td>
+              <td class="parcel-col">20040001061007</td>
+              <td>Brindle Rd</td>
+              <td>Greg &amp; Kim Dye</td>
+              <td>Gregory M. Dye &amp; Kimberly S. Isaly</td>
+              <td>05/2018</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 8</td>
+              <td class="parcel-col">20040001061008</td>
+              <td>623 Brindle Rd</td>
+              <td>Craig &amp; Kathy Heath</td>
+              <td class="changed">David M. &amp; Cheryl J. Marion (Trustees)</td>
+              <td>11/2025</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 9</td>
+              <td class="parcel-col">20040001061009</td>
+              <td>661 Brindle Rd</td>
+              <td>Ken &amp; Mary Lynn Towers</td>
+              <td class="changed">Jamie D. &amp; Stephanie S. Riffitt</td>
+              <td>06/2020</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 10/11 *</td>
+              <td class="parcel-col">20040001061010</td>
+              <td>675 Brindle Rd</td>
+              <td>Brian &amp; Mandy Sieger</td>
+              <td>Brian M. &amp; Amanda Sieger</td>
+              <td>06/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 12</td>
+              <td class="parcel-col">20040001061012</td>
+              <td>6810 Houseman Rd</td>
+              <td>Clayton &amp; Leah Childers</td>
+              <td>Clayton R. &amp; Leah Ann Childers</td>
+              <td>01/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 13</td>
+              <td class="parcel-col">20040001061013</td>
+              <td>6724 Houseman Rd</td>
+              <td>Ben &amp; Joy Colvin</td>
+              <td>Ben &amp; Joy Colvin</td>
+              <td>02/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 14</td>
+              <td class="parcel-col">20040001061014</td>
+              <td>6720 Houseman Rd</td>
+              <td>Jake &amp; Tammy Upper</td>
+              <td>Jake Upper &amp; Tammy Roberts Upper</td>
+              <td>02/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 15</td>
+              <td class="parcel-col">20040001061015</td>
+              <td>Houseman Rd</td>
+              <td>Ken Pauly</td>
+              <td class="changed">Ron &amp; Brandy Itnyre</td>
+              <td>09/2021</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 20</td>
+              <td class="parcel-col">20040002003005</td>
+              <td>7070 Slocum Rd</td>
+              <td>Larry &amp; Danielle Rickard</td>
+              <td>Lawrence E. &amp; Danielle D. Rickard (Trustees)</td>
+              <td>02/2016</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 21</td>
+              <td class="parcel-col">20040002003006</td>
+              <td>7058 Slocum Rd</td>
+              <td>Brian &amp; Janet Wolford</td>
+              <td>Brian C. &amp; Janet M. Wolford</td>
+              <td>08/2016</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 22</td>
+              <td class="parcel-col">20040002003007</td>
+              <td>554 Brindle Rd</td>
+              <td>Bobbie Fussichen</td>
+              <td>Bobbie Fussichen</td>
+              <td>01/2016</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 23</td>
+              <td class="parcel-col">20040002003008</td>
+              <td>510 Brindle Rd</td>
+              <td>Dan &amp; Rachel Gourley</td>
+              <td>Daniel III &amp; Rachael Gourley</td>
+              <td>01/2017</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 24</td>
+              <td class="parcel-col">20040002003002</td>
+              <td>494 Brindle Rd</td>
+              <td>John &amp; Paula Dranschak</td>
+              <td class="changed">John J. Dranschak (Trustee)</td>
+              <td>04/2022</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 25</td>
+              <td class="parcel-col">20040002003003</td>
+              <td>480 Brindle Rd</td>
+              <td>Gregg Mambourg</td>
+              <td class="changed">Kabron &amp; Natasha Kline</td>
+              <td>06/2024</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 26</td>
+              <td class="parcel-col">20040002003004</td>
+              <td>440 Brindle Rd</td>
+              <td>Spencer &amp; Melissa Walton</td>
+              <td>Spencer M. &amp; Melissa M. Walton</td>
+              <td>12/2015</td>
+            </tr>
+            <tr>
+              <td class="tract-col">Tract 27</td>
+              <td class="parcel-col">20040002003001</td>
+              <td>420 Brindle Rd</td>
+              <td>Stacie &amp; Sean Avner</td>
+              <td>Sean G. &amp; Stacie M. Avner</td>
+              <td>08/2018</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="parcel-notes">
+        <h4>Notes on Parcel Consolidations</h4>
+        <p>The original subdivision contained 27 lots/tracts. Two property owners have since legally consolidated adjacent parcels, reducing the total to 25 current tax parcels:</p>
+        <p><strong>1. Boles Property (Lot 2/3):</strong> Originally platted as Lot 2 and Lot 3. The owners combined them into a single 5.001-acre property. The Delaware County Auditor now recognizes this as a single parcel (20040001060004).</p>
+        <p><strong>2. Sieger Property (Tract 10/11):</strong> Originally platted as Tract 10 and Tract 11. The owners combined them into a single property under parcel 20040001061010.</p>
+        <p style="margin-top: var(--space-sm);"><strong>Important:</strong> Parcel consolidation does not affect the covenants. The consolidated parcels remain subject to all easements, restrictions, and obligations under the Restated Declaration. Each consolidated parcel carries one vote in association matters.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/#covenants">Covenants</a>
+          <a href="/#common-areas">Common Areas</a>
+          <a href="/voting-register.html">Voting Register</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
