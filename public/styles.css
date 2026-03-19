@@ -427,8 +427,15 @@ h1, h2, h3, h4 {
 
 .tract-list h4 {
   font-size: 1rem;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
   color: var(--forest-deep);
+}
+
+.tract-note {
+  font-size: 0.85rem;
+  color: var(--stone);
+  margin-bottom: var(--space-sm);
+  line-height: 1.6;
 }
 
 .tract-list ul {

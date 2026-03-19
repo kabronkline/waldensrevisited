@@ -58,12 +58,7 @@
               <stop offset="0%" stop-color="#4a6741"/>
               <stop offset="100%" stop-color="#3d5636"/>
             </linearGradient>
-            <filter id="waterRipple">
-              <feTurbulence type="fractalNoise" baseFrequency="0.015 0.08" numOctaves="3" seed="2">
-                <animate attributeName="baseFrequency" values="0.015 0.08;0.018 0.09;0.015 0.08" dur="8s" repeatCount="indefinite"/>
-              </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" scale="6"/>
-            </filter>
+            <!-- Simple water shimmer, no heavy filters -->
           </defs>
           <!-- Sky -->
           <rect width="1200" height="600" fill="url(#skyGrad)"/>
@@ -81,10 +76,15 @@
           <path d="M1100,360 L1170,220 L1240,360 Z" fill="url(#treeGrad)"/>
           <!-- Pond / water -->
           <ellipse cx="600" cy="420" rx="480" ry="100" fill="url(#waterGrad)" opacity="0.9"/>
-          <!-- Water reflection ripples -->
-          <g filter="url(#waterRipple)" opacity="0.3">
-            <ellipse cx="600" cy="420" rx="460" ry="90" fill="#ffffff"/>
-          </g>
+          <!-- Water reflection shimmer -->
+          <ellipse cx="500" cy="410" rx="120" ry="8" fill="#ffffff" opacity="0.12">
+            <animate attributeName="opacity" values="0.12;0.2;0.12" dur="5s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="120;130;120" dur="6s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="700" cy="425" rx="100" ry="6" fill="#ffffff" opacity="0.1">
+            <animate attributeName="opacity" values="0.1;0.18;0.1" dur="7s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="100;110;100" dur="5s" repeatCount="indefinite"/>
+          </ellipse>
           <!-- Grass shoreline -->
           <path d="M0,360 Q100,350 200,358 Q300,345 400,355 Q500,340 600,350 Q700,338 800,352 Q900,342 1000,355 Q1100,348 1200,358 L1200,380 Q1100,372 1000,378 Q900,368 800,376 Q700,365 600,375 Q500,362 400,374 Q300,365 200,378 Q100,370 0,380 Z" fill="#6b8f5a"/>
           <!-- Cattails / reeds -->
@@ -226,9 +226,10 @@
       </div>
       <div class="common-areas-content">
         <div class="common-areas-text">
-          <p>Our community includes approximately 31 acres of common use easement areas shared among the residents. These areas encompass the central pond, surrounding meadows, and natural corridors that connect the individual tracts.</p>
+          <p>A defined common use easement runs through portions of several tracts within Walden's Revisited. This easement&mdash;surveyed by Scioto Land Surveying Service and recorded with Delaware County (Book 1559, Pages 2106&ndash;2108)&mdash;encompasses the central pond and surrounding natural areas while individual homesites remain private.</p>
           <div class="tract-list">
             <h4>Community Tracts</h4>
+            <p class="tract-note">The common use easement runs through <em>portions</em> of multiple tracts. Individual homes and private land are located on these tracts outside the easement boundary.</p>
             <ul>
               <li><strong>Tract 1</strong> &mdash; 5.002 acres</li>
               <li><strong>Tract 2</strong> &mdash; 5.102 acres</li>
@@ -238,15 +239,19 @@
               <li><strong>Tract 6</strong> &mdash; 5.817 acres</li>
             </ul>
           </div>
-          <p class="text-muted">The common areas are maintained collectively by the property owners and are subject to the community's protective covenants and restrictions.</p>
+          <p class="text-muted">The easement boundaries are precisely defined by metes and bounds survey. The common areas are maintained collectively by the property owners and are subject to the community's protective covenants and restrictions.</p>
         </div>
         <div class="common-areas-map">
           <!-- Stylized SVG map based on the plat -->
-          <svg viewBox="0 0 500 500" class="plat-map" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 600 620" class="plat-map" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="pondGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#8aab9a"/>
                 <stop offset="100%" stop-color="#6b8f7a"/>
+              </linearGradient>
+              <linearGradient id="easementFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#c8dcc0" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#a8c8a0" stop-opacity="0.15"/>
               </linearGradient>
               <pattern id="grassPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
                 <rect width="10" height="10" fill="#e8efe6"/>
@@ -255,62 +260,109 @@
               </pattern>
             </defs>
             <!-- Background -->
-            <rect width="500" height="500" rx="12" fill="url(#grassPattern)"/>
-            <!-- Tract boundaries -->
-            <g stroke="#8b7355" stroke-width="1.5" fill="none" stroke-dasharray="6,3">
-              <!-- Tract 1 -->
-              <path d="M80,100 L250,80 L280,200 L100,220 Z"/>
-              <!-- Tract 2 -->
-              <path d="M100,220 L280,200 L290,320 L110,340 Z"/>
-              <!-- Tract 3 -->
-              <path d="M280,80 L440,100 L430,320 L290,320 L280,200 Z"/>
-              <!-- Tract 4 -->
-              <path d="M60,340 L110,340 L130,440 L60,440 Z"/>
-              <!-- Tract 5 -->
-              <path d="M110,340 L290,320 L280,440 L130,440 Z"/>
-              <!-- Tract 6 -->
-              <path d="M290,320 L430,320 L420,440 L280,440 Z"/>
-            </g>
-            <!-- Common area / pond -->
-            <ellipse cx="260" cy="280" rx="80" ry="50" fill="url(#pondGrad)" opacity="0.7">
-              <animate attributeName="ry" values="50;52;50" dur="4s" repeatCount="indefinite"/>
-            </ellipse>
-            <text x="260" y="285" text-anchor="middle" font-size="11" fill="#2d4a3e" font-family="Inter, sans-serif" font-weight="500">Pond</text>
-            <!-- Common use easement label -->
-            <text x="200" y="370" text-anchor="middle" font-size="9" fill="#6b5030" font-family="Inter, sans-serif" font-style="italic">Common Use Easement</text>
-            <!-- Tract labels -->
-            <g font-family="Inter, sans-serif" font-size="12" fill="#3d5636" text-anchor="middle" font-weight="500">
-              <text x="170" y="160">Tract 1</text>
-              <text x="10" y="170" font-size="9" fill="#6b6b6b">5.0 ac</text>
-              <text x="185" y="280">Tract 2</text>
-              <text x="370" y="200">Tract 3</text>
-              <text x="85" y="400">Tract 4</text>
-              <text x="200" y="420">Tract 5</text>
-              <text x="360" y="400">Tract 6</text>
-            </g>
-            <!-- Tract acreage -->
-            <g font-family="Inter, sans-serif" font-size="9" fill="#8b7355" text-anchor="middle">
-              <text x="170" y="175">5.002 ac</text>
-              <text x="185" y="295">5.102 ac</text>
-              <text x="370" y="215">7.244 ac</text>
-              <text x="85" y="415">3.094 ac</text>
-              <text x="200" y="435">5.069 ac</text>
-              <text x="360" y="415">5.817 ac</text>
-            </g>
+            <rect width="600" height="620" rx="12" fill="url(#grassPattern)"/>
+
+            <!--
+              Layout matched to the actual survey plat:
+              - Brindle Road (Twp Rd 170) runs vertically on the LEFT
+              - Slocum Road (Twp Rd 168) runs horizontally at the BOTTOM
+              - Intersection at bottom-left
+              - Tract 1 (5.002 ac): upper-left
+              - Tract 2 (5.102 ac): center-left, below Tract 1
+              - Tract 3 (7.244 ac): right side, large
+              - Tract 4 (3.094 ac): lower-left along Brindle Rd
+              - Tract 5 (5.069 ac): lower-center
+              - Tract 6 (5.817 ac): lower-right
+              - Common Use Easement: center area between upper & lower tracts
+            -->
+
             <!-- Roads -->
-            <g stroke="#b8a88a" stroke-width="3" fill="none" opacity="0.6">
-              <line x1="40" y1="460" x2="460" y2="460"/>
-              <line x1="40" y1="80" x2="40" y2="460"/>
+            <g stroke="#b8a88a" stroke-width="4" fill="none" opacity="0.5">
+              <!-- Brindle Road - left side, vertical -->
+              <line x1="58" y1="30" x2="58" y2="570"/>
+              <!-- Slocum Road - bottom, horizontal -->
+              <line x1="30" y1="570" x2="570" y2="570"/>
             </g>
-            <g font-family="Inter, sans-serif" font-size="9" fill="#8b7355">
-              <text x="250" y="480" text-anchor="middle">Slocum Road (Twp Rd 168)</text>
-              <text x="25" y="280" text-anchor="middle" transform="rotate(-90, 25, 280)">Brindle Road (Twp Rd 170)</text>
+
+            <!-- Outer property boundary -->
+            <path d="M75,55 L420,55 L530,70 L535,290 L540,520 L430,555 L200,555 L75,555 Z"
+              stroke="#8b7355" stroke-width="1.5" fill="none" opacity="0.4"/>
+
+            <!-- Tract boundary lines (internal property divisions) -->
+            <g stroke="#8b7355" stroke-width="1" fill="none" stroke-dasharray="5,3" opacity="0.45">
+              <!-- Horizontal divider: Tract 1 / Tract 2 boundary -->
+              <line x1="75" y1="200" x2="340" y2="185"/>
+              <!-- Tract 1+2 / Tract 3 vertical divider -->
+              <path d="M340,55 L340,185 L335,290 L340,350"/>
+              <!-- Upper tracts / easement zone horizontal -->
+              <path d="M75,290 L335,290"/>
+              <!-- Easement / lower tracts divider -->
+              <path d="M75,400 L200,380 L340,350 L430,360 L535,370"/>
+              <!-- Tract 4 / Tract 5 vertical divider -->
+              <line x1="200" y1="380" x2="200" y2="555"/>
+              <!-- Tract 5 / Tract 6 vertical divider -->
+              <line x1="380" y1="360" x2="430" y2="555"/>
             </g>
-            <!-- North arrow -->
-            <g transform="translate(440, 50)">
-              <line x1="0" y1="30" x2="0" y2="0" stroke="#3d5636" stroke-width="2" marker-end="url(#arrowhead)"/>
-              <polygon points="0,0 -5,10 5,10" fill="#3d5636"/>
-              <text x="0" y="42" text-anchor="middle" font-size="10" fill="#3d5636" font-family="Inter, sans-serif" font-weight="600">N</text>
+
+            <!-- Common Use Easement boundary - matching the irregular survey shape -->
+            <path d="M120,140 L310,120 L420,100 L500,130 L520,200 L530,290
+                     L520,340 L430,360 L380,390 L300,430 L200,450
+                     L140,420 L100,370 L90,300 L95,220 Z"
+              fill="url(#easementFill)" stroke="#4a6741" stroke-width="2.5" stroke-dasharray="10,5"/>
+
+            <!-- Common Use Easement label -->
+            <g font-family="Inter, sans-serif" text-anchor="middle" fill="#3d5636">
+              <text x="310" y="285" font-size="15" font-weight="600">COMMON</text>
+              <text x="310" y="305" font-size="15" font-weight="600">USE</text>
+              <text x="310" y="325" font-size="15" font-weight="600">EASEMENT</text>
+            </g>
+
+            <!-- Tract labels with acreage - positioned to match the real plat -->
+            <g font-family="Inter, sans-serif" text-anchor="middle">
+              <!-- Tract 1: upper-left -->
+              <text x="180" y="130" font-size="14" fill="#3d5636" font-weight="600">TRACT 1</text>
+              <text x="180" y="148" font-size="11" fill="#8b7355">5.002 Ac.</text>
+
+              <!-- Tract 2: center-left, below Tract 1 -->
+              <text x="180" y="245" font-size="14" fill="#3d5636" font-weight="600">TRACT 2</text>
+              <text x="180" y="263" font-size="11" fill="#8b7355">5.102 Ac.</text>
+
+              <!-- Tract 3: right side, large -->
+              <text x="460" y="200" font-size="14" fill="#3d5636" font-weight="600">TRACT 3</text>
+              <text x="460" y="218" font-size="11" fill="#8b7355">7.244 Ac.</text>
+
+              <!-- Tract 4: lower-left along Brindle Rd -->
+              <text x="138" y="475" font-size="14" fill="#3d5636" font-weight="600">TRACT 4</text>
+              <text x="138" y="493" font-size="11" fill="#8b7355">3.094 Ac.</text>
+
+              <!-- Tract 5: lower-center -->
+              <text x="300" y="475" font-size="14" fill="#3d5636" font-weight="600">TRACT 5</text>
+              <text x="300" y="493" font-size="11" fill="#8b7355">5.069 Ac.</text>
+
+              <!-- Tract 6: lower-right -->
+              <text x="485" y="445" font-size="14" fill="#3d5636" font-weight="600">TRACT 6</text>
+              <text x="485" y="463" font-size="11" fill="#8b7355">5.817 Ac.</text>
+            </g>
+
+            <!-- Road labels -->
+            <g font-family="Inter, sans-serif" font-size="10" fill="#8b7355">
+              <text x="300" y="593" text-anchor="middle">SLOCUM ROAD (TWP. RD. 168)</text>
+              <text x="30" y="310" text-anchor="middle" transform="rotate(-90, 30, 310)" font-size="10">BRINDLE ROAD (TWP. RD. 170)</text>
+            </g>
+
+            <!-- Legend -->
+            <g transform="translate(420, 510)" font-family="Inter, sans-serif" font-size="9" fill="#6b6b6b">
+              <line x1="0" y1="5" x2="20" y2="5" stroke="#4a6741" stroke-width="2.5" stroke-dasharray="6,3"/>
+              <text x="25" y="8">Easement boundary</text>
+              <line x1="0" y1="20" x2="20" y2="20" stroke="#8b7355" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>
+              <text x="25" y="23">Property lines</text>
+            </g>
+
+            <!-- North arrow (pointing upper-right as in the real plat) -->
+            <g transform="translate(545, 50)">
+              <line x1="0" y1="35" x2="6" y2="0" stroke="#3d5636" stroke-width="1.5"/>
+              <polygon points="6,0 1,12 11,12" fill="#3d5636"/>
+              <text x="6" y="48" text-anchor="middle" font-size="11" fill="#3d5636" font-family="Inter, sans-serif" font-weight="700">N</text>
             </g>
           </svg>
         </div>
