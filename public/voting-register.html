@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voting Register &mdash; Walden's Revisited</title>
+  <meta name="description" content="Official voting register for the 2019 Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, showing all lot owners and signatures.">
+  <meta property="og:site_name" content="Walden's Revisited">
+  <meta property="og:title" content="2019 Restated Declaration — Voting Register">
+  <meta property="og:description" content="Official voting register with all 20 signatures for the 2019 Restated Declaration of Protective Covenants &amp; Restrictions.">
+  <meta property="og:image" content="https://waldensrevisited.org/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://waldensrevisited.org/voting-register.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://waldensrevisited.org/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .vr-hero {
+      padding: var(--space-xl) 0 var(--space-md);
+      background: var(--mist);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
+    }
+    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
+    .vr-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-sm);
+    }
+    .vr-hero p { max-width: 700px; color: var(--stone); line-height: 1.8; }
+    .vr-hero .filed-info {
+      margin-top: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--parchment);
+      border-left: 3px solid var(--pond-reflect);
+      border-radius: 0 4px 4px 0;
+      display: inline-block;
+    }
+    .vr-hero .filed-info p { font-size: 0.85rem; color: var(--earth); margin: 0; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; color: var(--forest-mid);
+      margin-bottom: var(--space-md); transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--forest-deep); }
+    .vr-hero .section-tag {
+      display: block; padding: 0; margin-bottom: var(--space-xs);
+    }
+    .vr-hero .section-tag::before,
+    .vr-hero .section-tag::after { display: none; }
+
+    /* Tighten section spacing on this page */
+    .section, .section-alt { padding: var(--space-md) 0; }
+
+    /* What You Signed Banner */
+    .signed-banner {
+      margin: var(--space-md) 0;
+      border: 3px solid #8b2020;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .signed-banner-header {
+      background: #8b2020;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .signed-banner-header svg { flex-shrink: 0; }
+    .signed-banner-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+      color: #fff;
+    }
+    .signed-banner-body {
+      padding: 24px;
+      background: #fdf6f6;
+    }
+    .signed-banner-body p {
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      line-height: 1.8;
+      margin-bottom: var(--space-sm);
+    }
+    .signed-banner-body p:last-child { margin-bottom: 0; }
+    .signed-banner-body .obligation-list {
+      list-style: none;
+      padding: 0;
+      margin: var(--space-md) 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .signed-banner-body .obligation-list li {
+      background: #fff;
+      border: 1px solid rgba(139, 32, 32, 0.15);
+      border-left: 4px solid #8b2020;
+      padding: 14px 16px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.9rem;
+      color: var(--charcoal);
+      line-height: 1.6;
+    }
+    .signed-banner-body .obligation-list li strong {
+      display: block;
+      color: #8b2020;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .signed-banner-quote {
+      margin-top: var(--space-md);
+      padding: 16px 20px;
+      background: #fff;
+      border: 2px solid #8b2020;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      color: #8b2020;
+      font-weight: 500;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    /* Original Document */
+    .original-doc { padding: var(--space-md) 0; }
+    .original-doc h2 {
+      font-family: var(--font-display); font-size: 1.6rem;
+      color: var(--forest-deep); margin-bottom: var(--space-md);
+    }
+    .doc-image-wrapper {
+      background: var(--parchment); border: 1px solid rgba(139,115,85,0.15);
+      border-radius: 4px; padding: var(--space-sm); overflow-x: auto;
+    }
+    .doc-image-wrapper img { width: 100%; max-width: 1100px; display: block; margin: 0 auto; }
+    .doc-caption {
+      text-align: center; font-size: 0.8rem; color: var(--stone);
+      margin-top: var(--space-xs); font-style: italic;
+    }
+
+    /* Table */
+    .vr-table-section { padding: var(--space-md) 0; }
+    .vr-table-section h2 {
+      font-family: var(--font-display); font-size: 1.6rem;
+      color: var(--forest-deep); margin-bottom: var(--space-xs);
+    }
+    .vr-table-section > .container > p { color: var(--stone); margin-bottom: var(--space-md); font-size: 0.9rem; }
+    .vr-table-wrap {
+      overflow-x: auto; border: 1px solid rgba(139,115,85,0.15); border-radius: 4px;
+    }
+    .vr-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 0.85rem; }
+    .vr-table thead { background: var(--forest-deep); color: var(--parchment); }
+    .vr-table thead th {
+      padding: 12px 14px; text-align: left; font-weight: 500;
+      font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+    }
+    .vr-table tbody tr {
+      border-bottom: 1px solid rgba(139,115,85,0.1); transition: background 0.15s;
+    }
+    .vr-table tbody tr:hover { background: rgba(139,115,85,0.04); }
+    .vr-table tbody tr.signed { background: rgba(46,80,56,0.03); }
+    .vr-table tbody tr.signed:hover { background: rgba(46,80,56,0.07); }
+    .vr-table td { padding: 10px 14px; vertical-align: middle; color: var(--charcoal); }
+    .vr-table td.tract-col { font-weight: 500; white-space: nowrap; }
+    .vr-table td.parcel-col { font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--stone); }
+
+    .sig-none { font-size: 0.75rem; color: var(--clay); font-style: italic; }
+    .signed-badge {
+      display: inline-block; padding: 2px 8px; background: var(--forest-deep);
+      color: var(--parchment); font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase; border-radius: 2px;
+    }
+    .not-signed-badge {
+      display: inline-block; padding: 2px 8px; background: var(--clay);
+      color: white; font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase; border-radius: 2px;
+    }
+    .view-sig-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; background: var(--forest-mid); color: #fff;
+      border: none; border-radius: 3px; font-size: 0.75rem; font-weight: 500;
+      cursor: pointer; transition: background 0.2s; letter-spacing: 0.03em;
+    }
+    .view-sig-btn:hover { background: var(--forest-deep); }
+    .view-sig-btn svg { width: 14px; height: 14px; }
+
+    /* Vote Summary */
+    .vote-summary { display: flex; gap: var(--space-sm); margin: var(--space-sm) 0; flex-wrap: wrap; }
+    .vote-stat {
+      flex: 1; min-width: 160px; padding: var(--space-md);
+      background: var(--parchment); border: 1px solid rgba(139,115,85,0.12);
+      border-radius: 4px; text-align: center;
+    }
+    .vote-stat .stat-num {
+      font-family: var(--font-display); font-size: 2.2rem; font-weight: 600;
+      color: var(--forest-deep); line-height: 1;
+    }
+    .vote-stat .stat-label {
+      font-size: 0.8rem; color: var(--stone); margin-top: 4px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* Parcel Notes */
+    .parcel-notes {
+      margin-top: var(--space-md); padding: var(--space-md);
+      background: var(--linen); border-radius: 4px; border-left: 3px solid var(--clay);
+    }
+    .parcel-notes h4 { font-size: 0.95rem; color: var(--forest-deep); margin-bottom: var(--space-sm); }
+    .parcel-notes p { font-size: 0.85rem; color: var(--earth); margin-bottom: var(--space-xs); line-height: 1.7; }
+    .parcel-notes p:last-child { margin-bottom: 0; }
+
+    /* Lot Count History */
+    .lot-history { padding: var(--space-md) 0; }
+    .lot-history h2 {
+      font-family: var(--font-display); font-size: 1.6rem;
+      color: var(--forest-deep); margin-bottom: var(--space-sm);
+    }
+    .lot-history > .container > p {
+      color: var(--stone); font-size: 0.9rem; line-height: 1.8; margin-bottom: var(--space-md);
+    }
+    .history-step {
+      margin-bottom: var(--space-sm); padding: var(--space-md);
+      background: var(--parchment); border-radius: 4px;
+      border-left: 4px solid var(--forest-mid);
+    }
+    .history-step h3 {
+      font-family: var(--font-display); font-size: 1.15rem;
+      color: var(--forest-deep); margin-bottom: var(--space-sm);
+    }
+    .history-step p {
+      font-size: 0.9rem; color: var(--earth); line-height: 1.8;
+      margin-bottom: var(--space-xs);
+    }
+    .history-step p:last-child { margin-bottom: 0; }
+    .history-step ul {
+      list-style: none; padding: 0; margin: var(--space-sm) 0 0;
+    }
+    .history-step ul li {
+      font-size: 0.9rem; color: var(--earth); line-height: 1.8;
+      padding: 4px 0 4px 20px; position: relative;
+    }
+    .history-step ul li::before {
+      content: ''; position: absolute; left: 0; top: 12px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--forest-mid);
+    }
+    .history-step.highlight {
+      border-left-color: var(--pond-deep);
+      background: rgba(58, 107, 117, 0.06);
+    }
+
+    /* Modal */
+    .sig-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .sig-modal-overlay.active { display: flex; }
+    .sig-modal {
+      background: #fff;
+      border-radius: 8px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .sig-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid rgba(139,115,85,0.12);
+    }
+    .sig-modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--forest-deep);
+      margin: 0;
+    }
+    .sig-modal-header .modal-badge {
+      margin-top: 4px;
+    }
+    .sig-modal-close {
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--stone); transition: color 0.2s;
+      flex-shrink: 0; margin-left: 16px;
+    }
+    .sig-modal-close:hover { color: var(--charcoal); }
+    .sig-modal-body { padding: 24px; }
+    .sig-modal-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .sig-modal-detail {
+      padding: 12px 16px;
+      background: var(--mist);
+      border-radius: 4px;
+    }
+    .sig-modal-detail label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--stone);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .sig-modal-detail span {
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      font-weight: 500;
+    }
+    .sig-modal-detail.full-width {
+      grid-column: 1 / -1;
+    }
+    .sig-modal-image {
+      border: 1px solid rgba(139,115,85,0.15);
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--parchment);
+    }
+    .sig-modal-image img {
+      width: 100%;
+      display: block;
+    }
+    .sig-modal-image-label {
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      color: var(--stone);
+      text-align: center;
+      background: rgba(139,115,85,0.04);
+      border-top: 1px solid rgba(139,115,85,0.1);
+    }
+    .sig-modal-agreed {
+      margin-top: 20px;
+      padding: 14px 18px;
+      background: rgba(139, 32, 32, 0.06);
+      border: 1px solid rgba(139, 32, 32, 0.2);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: #6b1a1a;
+      line-height: 1.6;
+    }
+    .sig-modal-agreed strong { color: #8b2020; }
+
+    @media (max-width: 768px) {
+      .vote-summary { flex-direction: column; }
+      .vote-stat { min-width: auto; }
+      .sig-modal-details { grid-template-columns: 1fr; }
+      .sig-modal { margin: 10px; }
+      .signed-banner-body .obligation-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 6C16 6 10 11 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 11 16 6 16 6Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14V20M14 16L16 14L18 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/voting-records.html">Voting Records</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="vr-hero">
+    <div class="container">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Home
+      </a>
+      <span class="section-tag">Official Record</span>
+      <h1>Voting Register</h1>
+      <p>This page reproduces the official voting register from the <em>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</em>, executed on March 9, 2019. The register documents which lot owners signed and approved the restated declaration.</p>
+      <div class="filed-info">
+        <p><strong>Instrument #2019-00009690</strong> &mdash; Filed with the Delaware County Recorder's Office, April 25, 2019</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vote Summary -->
+  <section class="section">
+    <div class="container">
+      <div class="vote-summary">
+        <div class="vote-stat">
+          <div class="stat-num">25</div>
+          <div class="stat-label">Legal Lots (County Auditor)</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">20</div>
+          <div class="stat-label">Lots Signed</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">80%</div>
+          <div class="stat-label">Approval Rate</div>
+        </div>
+        <div class="vote-stat">
+          <div class="stat-num">75%</div>
+          <div class="stat-label">Required to Amend</div>
+        </div>
+      </div>
+
+      <!-- What Signing Meant Banner -->
+      <div class="signed-banner">
+        <div class="signed-banner-header">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <h3>What Every Signer Explicitly Agreed To</h3>
+        </div>
+        <div class="signed-banner-body">
+          <p>The 2019 Restated Declaration is not a vague petition or a statement of interest. It is a <strong>52-page legally binding instrument</strong> recorded with the Delaware County Recorder's Office. Every owner who signed the document on March 9, 2019 affixed their signature to the full text of this instrument&mdash;including all of the following provisions:</p>
+
+          <ul class="obligation-list">
+            <li>
+              <strong>Creation of an HOA Corporation</strong>
+              Signers approved the formation of the Walden's Revisited Homeowners Association as a formal Ohio nonprofit corporation with full legal authority to govern the community. (Article II)
+            </li>
+            <li>
+              <strong>Mandatory Membership</strong>
+              Signers agreed that every lot owner is automatically and irrevocably a member of the association. Membership is not optional and cannot be declined. (Section 2.02)
+            </li>
+            <li>
+              <strong>Payment of Annual Dues &amp; Assessments</strong>
+              Signers agreed to pay annual assessments as determined by the Board of Directors, with the understanding that unpaid dues accrue interest, become a lien on the property, and are enforceable through foreclosure under Ohio law. (Article IV)
+            </li>
+            <li>
+              <strong>Adherence to All Bylaws</strong>
+              Signers approved the attached 16-page Code of Regulations (Bylaws), agreeing to be bound by all rules governing board elections, meetings, quorum requirements, and decision-making procedures. (Exhibit B)
+            </li>
+            <li>
+              <strong>Liability Insurance Mandate</strong>
+              Signers agreed that the HOA must carry Commercial General Liability insurance and Directors &amp; Officers coverage, funded through their assessments. (Section 6.01)
+            </li>
+            <li>
+              <strong>Enforcement &amp; Legal Remedies</strong>
+              Signers consented to the association's authority to enforce all covenants, restrictions, and rules through legal action, including injunctive relief and recovery of attorney's fees. (Article VII)
+            </li>
+          </ul>
+
+          <div class="signed-banner-quote">
+            A signature on this document is not a suggestion&mdash;it is a binding legal commitment. Every signer acknowledged the full scope of these obligations. The recorded instrument with each owner's original signature is a matter of permanent public record at the Delaware County Recorder's Office.
+          </div>
+        </div>
+      </div>
+
+      <div class="ccr-section">
+        <h3>How This Vote Was Validated</h3>
+        <p>The original Declaration (Section 1.10) provides that it may be amended by a two-thirds vote when six or more lots have homes constructed upon them which are occupied. Under Ohio law (ORC 5312.01(J)), a &ldquo;lot&rdquo; is defined as a tract with a separate parcel number assigned by the county auditor. Following two property consolidations, the Delaware County Auditor recognizes <strong>25 legal lots</strong> in the community. Amending the declaration therefore requires 75% approval&mdash;a minimum of <strong>19 signatures</strong>. With 20 of 25 lots signing, the Restated Declaration cleared this threshold and is the currently effective governing document.</p>
+        <p>Under the Declaration, there is <strong>one vote per lot</strong>, regardless of how many individuals are listed as owners on a given parcel. In the absence of a dispute by co-owners, a lot's vote can be made by any one co-owner.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lot Count History -->
+  <section class="lot-history section-alt">
+    <div class="container">
+      <h2>How the Lot Count Reached 25: A Legal History</h2>
+      <p>The voting register contains 25 rows rather than the 26 referenced in the original declaration text. Understanding why is critical to understanding the community's governance. The table below cross-references each lot and owner for those who wish to verify the specifics.</p>
+
+      <div class="history-step">
+        <h3>1. The Original Drafting Discrepancy (2014&ndash;2015)</h3>
+        <p>The confusion begins with a fundamental contradiction in the original 2015 Declaration. The text of the document explicitly claimed Walden's Revisited consisted of 26 lots. However, mapping out the properties designated in the original recorded exhibits (Lots 1&ndash;4, Tracts 1&ndash;15, and Tracts 20&ndash;27) yields exactly <strong>27 distinct platted tracts</strong>. This indicates a clear counting or drafting error by the original declarant from the very beginning.</p>
+      </div>
+
+      <div class="history-step">
+        <h3>2. The County Consolidations (2016&ndash;2017)</h3>
+        <p>Following the initial development, two separate property mergers occurred. The owners of Lot 2 and Lot 3 (parcel 20040001060004) consolidated their properties into a single 5-acre parcel. Similarly, the owners of Tract 10 and Tract 11 (parcel 20040001061010) combined theirs. Because the Delaware County Auditor officially recognized these joined properties as single tax parcels, the physical number of distinct tracts in the community dropped from the platted 27 down to <strong>25</strong>.</p>
+      </div>
+
+      <div class="history-step highlight">
+        <h3>3. The Mathematical and Legal Impact on Voting</h3>
+        <p>This consolidation is the linchpin for the community's governance because of how the state calculates voting power.</p>
+        <ul>
+          <li><strong>The Legal Definition:</strong> Under the Ohio Planned Community Law (ORC 5312.01(J)), a &ldquo;lot&rdquo; is explicitly defined as a tract of land that has a &ldquo;separate parcel number assigned by the county auditor.&rdquo;</li>
+          <li><strong>The Denominator Shift:</strong> Because the county auditor officially reduced the number of parcel numbers, the legal denominator for the HOA permanently dropped to 25 lots, rendering the 26-lot text in the 2015 Declaration legally obsolete.</li>
+          <li><strong>The Voting Threshold:</strong> Amending the declaration requires 75% approval. 75% of 25 lots is 18.75. Since fractional votes do not exist, a minimum of <strong>19 signatures</strong> is required to pass any amendment.</li>
+          <li><strong>The Outcome:</strong> The 20 signatures on the 2019 Restated Declaration successfully cleared this 19-vote threshold. Had state law not deferred to the county auditor's parcel count (keeping the denominator at the platted 27), 21 signatures would have been required, and the 2019 restatement would have failed.</li>
+          <li><strong>The Bottom Line:</strong> Even if the original declaration's stated total of 26 lots were used as the denominator instead of the county auditor's 25, the outcome does not change. 75% of 26 is 19.5&mdash;requiring 20 signatures. The 2019 Restated Declaration received exactly 20 signatures, <strong>clearing the 75% threshold under any reasonable interpretation of the lot count</strong>. Whether the number is 25, 26, or even the original platted 27, the vote passed because two owners owning two lots had only one vote. The 75% threshold is cleared in all cases therefore the restated declaration is in effect.</li>
+        </ul>
+      </div>
+
+      <div class="history-step">
+        <h3>4. Impact on Reinstatement, Assessments, and Easements</h3>
+        <p>Validating the 25-lot count has profound implications for the legal landscape of the community moving forward:</p>
+        <ul>
+          <li><strong>HOA Reinstatement:</strong> Because the 2019 vote mathematically succeeded under Ohio law, the Restated Declaration is the undisputed, legally binding governing document. Any formal reinstatement of the dissolved HOA, election of officers, or enforcement of bylaws must strictly adhere to the 2019 framework.</li>
+          <li><strong>Financial Assessments:</strong> When calculating budgets, annual dues, or potential special assessments for the reinstated association, all costs must be divided 25 ways. The consolidated properties (Lot 2/3 and Tract 10/11) legally possess only one vote and carry only one share of the financial liability.</li>
+          <li><strong>Common Area Easements:</strong> The legal survival of the 2019 Restatement permanently cements the rules surrounding the permanent common areas. While facing situations that act as a deterrent to enjoying these shared spaces can be highly frustrating, the legal right to maintain ongoing access and continue utilizing the common areas remains fully protected and enforceable under these validated covenants.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Original Document Image -->
+  <section class="original-doc section">
+    <div class="container">
+      <h2>Original Filed Document</h2>
+      <p style="color: var(--stone); margin-bottom: var(--space-md); font-size: 0.9rem;">The image below is reproduced directly from the recorded instrument filed with the Delaware County Recorder's Office. It shows the voting register with original signatures as they appear in the public record.</p>
+      <div class="doc-image-wrapper">
+        <img src="/voting-register-full.png" alt="Original voting register from the Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, showing lot owner names, parcel numbers, addresses, and original signatures, dated March 9, 2019"/>
+      </div>
+      <p class="doc-caption">Restated Declaration of Protective Covenants and Restrictions &mdash; Voting Register, Page 30 of 52 &mdash; Book 1037, Page 2716</p>
+    </div>
+  </section>
+
+  <!-- Digitized Voting Table -->
+  <section class="vr-table-section section-alt">
+    <div class="container">
+      <h2>Digitized Voting Record</h2>
+      <p>The following table digitizes the voting register, showing each lot owner as of March 9, 2019. Click &ldquo;View Record&rdquo; on any signed row to see the original signature from the filed document along with full parcel details.</p>
+
+      <div class="vr-table-wrap">
+        <table class="vr-table">
+          <thead>
+            <tr>
+              <th>Tract/Lot</th>
+              <th>#</th>
+              <th>Address</th>
+              <th>Owner (2019)</th>
+              <th>Status</th>
+              <th>Record</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="signed" id="lot-1-snyder">
+              <td class="tract-col">Lot</td>
+              <td>1</td>
+              <td>423 Brindle Road</td>
+              <td>David &amp; Corey Snyder</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Lot','1','20040001060002','423 Brindle Road','David &amp; Corey Snyder','/signatures/1.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-1-mull">
+              <td class="tract-col">Tract</td>
+              <td>1</td>
+              <td>475 Brindle Road</td>
+              <td>Jim &amp; Stacia Mull</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','1','20040001061016','475 Brindle Road','Jim &amp; Stacia Mull','/signatures/2.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="lot-2-3-boles">
+              <td class="tract-col">Lot</td>
+              <td>2/3</td>
+              <td>427 Brindle Road</td>
+              <td>Ryan &amp; Betsy Boles</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Lot','2/3','20040001060004','427 Brindle Road','Ryan &amp; Betsy Boles','/signatures/3.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr id="tract-2-heider">
+              <td class="tract-col">Tract</td>
+              <td>2</td>
+              <td>497 Brindle Road</td>
+              <td>Chris &amp; Christine Heider</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td><span class="sig-none">&mdash;</span></td>
+            </tr>
+            <tr class="signed" id="tract-3-tryon">
+              <td class="tract-col">Tract</td>
+              <td>3</td>
+              <td>505 Brindle Road</td>
+              <td>Steve &amp; Tammy Tryon</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','3','20040001061003','505 Brindle Road','Steve &amp; Tammy Tryon','/signatures/4.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="lot-4-gregory">
+              <td class="tract-col">Lot</td>
+              <td>4</td>
+              <td>431 Brindle Road</td>
+              <td>Scott &amp; Kimberly Gregory</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Lot','4','20040001060003','431 Brindle Road','Scott &amp; Kimberly Gregory','/signatures/6.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr id="tract-4-smart">
+              <td class="tract-col">Tract</td>
+              <td>4</td>
+              <td>541 Brindle Road</td>
+              <td>Brad &amp; Jean Smart</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td><span class="sig-none">&mdash;</span></td>
+            </tr>
+            <tr class="signed" id="tract-5-potts">
+              <td class="tract-col">Tract</td>
+              <td>5</td>
+              <td>Brindle Road</td>
+              <td>Mark Potts</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','5','20040001061005','Brindle Road','Mark Potts','/signatures/7.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr id="tract-6-rosser">
+              <td class="tract-col">Tract</td>
+              <td>6</td>
+              <td>Brindle Road</td>
+              <td>Steve &amp; Diana Rosser</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td><span class="sig-none">&mdash;</span></td>
+            </tr>
+            <tr class="signed" id="tract-7-dye">
+              <td class="tract-col">Tract</td>
+              <td>7</td>
+              <td>Brindle Road</td>
+              <td>Greg &amp; Kim Dye (Isaly)</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','7','20040001061007','Brindle Road','Greg &amp; Kim Dye (Isaly)','/signatures/8.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-8-heath">
+              <td class="tract-col">Tract</td>
+              <td>8</td>
+              <td>623 Brindle Road</td>
+              <td>Craig &amp; Kathy Heath (Anderson)</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','8','20040001061008','623 Brindle Road','Craig &amp; Kathy Heath (Anderson)','/signatures/9.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-9-towers">
+              <td class="tract-col">Tract</td>
+              <td>9</td>
+              <td>661 Brindle Road</td>
+              <td>Ken &amp; Mary Lynn Towers</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','9','20040001061009','661 Brindle Road','Ken &amp; Mary Lynn Towers','/signatures/10.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-10-11-sieger">
+              <td class="tract-col">Tract</td>
+              <td>10/11</td>
+              <td>675 Brindle Road</td>
+              <td>Brian &amp; Mandy Sieger</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','10/11','20040001061010','675 Brindle Road','Brian &amp; Mandy Sieger','/signatures/11.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-12-childers">
+              <td class="tract-col">Tract</td>
+              <td>12</td>
+              <td>6810 Houseman Rd</td>
+              <td>Clayton &amp; Leah Childers</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','12','20040001061012','6810 Houseman Rd','Clayton &amp; Leah Childers','/signatures/12.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-13-colvin">
+              <td class="tract-col">Tract</td>
+              <td>13</td>
+              <td>6724 Houseman Rd</td>
+              <td>Ben &amp; Joy Colvin</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','13','20040001061013','6724 Houseman Rd','Ben &amp; Joy Colvin','/signatures/13.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-14-upper">
+              <td class="tract-col">Tract</td>
+              <td>14</td>
+              <td>6720 Houseman Rd</td>
+              <td>Jake &amp; Tammy Upper</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','14','20040001061014','6720 Houseman Rd','Jake &amp; Tammy Upper','/signatures/14.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr id="tract-15-pauly">
+              <td class="tract-col">Tract</td>
+              <td>15</td>
+              <td>Houseman Rd</td>
+              <td>Ken Pauly</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td><span class="sig-none">&mdash;</span></td>
+            </tr>
+            <tr class="signed" id="tract-20-rickard">
+              <td class="tract-col">Tract</td>
+              <td>20</td>
+              <td>7070 Slocum Road</td>
+              <td>Larry &amp; Danielle Rickard</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','20','20040002003005','7070 Slocum Road','Larry &amp; Danielle Rickard','/signatures/15.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-21-wolford">
+              <td class="tract-col">Tract</td>
+              <td>21</td>
+              <td>7058 Slocum Road</td>
+              <td>Brian &amp; Janet Wolford</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','21','20040002003006','7058 Slocum Road','Brian &amp; Janet Wolford','/signatures/16.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-22-fussichen">
+              <td class="tract-col">Tract</td>
+              <td>22</td>
+              <td>554 Brindle Road</td>
+              <td>Bobbie Fussichen</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','22','20040002003007','554 Brindle Road','Bobbie Fussichen','/signatures/17.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-23-gourley">
+              <td class="tract-col">Tract</td>
+              <td>23</td>
+              <td>510 Brindle Road</td>
+              <td>Dan &amp; Rachel Gourley</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','23','20040002003008','510 Brindle Road','Dan &amp; Rachel Gourley','/signatures/18.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-24-dranschak">
+              <td class="tract-col">Tract</td>
+              <td>24</td>
+              <td>494 Brindle Road</td>
+              <td>John &amp; Paula Dranschak</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','24','20040002003002','494 Brindle Road','John &amp; Paula Dranschak','/signatures/19.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr id="tract-25-mambourg">
+              <td class="tract-col">Tract</td>
+              <td>25</td>
+              <td>480 Brindle Road</td>
+              <td>Gregg Mambourg</td>
+              <td><span class="not-signed-badge">Not Signed</span></td>
+              <td><span class="sig-none">&mdash;</span></td>
+            </tr>
+            <tr class="signed" id="tract-26-walton">
+              <td class="tract-col">Tract</td>
+              <td>26</td>
+              <td>440 Brindle Road</td>
+              <td>Spencer &amp; Melissa Walton</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','26','20040002003004','440 Brindle Road','Spencer &amp; Melissa Walton','/signatures/20.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+            <tr class="signed" id="tract-27-avner">
+              <td class="tract-col">Tract</td>
+              <td>27</td>
+              <td>420 Brindle Road</td>
+              <td>Stacie &amp; Sean Avner</td>
+              <td><span class="signed-badge">Signed</span></td>
+              <td><button class="view-sig-btn" onclick="openModal('Tract','27','20040002003001','420 Brindle Road','Stacie &amp; Sean Avner','/signatures/21.png')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Record</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="parcel-notes">
+        <h4>Notes on Parcel Consolidations</h4>
+        <p>The original subdivision contained 27 platted lots/tracts. Two properties have since been legally consolidated by their respective owners, reducing the total to 25 current tax parcels:</p>
+        <p><strong>1. Lot 2/3:</strong> Originally platted as Lot 2 and Lot 3. Combined into a single 5.001-acre property. The Delaware County Auditor now recognizes this as a single parcel (20040001060004).</p>
+        <p><strong>2. Tract 10/11:</strong> Originally platted as Tract 10 and Tract 11. Combined into a single property under parcel 20040001061010.</p>
+        <p style="margin-top: var(--space-sm);"><strong>Important:</strong> Parcel consolidation does not affect the covenants. The consolidated parcels remain subject to all easements, restrictions, and obligations under the Restated Declaration. Each consolidated parcel carries one vote in association matters.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Signature Modal -->
+  <div class="sig-modal-overlay" id="sigModal">
+    <div class="sig-modal">
+      <div class="sig-modal-header">
+        <div>
+          <h3 id="modalTitle"></h3>
+          <div class="modal-badge"><span class="signed-badge">Signed &mdash; March 9, 2019</span></div>
+        </div>
+        <button class="sig-modal-close" onclick="closeModal()" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sig-modal-body">
+        <div class="sig-modal-details">
+          <div class="sig-modal-detail">
+            <label>Tract / Lot</label>
+            <span id="modalTract"></span>
+          </div>
+          <div class="sig-modal-detail">
+            <label>Parcel Number</label>
+            <span id="modalParcel"></span>
+          </div>
+          <div class="sig-modal-detail">
+            <label>Address</label>
+            <span id="modalAddress"></span>
+          </div>
+          <div class="sig-modal-detail">
+            <label>Owner (as of 2019)</label>
+            <span id="modalOwner"></span>
+          </div>
+          <div class="sig-modal-detail full-width">
+            <label>Document Signed</label>
+            <span>Restated Declaration of Covenants, Easements, Conditions, Restrictions and Assessments for Walden's Revisited (52 pages)</span>
+          </div>
+        </div>
+
+        <div class="sig-modal-image">
+          <img id="modalSigImg" src="" alt=""/>
+          <div class="sig-modal-image-label">Original signed record as filed with the Delaware County Recorder's Office &mdash; Instrument #2019-00009690</div>
+        </div>
+
+        <div class="sig-modal-agreed">
+          <strong>By signing, this owner explicitly agreed to:</strong> the creation of the Walden's Revisited Homeowners Association as a legal corporation; mandatory HOA membership; payment of annual dues and assessments; adherence to all bylaws and the 16-page Code of Regulations; and the HOA's authority to enforce covenants through legal action. This signature is permanently recorded as public record.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/#about">About</a>
+          <a href="/#community">Community</a>
+          <a href="/#common-areas">Common Areas</a>
+          <a href="/#covenants">Covenants</a>
+          <a href="/voting-records.html">Voting Records</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script>
+    // Signer data keyed by row ID for deep-linking
+    var signerData = {
+      'lot-1-snyder':        { type:'Lot',   num:'1',    parcel:'20040001060002', address:'423 Brindle Road',  owner:'David & Corey Snyder',            img:'/signatures/1.png' },
+      'tract-1-mull':        { type:'Tract', num:'1',    parcel:'20040001061016', address:'475 Brindle Road',  owner:'Jim & Stacia Mull',               img:'/signatures/2.png' },
+      'lot-2-3-boles':       { type:'Lot',   num:'2/3',  parcel:'20040001060004', address:'427 Brindle Road',  owner:'Ryan & Betsy Boles',              img:'/signatures/3.png' },
+      'tract-3-tryon':       { type:'Tract', num:'3',    parcel:'20040001061003', address:'505 Brindle Road',  owner:'Steve & Tammy Tryon',             img:'/signatures/4.png' },
+      'lot-4-gregory':       { type:'Lot',   num:'4',    parcel:'20040001060003', address:'431 Brindle Road',  owner:'Scott & Kimberly Gregory',        img:'/signatures/6.png' },
+      'tract-5-potts':       { type:'Tract', num:'5',    parcel:'20040001061005', address:'Brindle Road',      owner:'Mark Potts',                      img:'/signatures/7.png' },
+      'tract-7-dye':         { type:'Tract', num:'7',    parcel:'20040001061007', address:'Brindle Road',      owner:'Greg & Kim Dye (Isaly)',          img:'/signatures/8.png' },
+      'tract-8-heath':       { type:'Tract', num:'8',    parcel:'20040001061008', address:'623 Brindle Road',  owner:'Craig & Kathy Heath (Anderson)',  img:'/signatures/9.png' },
+      'tract-9-towers':      { type:'Tract', num:'9',    parcel:'20040001061009', address:'661 Brindle Road',  owner:'Ken & Mary Lynn Towers',          img:'/signatures/10.png' },
+      'tract-10-11-sieger':  { type:'Tract', num:'10/11',parcel:'20040001061010', address:'675 Brindle Road',  owner:'Brian & Mandy Sieger',            img:'/signatures/11.png' },
+      'tract-12-childers':   { type:'Tract', num:'12',   parcel:'20040001061012', address:'6810 Houseman Rd',  owner:'Clayton & Leah Childers',         img:'/signatures/12.png' },
+      'tract-13-colvin':     { type:'Tract', num:'13',   parcel:'20040001061013', address:'6724 Houseman Rd',  owner:'Ben & Joy Colvin',                img:'/signatures/13.png' },
+      'tract-14-upper':      { type:'Tract', num:'14',   parcel:'20040001061014', address:'6720 Houseman Rd',  owner:'Jake & Tammy Upper',              img:'/signatures/14.png' },
+      'tract-20-rickard':    { type:'Tract', num:'20',   parcel:'20040002003005', address:'7070 Slocum Road',  owner:'Larry & Danielle Rickard',        img:'/signatures/15.png' },
+      'tract-21-wolford':    { type:'Tract', num:'21',   parcel:'20040002003006', address:'7058 Slocum Road',  owner:'Brian & Janet Wolford',           img:'/signatures/16.png' },
+      'tract-22-fussichen':  { type:'Tract', num:'22',   parcel:'20040002003007', address:'554 Brindle Road',  owner:'Bobbie Fussichen',                img:'/signatures/17.png' },
+      'tract-23-gourley':    { type:'Tract', num:'23',   parcel:'20040002003008', address:'510 Brindle Road',  owner:'Dan & Rachel Gourley',            img:'/signatures/18.png' },
+      'tract-24-dranschak':  { type:'Tract', num:'24',   parcel:'20040002003002', address:'494 Brindle Road',  owner:'John & Paula Dranschak',          img:'/signatures/19.png' },
+      'tract-26-walton':     { type:'Tract', num:'26',   parcel:'20040002003004', address:'440 Brindle Road',  owner:'Spencer & Melissa Walton',        img:'/signatures/20.png' },
+      'tract-27-avner':      { type:'Tract', num:'27',   parcel:'20040002003001', address:'420 Brindle Road',  owner:'Stacie & Sean Avner',             img:'/signatures/21.png' }
+    };
+
+    function openModal(type, num, parcel, address, owner, imgSrc) {
+      document.getElementById('modalTitle').textContent = owner;
+      document.getElementById('modalTract').textContent = type + ' ' + num;
+      document.getElementById('modalParcel').textContent = parcel;
+      document.getElementById('modalAddress').textContent = address;
+      document.getElementById('modalOwner').textContent = owner;
+      var img = document.getElementById('modalSigImg');
+      img.src = imgSrc;
+      img.alt = 'Signed record - ' + owner + ', ' + type + ' ' + num;
+      document.getElementById('sigModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('sigModal').classList.remove('active');
+      document.body.style.overflow = '';
+      // Update URL without the hash so closing doesn't re-trigger on refresh
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
+    document.getElementById('sigModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Deep-link: auto-open modal if URL has a matching hash
+    function checkHash() {
+      var hash = window.location.hash.substring(1);
+      if (hash && signerData[hash]) {
+        var d = signerData[hash];
+        // Scroll the row into view first
+        var row = document.getElementById(hash);
+        if (row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // Small delay to let scroll finish, then open modal
+        setTimeout(function() {
+          openModal(d.type, d.num, d.parcel, d.address, d.owner, d.img);
+        }, 300);
+      }
+    }
+
+    // Run on page load
+    checkHash();
+    // Also handle hash changes (e.g., user clicks a link on same page)
+    window.addEventListener('hashchange', checkHash);
+  </script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voting Records — Walden's Revisited</title>
+  <meta name="description" content="Official voting records for Walden's Revisited community governance decisions, including the 2019 Restated Declaration of Protective Covenants.">
+  <meta property="og:site_name" content="Walden's Revisited">
+  <meta property="og:title" content="Walden's Revisited — Community Governance Voting Records">
+  <meta property="og:description" content="Official archive of all community governance votes for Walden's Revisited, including the 2019 Restated Declaration that passed with 80% approval.">
+  <meta property="og:image" content="https://waldensrevisited.org/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://waldensrevisited.org/voting-records.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://waldensrevisited.org/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .vr-hero {
+      padding: calc(var(--space-xl) + 20px) 0 var(--space-md);
+      background: var(--mist);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
+    }
+    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
+    .vr-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+    .vr-hero p { max-width: 700px; color: var(--stone); line-height: 1.8; margin: 0; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; color: var(--forest-mid);
+      margin-bottom: var(--space-sm); transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--forest-deep); }
+    .vr-hero .section-tag {
+      display: block; padding: 0; margin-bottom: var(--space-xs);
+    }
+    .vr-hero .section-tag::before,
+    .vr-hero .section-tag::after { display: none; }
+
+    .records-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+    }
+    .record-card {
+      background: var(--parchment);
+      border: 1px solid rgba(139,115,85,0.15);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .record-card:hover {
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    .record-card-header {
+      padding: 16px 24px;
+      background: var(--forest-deep);
+      color: #fff;
+    }
+    .record-card-header .record-date {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 4px;
+    }
+    .record-card-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0;
+      color: #fff;
+    }
+    .record-card-body {
+      padding: 20px 24px;
+    }
+    .record-card-body p {
+      font-size: 0.9rem;
+      color: var(--earth);
+      line-height: 1.7;
+      margin-bottom: var(--space-sm);
+    }
+    .record-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: var(--space-md);
+      flex-wrap: wrap;
+    }
+    .record-stat {
+      flex: 1;
+      min-width: 80px;
+      text-align: center;
+      padding: 10px 8px;
+      background: var(--mist);
+      border-radius: 4px;
+    }
+    .record-stat .num {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      line-height: 1;
+    }
+    .record-stat .label {
+      font-size: 0.65rem;
+      color: var(--stone);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+    .record-card-filed {
+      padding: 12px 24px;
+      background: rgba(139,115,85,0.04);
+      border-top: 1px solid rgba(139,115,85,0.1);
+      font-size: 0.78rem;
+      color: var(--stone);
+    }
+    .record-card-actions {
+      padding: 16px 24px 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .record-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .record-btn:hover { transform: translateY(-1px); }
+    .record-btn svg { width: 16px; height: 16px; }
+    .record-btn-primary {
+      background: var(--forest-mid);
+      color: #fff;
+    }
+    .record-btn-primary:hover { background: var(--forest-deep); }
+    .record-btn-secondary {
+      background: rgba(139,115,85,0.1);
+      color: var(--earth);
+    }
+    .record-btn-secondary:hover { background: rgba(139,115,85,0.18); }
+
+    .result-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .result-badge.passed {
+      background: rgba(46,80,56,0.12);
+      color: var(--forest-deep);
+    }
+
+    body .section { padding: var(--space-md) 0 var(--space-md); }
+    .empty-note {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--linen);
+      border-radius: 4px;
+      border-left: 3px solid var(--stone);
+    }
+    .empty-note p {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .records-grid { grid-template-columns: 1fr; }
+      .record-stats { flex-direction: row; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 6C16 6 10 11 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 11 16 6 16 6Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14V20M14 16L16 14L18 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/voting-records.html">Voting Records</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="vr-hero">
+    <div class="container">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Home
+      </a>
+      <span class="section-tag">Community Governance</span>
+      <h1>Voting Records</h1>
+      <p>This page catalogs all formal votes conducted by the Walden's Revisited community. Each record links to the full details, including individual lot-owner signatures as they appear in the publicly filed instruments with the Delaware County Recorder's Office.</p>
+    </div>
+  </section>
+
+  <!-- Voting Records -->
+  <section class="section">
+    <div class="container">
+      <div class="records-grid">
+
+        <!-- 2019 Restated Declaration -->
+        <div class="record-card">
+          <div class="record-card-header">
+            <div class="record-date">March 9, 2019</div>
+            <h3>Restated Declaration of Protective Covenants &amp; Restrictions</h3>
+          </div>
+          <div class="record-card-body">
+            <p>A community-wide vote to adopt a comprehensive 52-page restated declaration, replacing the original 2015 document. The restatement introduced mandatory liability insurance, a 16-page Code of Regulations (Bylaws), elected board governance, and modern lifestyle protections for all lot owners.</p>
+            <div class="record-stats">
+              <div class="record-stat">
+                <div class="num">25</div>
+                <div class="label">Total Lots</div>
+              </div>
+              <div class="record-stat">
+                <div class="num">20</div>
+                <div class="label">Voted Yes</div>
+              </div>
+              <div class="record-stat">
+                <div class="num">80%</div>
+                <div class="label">Approval</div>
+              </div>
+              <div class="record-stat">
+                <div class="num">75%</div>
+                <div class="label">Required</div>
+              </div>
+            </div>
+            <span class="result-badge passed">Passed &mdash; Threshold Exceeded</span>
+          </div>
+          <div class="record-card-filed">
+            <strong>Instrument #2019-00009690</strong> &mdash; Filed with the Delaware County Recorder's Office, April 25, 2019 &mdash; Book 1037, Page 2716
+          </div>
+          <div class="record-card-actions">
+            <a href="/votes/2019-restated-declaration/" class="record-btn record-btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              View Full Register &amp; Signatures
+            </a>
+            <button onclick="openPdfViewer('/restated-declaration-2019.pdf', 'Restated Declaration — 2019 (52 pages)')" class="record-btn record-btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              View Declaration (PDF)
+            </button>
+            <a href="/restated-declaration-2019.pdf" download class="record-btn record-btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download PDF
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="empty-note">
+        <p>This archive currently contains only the 2019 Restated Declaration vote. Additional voting records will be added here as future community governance actions are conducted and recorded.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/#about">About</a>
+          <a href="/#community">Community</a>
+          <a href="/#common-areas">Common Areas</a>
+          <a href="/#covenants">Covenants</a>
+          <a href="/voting-records.html">Voting Records</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script src="/pdf-viewer.js" type="module"></script>
+</body>
+</html>
