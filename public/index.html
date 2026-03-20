@@ -603,8 +603,14 @@
       var ctx = canvas.getContext('2d');
       var wrap = document.getElementById('flyerCanvasWrap');
 
-      function calcFit(page) {
-        var vp = page.getViewport({ scale: 1.0 });
+      var pageRotations = { 3: 90 };
+
+      function getRotation(num) {
+        return pageRotations[num] || 0;
+      }
+
+      function calcFit(page, rotation) {
+        var vp = page.getViewport({ scale: 1.0, rotation: rotation });
         var availW = wrap.clientWidth - 24;
         var availH = wrap.clientHeight - 16;
         var scaleW = availW / vp.width;
@@ -622,9 +628,10 @@
       function render(num) {
         rendering = true;
         doc.getPage(num).then(function(page) {
-          if (baseScale === 1.0) baseScale = calcFit(page);
+          var rotation = getRotation(num);
+          baseScale = calcFit(page, rotation);
           var scale = baseScale * userZoom;
-          var vp = page.getViewport({ scale: scale });
+          var vp = page.getViewport({ scale: scale, rotation: rotation });
           var dpr = window.devicePixelRatio || 1;
           canvas.width = vp.width * dpr;
           canvas.height = vp.height * dpr;
