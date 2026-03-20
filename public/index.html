@@ -114,9 +114,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
           </button>
         </div>
-        <div class="inline-pdf-canvas-wrap" id="flyerCanvasWrap">
-          <canvas id="flyerCanvas"></canvas>
-        </div>
+        <div class="inline-pdf-canvas-wrap" id="flyerCanvasWrap"></div>
         <div class="inline-pdf-controls" id="flyerControlsBottom">
           <button class="inline-pdf-btn flyer-prev" title="Previous page" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -162,7 +160,7 @@
               <circle cx="24" cy="28" r="4" stroke="currentColor" stroke-width="2"/>
             </svg>
           </div>
-          <h3>Central Pond</h3>
+          <h3>Central Common Areas</h3>
           <p>Our community is built around a peaceful pond&mdash;a shared natural treasure that provides beauty, wildlife habitat, and a gathering point for neighbors.</p>
         </div>
         <div class="feature-card">
@@ -581,25 +579,17 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
     (function() {
-      var doc = null, pageNum = 1, baseScale = 1.0, userZoom = 1.0;
-      var rendering = false, pending = null;
-      var canvas = document.getElementById('flyerCanvas');
-      var ctx = canvas.getContext('2d');
+      var doc = null, pages = [], pageNum = 1, baseScale = 1.0, userZoom = 1.0;
       var wrap = document.getElementById('flyerCanvasWrap');
+      var scrollTracking = true;
 
       var pageRotations = { 3: 270 };
-
-      function getRotation(num) {
-        return pageRotations[num] || 0;
-      }
+      function getRotation(num) { return pageRotations[num] || 0; }
 
       function calcFit(page, rotation) {
         var vp = page.getViewport({ scale: 1.0, rotation: rotation });
         var availW = wrap.clientWidth - 24;
-        var availH = wrap.clientHeight - 16;
-        var scaleW = availW / vp.width;
-        var scaleH = availH / vp.height;
-        return Math.min(scaleW, scaleH);
+        return availW / vp.width;
       }
 
       function updateUI() {
@@ -609,37 +599,80 @@
         document.querySelectorAll('.flyer-zoom-label').forEach(function(el) { el.textContent = Math.round(userZoom * 100) + '%'; });
       }
 
-      function render(num) {
-        rendering = true;
-        doc.getPage(num).then(function(page) {
-          var rotation = getRotation(num);
-          baseScale = calcFit(page, rotation);
-          var scale = baseScale * userZoom;
-          var vp = page.getViewport({ scale: scale, rotation: rotation });
-          var dpr = window.devicePixelRatio || 1;
-          canvas.width = vp.width * dpr;
-          canvas.height = vp.height * dpr;
-          canvas.style.width = vp.width + 'px';
-          canvas.style.height = vp.height + 'px';
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          page.render({ canvasContext: ctx, viewport: vp }).promise.then(function() {
-            rendering = false;
-            if (pending !== null) { render(pending); pending = null; }
-          });
-        });
-        updateUI();
+      function renderCanvas(page, canvas, viewport) {
+        var ctx = canvas.getContext('2d');
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width = viewport.width * dpr;
+        canvas.height = viewport.height * dpr;
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.height = viewport.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        page.render({ canvasContext: ctx, viewport: viewport });
       }
 
-      function queue(num) {
-        if (rendering) pending = num;
-        else render(num);
+      function buildPages() {
+        wrap.innerHTML = '';
+        var pagePromises = [];
+        for (var i = 1; i <= doc.numPages; i++) pagePromises.push(doc.getPage(i));
+
+        Promise.all(pagePromises).then(function(pgs) {
+          pages = pgs;
+          // Use first page for base scale
+          baseScale = calcFit(pages[0], getRotation(1));
+          var scale = baseScale * userZoom;
+
+          pages.forEach(function(page, idx) {
+            var num = idx + 1;
+            var rotation = getRotation(num);
+            var vp = page.getViewport({ scale: scale, rotation: rotation });
+
+            var pageDiv = document.createElement('div');
+            pageDiv.className = 'flyer-page';
+            pageDiv.dataset.pageNum = num;
+            pageDiv.style.width = vp.width + 'px';
+            pageDiv.style.height = vp.height + 'px';
+
+            var canvas = document.createElement('canvas');
+            pageDiv.appendChild(canvas);
+            wrap.appendChild(pageDiv);
+
+            renderCanvas(page, canvas, vp);
+          });
+          updateUI();
+        });
+      }
+
+      function rerenderPages() {
+        if (!pages.length) return;
+        baseScale = calcFit(pages[0], getRotation(1));
+        var scale = baseScale * userZoom;
+
+        pages.forEach(function(page, idx) {
+          var num = idx + 1;
+          var rotation = getRotation(num);
+          var vp = page.getViewport({ scale: scale, rotation: rotation });
+          var pageDiv = wrap.querySelector('[data-page-num="' + num + '"]');
+          if (!pageDiv) return;
+          pageDiv.style.width = vp.width + 'px';
+          pageDiv.style.height = vp.height + 'px';
+          renderCanvas(page, pageDiv.querySelector('canvas'), vp);
+        });
+      }
+
+      function scrollToPage(num) {
+        var pageDiv = wrap.querySelector('[data-page-num="' + num + '"]');
+        if (pageDiv) {
+          scrollTracking = false;
+          pageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setTimeout(function() { scrollTracking = true; }, 600);
+        }
+        pageNum = num;
+        updateUI();
       }
 
       function goPage(n) {
         if (!doc || n < 1 || n > doc.numPages) return;
-        pageNum = n;
-        wrap.scrollTop = 0;
-        queue(pageNum);
+        scrollToPage(n);
       }
 
       function zoom(delta) {
@@ -648,13 +681,28 @@
         if (z === userZoom) return;
         userZoom = z;
         updateUI();
-        if (doc) queue(pageNum);
+        if (doc) rerenderPages();
       }
 
       document.querySelectorAll('.flyer-prev').forEach(function(el) { el.addEventListener('click', function() { goPage(pageNum - 1); }); });
       document.querySelectorAll('.flyer-next').forEach(function(el) { el.addEventListener('click', function() { goPage(pageNum + 1); }); });
       document.querySelectorAll('.flyer-zoom-out').forEach(function(el) { el.addEventListener('click', function() { zoom(-0.25); }); });
       document.querySelectorAll('.flyer-zoom-in').forEach(function(el) { el.addEventListener('click', function() { zoom(0.25); }); });
+
+      // Track current page from scroll position
+      wrap.addEventListener('scroll', function() {
+        if (!scrollTracking || !doc) return;
+        var wrapRect = wrap.getBoundingClientRect();
+        var wrapCenter = wrapRect.top + wrapRect.height / 3;
+        var pageDivs = wrap.querySelectorAll('.flyer-page');
+        var closest = 1, closestDist = Infinity;
+        pageDivs.forEach(function(p) {
+          var rect = p.getBoundingClientRect();
+          var dist = Math.abs(rect.top + rect.height / 3 - wrapCenter);
+          if (dist < closestDist) { closestDist = dist; closest = parseInt(p.dataset.pageNum); }
+        });
+        if (closest !== pageNum) { pageNum = closest; updateUI(); }
+      });
 
       // Pinch-to-zoom
       var pinchDist = 0, pinchZoom = 1;
@@ -675,7 +723,7 @@
           var d = Math.sqrt(dx*dx + dy*dy);
           var z = Math.max(0.5, Math.min(4, pinchZoom * (d / pinchDist)));
           z = Math.round(z * 100) / 100;
-          if (z !== userZoom) { userZoom = z; updateUI(); queue(pageNum); }
+          if (z !== userZoom) { userZoom = z; updateUI(); rerenderPages(); }
         }
       }, { passive: false });
 
@@ -695,7 +743,7 @@
           pdfjsLib.getDocument('/original-flyer.pdf').promise.then(function(d) {
             doc = d;
             document.querySelectorAll('.flyer-page-count').forEach(function(el) { el.textContent = d.numPages; });
-            render(1);
+            buildPages();
           });
           obs.disconnect();
         }
@@ -707,7 +755,7 @@
       window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
-          if (doc) { baseScale = 1.0; queue(pageNum); }
+          if (doc) { baseScale = 1.0; rerenderPages(); }
         }, 200);
       });
     })();

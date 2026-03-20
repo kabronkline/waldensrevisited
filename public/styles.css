@@ -649,15 +649,20 @@ h1, h2, h3, h4 {
 .inline-pdf-canvas-wrap {
   overflow: auto;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
   background: #e8e4de;
   height: 500px;
   position: relative;
-  touch-action: none;
 }
 
-.inline-pdf-canvas-wrap canvas {
+.flyer-page {
+  flex-shrink: 0;
+}
+
+.flyer-page canvas {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
   display: block;
 }

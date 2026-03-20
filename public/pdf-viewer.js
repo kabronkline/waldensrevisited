@@ -3,14 +3,15 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 var pdfDoc = null;
+var pdfPages = [];
 var pdfPageNum = 1;
 var pdfBaseScale = 1.0;
 var pdfUserZoom = 1.0;
 var pdfRotation = 0;
-var pdfRendering = false;
-var pdfPendingPage = null;
 var pdfCurrentUrl = '';
 var zoomBadgeTimer = null;
+var scrollTracking = true;
+var pageObserver = null;
 
 function ensureModal() {
   if (document.getElementById('pdfModal')) return;
@@ -44,7 +45,7 @@ function ensureModal() {
       '<button class="pdf-nav-btn" id="pdfRotateBtn" title="Rotate page">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38L21.5 8"/></svg>' +
       '</button>' +
-    '</div>' +  /* end toolbar-center */
+    '</div>' +
     '<div class="pdf-modal-toolbar-right">' +
       '<a id="pdfDownloadBtn" href="#" download class="pdf-nav-btn" title="Download PDF" style="text-decoration:none;">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
@@ -54,9 +55,7 @@ function ensureModal() {
       '</button>' +
     '</div>' +
   '</div>' +
-  '<div class="pdf-modal-canvas-wrap" id="pdfCanvasWrap">' +
-    '<canvas id="pdfCanvas"></canvas>' +
-  '</div>' +
+  '<div class="pdf-modal-canvas-wrap" id="pdfCanvasWrap"></div>' +
   '<div class="pdf-zoom-badge" id="pdfZoomBadge">100%</div>';
 
   document.body.appendChild(overlay);
@@ -102,6 +101,32 @@ function ensureModal() {
       setZoom(pdfUserZoom + (-e.deltaY * 0.01));
     }
   }, { passive: false });
+
+  // Track current page from scroll position + lazy render nearby pages
+  var scrollRenderTimer = null;
+  canvasWrap.addEventListener('scroll', function() {
+    if (!scrollTracking || !pdfDoc) return;
+    var wrapRect = canvasWrap.getBoundingClientRect();
+    var wrapCenter = wrapRect.top + wrapRect.height / 3;
+    var pages = canvasWrap.querySelectorAll('.pdf-page');
+    var closest = 1;
+    var closestDist = Infinity;
+    pages.forEach(function(p) {
+      var rect = p.getBoundingClientRect();
+      var dist = Math.abs(rect.top + rect.height / 3 - wrapCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = parseInt(p.dataset.pageNum);
+      }
+    });
+    if (closest !== pdfPageNum) {
+      pdfPageNum = closest;
+      updatePageUI();
+    }
+    // Debounced lazy render of nearby pages + unload distant ones
+    clearTimeout(scrollRenderTimer);
+    scrollRenderTimer = setTimeout(function() { renderNearbyPages(pdfPageNum); }, 100);
+  });
 }
 
 function injectStyles() {
@@ -123,13 +148,14 @@ function injectStyles() {
     '.pdf-page-info{font-size:0.8rem;white-space:nowrap;min-width:80px;text-align:center;color:#fff}' +
     '.pdf-page-input{width:40px;padding:4px;text-align:center;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(255,255,255,0.1);color:#fff;font-size:0.8rem}' +
     '.pdf-zoom-label{font-size:0.75rem;opacity:0.8}' +
-    '.pdf-modal-canvas-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:20px;background:#525659;position:relative;touch-action:none}' +
-    '.pdf-modal-canvas-wrap canvas{box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:none}' +
+    '.pdf-modal-canvas-wrap{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px;background:#525659;position:relative}' +
+    '.pdf-page{flex-shrink:0;position:relative;background:#e8e4de}' +
+    '.pdf-page canvas{display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:none}' +
     '.pdf-zoom-badge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:8px 20px;border-radius:20px;font-size:0.9rem;font-weight:500;letter-spacing:0.03em;pointer-events:none;z-index:10001;opacity:0;transition:opacity 0.25s ease;backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,0.3)}' +
     '.pdf-zoom-badge.visible{opacity:1}' +
     '.pdf-modal-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:36px;height:36px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s}' +
     '.pdf-modal-close:hover{background:rgba(220,80,80,0.7)}' +
-    '@media(max-width:768px){.pdf-toolbar-title{display:none}.pdf-modal-toolbar{padding:8px 8px;gap:4px}.pdf-modal-toolbar-center{gap:4px}.pdf-nav-btn{width:32px;height:32px}.pdf-modal-close{width:32px;height:32px}.pdf-modal-canvas-wrap{padding:10px}}';
+    '@media(max-width:768px){.pdf-toolbar-title{display:none}.pdf-modal-toolbar{padding:8px 8px;gap:4px}.pdf-modal-toolbar-center{gap:4px}.pdf-nav-btn{width:32px;height:32px}.pdf-modal-close{width:32px;height:32px}.pdf-modal-canvas-wrap{padding:10px;gap:10px}}';
   document.head.appendChild(style);
 }
 
@@ -153,38 +179,168 @@ function updateZoomUI() {
   }
 }
 
-function renderPage(num) {
-  pdfRendering = true;
-  var canvas = document.getElementById('pdfCanvas');
-  var ctx = canvas.getContext('2d');
-  pdfDoc.getPage(num).then(function(page) {
-    if (pdfBaseScale === 1.0) {
-      pdfBaseScale = calcFitScale(page);
-    }
-    var effectiveScale = pdfBaseScale * pdfUserZoom;
-    var viewport = page.getViewport({ scale: effectiveScale, rotation: pdfRotation });
-    var dpr = window.devicePixelRatio || 1;
-    canvas.width = viewport.width * dpr;
-    canvas.height = viewport.height * dpr;
-    canvas.style.width = viewport.width + 'px';
-    canvas.style.height = viewport.height + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
-      pdfRendering = false;
-      if (pdfPendingPage !== null) {
-        renderPage(pdfPendingPage);
-        pdfPendingPage = null;
-      }
-    });
-  });
-  document.getElementById('pdfPageInput').value = num;
-  document.getElementById('pdfPrev').disabled = (num <= 1);
-  document.getElementById('pdfNext').disabled = (num >= pdfDoc.numPages);
+function updatePageUI() {
+  document.getElementById('pdfPageInput').value = pdfPageNum;
+  document.getElementById('pdfPrev').disabled = (pdfPageNum <= 1);
+  document.getElementById('pdfNext').disabled = (!pdfDoc || pdfPageNum >= pdfDoc.numPages);
 }
 
-function queueRenderPage(num) {
-  if (pdfRendering) { pdfPendingPage = num; }
-  else { renderPage(num); }
+// Render a single page's canvas
+function renderPageCanvas(page, canvas, viewport) {
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = viewport.width * dpr;
+  canvas.height = viewport.height * dpr;
+  canvas.style.width = viewport.width + 'px';
+  canvas.style.height = viewport.height + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  page.render({ canvasContext: ctx, viewport: viewport });
+}
+
+// Unload a page's canvas to free memory (keep div dimensions for scroll stability)
+function unloadPage(pageDiv) {
+  if (!pageDiv.dataset.rendered) return;
+  var canvas = pageDiv.querySelector('canvas');
+  if (canvas) {
+    // Replace canvas with a fresh one to release GPU memory
+    var newCanvas = document.createElement('canvas');
+    pageDiv.replaceChild(newCanvas, canvas);
+  }
+  delete pageDiv.dataset.rendered;
+}
+
+// Render a page by number if not already rendered
+function renderPageByNum(num) {
+  var wrap = document.getElementById('pdfCanvasWrap');
+  var pageDiv = wrap.querySelector('[data-page-num="' + num + '"]');
+  if (!pageDiv || pageDiv.dataset.rendered || !pdfPages[num - 1]) return;
+  var page = pdfPages[num - 1];
+  var scale = pdfBaseScale * pdfUserZoom;
+  var viewport = page.getViewport({ scale: scale, rotation: pdfRotation });
+  renderPageCanvas(page, pageDiv.querySelector('canvas'), viewport);
+  pageDiv.dataset.rendered = '1';
+}
+
+// Render pages near the current page, unload distant ones
+function renderNearbyPages(currentNum) {
+  if (!pdfPages.length || !pdfDoc) return;
+  var wrap = document.getElementById('pdfCanvasWrap');
+  var buffer = 3; // Render 3 pages ahead/behind
+  var unloadDist = 8; // Unload pages more than 8 away
+
+  for (var i = 1; i <= pdfDoc.numPages; i++) {
+    var dist = Math.abs(i - currentNum);
+    if (dist <= buffer) {
+      renderPageByNum(i);
+    } else if (dist > unloadDist) {
+      var pageDiv = wrap.querySelector('[data-page-num="' + i + '"]');
+      if (pageDiv) unloadPage(pageDiv);
+    }
+  }
+}
+
+// Set up IntersectionObserver for lazy rendering / unloading
+function setupPageObserver() {
+  var wrap = document.getElementById('pdfCanvasWrap');
+  if (pageObserver) pageObserver.disconnect();
+
+  pageObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      var pageDiv = entry.target;
+      var num = parseInt(pageDiv.dataset.pageNum);
+      if (entry.isIntersecting) {
+        renderPageByNum(num);
+        // Also pre-render adjacent pages
+        if (num > 1) renderPageByNum(num - 1);
+        if (num < pdfDoc.numPages) renderPageByNum(num + 1);
+      } else {
+        // Unload distant pages to free memory (keep a buffer of 3 pages)
+        var dist = Math.abs(num - pdfPageNum);
+        if (dist > 5) unloadPage(pageDiv);
+      }
+    });
+  }, { root: wrap, rootMargin: '2000px 0px' });
+
+  wrap.querySelectorAll('.pdf-page').forEach(function(p) {
+    pageObserver.observe(p);
+  });
+
+  // Fallback: explicitly render first few pages in case observer doesn't fire
+  for (var i = 1; i <= Math.min(3, pdfDoc.numPages); i++) {
+    renderPageByNum(i);
+  }
+}
+
+function buildPages() {
+  var wrap = document.getElementById('pdfCanvasWrap');
+  wrap.innerHTML = '';
+
+  var pagePromises = [];
+  for (var i = 1; i <= pdfDoc.numPages; i++) {
+    pagePromises.push(pdfDoc.getPage(i));
+  }
+
+  Promise.all(pagePromises).then(function(pages) {
+    pdfPages = pages;
+    pdfBaseScale = calcFitScale(pages[0]);
+    var scale = pdfBaseScale * pdfUserZoom;
+
+    // Create placeholder divs with correct dimensions (no canvas rendering yet)
+    pages.forEach(function(page, idx) {
+      var num = idx + 1;
+      var viewport = page.getViewport({ scale: scale, rotation: pdfRotation });
+
+      var pageDiv = document.createElement('div');
+      pageDiv.className = 'pdf-page';
+      pageDiv.dataset.pageNum = num;
+      pageDiv.style.width = viewport.width + 'px';
+      pageDiv.style.height = viewport.height + 'px';
+
+      var canvas = document.createElement('canvas');
+      pageDiv.appendChild(canvas);
+      wrap.appendChild(pageDiv);
+    });
+
+    // Let IntersectionObserver handle rendering visible pages
+    setupPageObserver();
+    updatePageUI();
+  });
+}
+
+function rerenderPages() {
+  if (!pdfPages.length) return;
+  var wrap = document.getElementById('pdfCanvasWrap');
+  pdfBaseScale = calcFitScale(pdfPages[0]);
+  var scale = pdfBaseScale * pdfUserZoom;
+
+  // Update all placeholder sizes, clear rendered state
+  pdfPages.forEach(function(page, idx) {
+    var num = idx + 1;
+    var viewport = page.getViewport({ scale: scale, rotation: pdfRotation });
+    var pageDiv = wrap.querySelector('[data-page-num="' + num + '"]');
+    if (!pageDiv) return;
+    pageDiv.style.width = viewport.width + 'px';
+    pageDiv.style.height = viewport.height + 'px';
+    unloadPage(pageDiv);
+  });
+
+  // Re-render nearby pages with new scale, re-observe for future scrolls
+  renderNearbyPages(pdfPageNum);
+  setupPageObserver();
+}
+
+function scrollToPage(num) {
+  var wrap = document.getElementById('pdfCanvasWrap');
+  var pageDiv = wrap.querySelector('[data-page-num="' + num + '"]');
+  // Render target + nearby pages before scrolling
+  renderNearbyPages(num);
+  if (pageDiv) {
+    scrollTracking = false;
+    pageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function() { scrollTracking = true; }, 600);
+  }
+  pdfPageNum = num;
+  updatePageUI();
 }
 
 function setZoom(newZoom) {
@@ -193,7 +349,7 @@ function setZoom(newZoom) {
   if (newZoom === pdfUserZoom) return;
   pdfUserZoom = newZoom;
   updateZoomUI();
-  if (pdfDoc) queueRenderPage(pdfPageNum);
+  if (pdfDoc) rerenderPages();
 }
 
 function openPdfViewer(url, title) {
@@ -205,8 +361,8 @@ function openPdfViewer(url, title) {
   document.body.style.overflow = 'hidden';
 
   if (pdfCurrentUrl !== url) {
-    // Loading a different PDF
     pdfDoc = null;
+    pdfPages = [];
     pdfPageNum = 1;
     pdfBaseScale = 1.0;
     pdfUserZoom = 1.0;
@@ -217,7 +373,7 @@ function openPdfViewer(url, title) {
       pdfDoc = doc;
       document.getElementById('pdfPageCount').textContent = doc.numPages;
       document.getElementById('pdfPageInput').max = doc.numPages;
-      renderPage(1);
+      buildPages();
     });
   } else {
     pdfBaseScale = 1.0;
@@ -225,7 +381,7 @@ function openPdfViewer(url, title) {
     pdfRotation = 0;
     updateZoomUI();
     document.getElementById('pdfCanvasWrap').scrollTop = 0;
-    queueRenderPage(pdfPageNum);
+    rerenderPages();
   }
 }
 
@@ -239,24 +395,18 @@ function closePdfViewer() {
 
 function pdfPrevPage() {
   if (pdfPageNum <= 1) return;
-  pdfPageNum--;
-  queueRenderPage(pdfPageNum);
-  document.getElementById('pdfCanvasWrap').scrollTop = 0;
+  scrollToPage(pdfPageNum - 1);
 }
 
 function pdfNextPage() {
   if (!pdfDoc || pdfPageNum >= pdfDoc.numPages) return;
-  pdfPageNum++;
-  queueRenderPage(pdfPageNum);
-  document.getElementById('pdfCanvasWrap').scrollTop = 0;
+  scrollToPage(pdfPageNum + 1);
 }
 
 function pdfGoToPage(val) {
   var num = parseInt(val, 10);
   if (!pdfDoc || isNaN(num) || num < 1 || num > pdfDoc.numPages) return;
-  pdfPageNum = num;
-  queueRenderPage(pdfPageNum);
-  document.getElementById('pdfCanvasWrap').scrollTop = 0;
+  scrollToPage(num);
 }
 
 function pdfZoom(delta) {
@@ -266,7 +416,7 @@ function pdfZoom(delta) {
 function pdfRotatePage() {
   pdfRotation = (pdfRotation + 90) % 360;
   pdfBaseScale = 1.0;
-  if (pdfDoc) queueRenderPage(pdfPageNum);
+  if (pdfDoc) rerenderPages();
 }
 
 // Keyboard shortcuts
