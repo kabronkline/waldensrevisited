@@ -6,6 +6,7 @@ var pdfDoc = null;
 var pdfPageNum = 1;
 var pdfBaseScale = 1.0;
 var pdfUserZoom = 1.0;
+var pdfRotation = 0;
 var pdfRendering = false;
 var pdfPendingPage = null;
 var pdfCurrentUrl = '';
@@ -39,6 +40,10 @@ function ensureModal() {
       '<button class="pdf-nav-btn" id="pdfZoomIn" title="Zoom in">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
       '</button>' +
+      '<span style="width:1px;height:24px;background:rgba(255,255,255,0.2);margin:0 4px"></span>' +
+      '<button class="pdf-nav-btn" id="pdfRotateBtn" title="Rotate page">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38L21.5 8"/></svg>' +
+      '</button>' +
     '</div>' +
     '<div class="pdf-modal-toolbar-right">' +
       '<a id="pdfDownloadBtn" href="#" download class="pdf-nav-btn" title="Download PDF" style="text-decoration:none;">' +
@@ -61,6 +66,7 @@ function ensureModal() {
   document.getElementById('pdfNext').addEventListener('click', function() { pdfNextPage(); });
   document.getElementById('pdfZoomOut').addEventListener('click', function() { pdfZoom(-0.25); });
   document.getElementById('pdfZoomIn').addEventListener('click', function() { pdfZoom(0.25); });
+  document.getElementById('pdfRotateBtn').addEventListener('click', function() { pdfRotatePage(); });
   document.getElementById('pdfCloseBtn').addEventListener('click', function() { closePdfViewer(); });
   document.getElementById('pdfPageInput').addEventListener('change', function() { pdfGoToPage(this.value); });
 
@@ -130,7 +136,7 @@ function injectStyles() {
 function calcFitScale(page) {
   var wrap = document.getElementById('pdfCanvasWrap');
   var availWidth = wrap.clientWidth - 40;
-  var viewport = page.getViewport({ scale: 1.0 });
+  var viewport = page.getViewport({ scale: 1.0, rotation: pdfRotation });
   return availWidth / viewport.width;
 }
 
@@ -156,7 +162,7 @@ function renderPage(num) {
       pdfBaseScale = calcFitScale(page);
     }
     var effectiveScale = pdfBaseScale * pdfUserZoom;
-    var viewport = page.getViewport({ scale: effectiveScale });
+    var viewport = page.getViewport({ scale: effectiveScale, rotation: pdfRotation });
     var dpr = window.devicePixelRatio || 1;
     canvas.width = viewport.width * dpr;
     canvas.height = viewport.height * dpr;
@@ -204,6 +210,7 @@ function openPdfViewer(url, title) {
     pdfPageNum = 1;
     pdfBaseScale = 1.0;
     pdfUserZoom = 1.0;
+    pdfRotation = 0;
     pdfCurrentUrl = url;
     updateZoomUI();
     pdfjsLib.getDocument(url).promise.then(function(doc) {
@@ -215,6 +222,7 @@ function openPdfViewer(url, title) {
   } else {
     pdfBaseScale = 1.0;
     pdfUserZoom = 1.0;
+    pdfRotation = 0;
     updateZoomUI();
     document.getElementById('pdfCanvasWrap').scrollTop = 0;
     queueRenderPage(pdfPageNum);
@@ -255,6 +263,12 @@ function pdfZoom(delta) {
   setZoom(pdfUserZoom + delta);
 }
 
+function pdfRotatePage() {
+  pdfRotation = (pdfRotation + 90) % 360;
+  pdfBaseScale = 1.0;
+  if (pdfDoc) queueRenderPage(pdfPageNum);
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
   var modal = document.getElementById('pdfModal');
@@ -275,3 +289,4 @@ window.pdfPrevPage = pdfPrevPage;
 window.pdfNextPage = pdfNextPage;
 window.pdfGoToPage = pdfGoToPage;
 window.pdfZoom = pdfZoom;
+window.pdfRotatePage = pdfRotatePage;
