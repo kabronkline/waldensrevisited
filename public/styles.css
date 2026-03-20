@@ -236,6 +236,7 @@ h1, h2, h3, h4 {
   width: 100%;
   overflow: hidden;
   position: relative;
+  max-height: 65vh;
 }
 
 .hero-image-wrap::after {
@@ -248,7 +249,9 @@ h1, h2, h3, h4 {
 
 .hero-bg-img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
   display: block;
 }
 
@@ -906,6 +909,15 @@ h1, h2, h3, h4 {
 
   .section {
     padding: var(--space-xl) 0;
+  }
+
+  .hero-image-wrap {
+    max-height: none;
+  }
+
+  .hero-bg-img {
+    height: auto;
+    object-fit: initial;
   }
 
   .hero-bottom {
