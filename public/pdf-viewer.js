@@ -44,7 +44,7 @@ function ensureModal() {
       '<button class="pdf-nav-btn" id="pdfRotateBtn" title="Rotate page">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38L21.5 8"/></svg>' +
       '</button>' +
-    '</div>' +
+    '</div>' +  /* end toolbar-center */
     '<div class="pdf-modal-toolbar-right">' +
       '<a id="pdfDownloadBtn" href="#" download class="pdf-nav-btn" title="Download PDF" style="text-decoration:none;">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
@@ -111,10 +111,10 @@ function injectStyles() {
   style.textContent =
     '.pdf-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;flex-direction:column;backdrop-filter:blur(4px)}' +
     '.pdf-modal-overlay.active{display:flex}' +
-    '.pdf-modal-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#2e4032;color:#fff;flex-shrink:0}' +
-    '.pdf-modal-toolbar-left{display:flex;align-items:center;gap:12px}' +
-    '.pdf-modal-toolbar-center{display:flex;align-items:center;gap:8px}' +
-    '.pdf-modal-toolbar-right{display:flex;align-items:center;gap:8px}' +
+    '.pdf-modal-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#2e4032;color:#fff;flex-shrink:0;flex-wrap:wrap;gap:8px}' +
+    '.pdf-modal-toolbar-left{display:flex;align-items:center;gap:12px;flex-shrink:0}' +
+    '.pdf-modal-toolbar-center{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;min-width:0}' +
+    '.pdf-modal-toolbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}' +
     '.pdf-toolbar-title{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}' +
     '.pdf-nav-btn{background:rgba(255,255,255,0.15);border:none;color:#fff;width:36px;height:36px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s}' +
     '.pdf-nav-btn:hover{background:rgba(255,255,255,0.25)}' +
@@ -129,7 +129,7 @@ function injectStyles() {
     '.pdf-zoom-badge.visible{opacity:1}' +
     '.pdf-modal-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:36px;height:36px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s}' +
     '.pdf-modal-close:hover{background:rgba(220,80,80,0.7)}' +
-    '@media(max-width:768px){.pdf-toolbar-title{display:none}.pdf-modal-canvas-wrap{padding:10px}}';
+    '@media(max-width:768px){.pdf-toolbar-title{display:none}.pdf-modal-toolbar{padding:8px 8px;gap:4px}.pdf-modal-toolbar-center{gap:4px}.pdf-nav-btn{width:32px;height:32px}.pdf-modal-close{width:32px;height:32px}.pdf-modal-canvas-wrap{padding:10px}}';
   document.head.appendChild(style);
 }
 
