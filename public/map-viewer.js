@@ -123,7 +123,7 @@ function injectMapStyles() {
     '.map-legend-swatch{width:20px;height:14px;border-radius:2px;flex-shrink:0}' +
     '.map-legend-divider{border:none;border-top:1px solid #ddd;margin:8px 0}' +
     '.map-legend-details{font-size:11px;color:#5a6b60}' +
-    '.map-legend-toggle{cursor:pointer;background:none;border:none;color:#3d5e4a;font-size:12px;padding:4px 0;font-family:inherit;text-align:left}' +
+    '.map-legend-toggle{cursor:pointer;background:none;border:none;color:#5a6b60;font-size:12px;padding:4px 0;font-family:inherit;text-align:left}' +
     '.map-legend-toggle:hover{color:#1a2e23}' +
     '.map-legend-section{display:none;margin-top:6px}' +
     '.map-legend-section.visible{display:block}' +
@@ -283,10 +283,10 @@ function buildMap() {
 
   // Easement polygon
   var easementPolygon = L.polygon(easementCoords, {
-    color: '#3d5e4a',
+    color: '#e67e22',
     weight: 3,
-    opacity: 0.9,
-    fillColor: '#6b8f7a',
+    opacity: 0.95,
+    fillColor: '#f39c12',
     fillOpacity: 0.2,
     dashArray: '10, 5'
   }).addTo(map);
@@ -325,12 +325,15 @@ function buildMap() {
     var legIdx = i + 1;
     if (legIdx <= 23) {
       L.circleMarker(coord, {
-        radius: 3, color: '#fff', fillColor: '#3d5e4a', fillOpacity: 0.8, weight: 1
+        radius: 3, color: '#fff', fillColor: '#e67e22', fillOpacity: 0.8, weight: 1
       }).bindTooltip('L' + legIdx, {
         permanent: false, direction: 'top'
       }).addTo(vertexGroup);
     }
   });
+
+  // Show vertices by default
+  vertexGroup.addTo(map);
 
   // Scale bar
   L.control.scale({ imperial: true, metric: true }).addTo(map);
@@ -367,7 +370,7 @@ function buildLegend(container) {
   legend.innerHTML =
     '<h4>Common Area Easement</h4>' +
     '<div class="map-legend-item">' +
-      '<div class="map-legend-swatch" style="background:rgba(107,143,122,0.3);border:2px dashed #3d5e4a;"></div>' +
+      '<div class="map-legend-swatch" style="background:rgba(243,156,18,0.25);border:2px dashed #e67e22;"></div>' +
       '<span>Common Use Easement</span>' +
     '</div>' +
     '<div class="map-legend-item">' +
@@ -380,7 +383,7 @@ function buildLegend(container) {
     '</div>' +
     '<hr class="map-legend-divider">' +
     '<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin:4px 0;">' +
-      '<input type="checkbox" id="mapVertexToggle"> Show survey vertices (L2\u2013L23)' +
+      '<input type="checkbox" id="mapVertexToggle" checked> Show survey vertices (L2\u2013L23)' +
     '</label>' +
     '<hr class="map-legend-divider">' +
     '<button class="map-legend-toggle" id="mapDetailsToggle">Survey details \u25B6</button>' +
