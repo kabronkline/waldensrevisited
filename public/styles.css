@@ -628,9 +628,36 @@ h1, h2, h3, h4 {
   padding: 12px 16px;
   background: var(--forest-deep);
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.inline-pdf-header:hover {
+  background: #375347;
+}
+
+.inline-pdf-chevron {
+  color: var(--pond-reflect);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.inline-pdf-header[aria-expanded="true"] .inline-pdf-chevron {
+  transform: rotate(180deg);
+}
+
+.inline-pdf-collapsible {
+  display: none;
+}
+
+.inline-pdf-collapsible.expanded {
+  display: block;
 }
 
 .inline-pdf-label {

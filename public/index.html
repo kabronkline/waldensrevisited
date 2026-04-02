@@ -82,12 +82,16 @@
         </div>
       </div>
 
-      <!-- Inline Original Flyer Viewer -->
+      <!-- Inline Original Flyer Viewer (collapsed by default) -->
       <div class="inline-pdf-viewer" id="flyerViewer">
-        <div class="inline-pdf-header">
-          <span class="inline-pdf-label">Original Developer Flyer</span>
-          <span class="inline-pdf-sublabel">Mailed to the first homeowners</span>
-        </div>
+        <button class="inline-pdf-header" id="flyerToggle" aria-expanded="false" aria-controls="flyerCollapsible">
+          <span style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+            <span class="inline-pdf-label">Original Developer Flyer</span>
+            <span class="inline-pdf-sublabel">Mailed to the first homeowners</span>
+          </span>
+          <svg class="inline-pdf-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="inline-pdf-collapsible" id="flyerCollapsible">
         <div class="inline-pdf-controls" id="flyerControlsTop">
           <button class="inline-pdf-btn flyer-prev" title="Previous page" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -140,6 +144,7 @@
           <button class="inline-pdf-btn" title="Open in full viewer" onclick="openPdfViewer('/original-flyer.pdf', 'Original Developer Flyer')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
           </button>
+        </div>
         </div>
       </div>
     </div>
@@ -763,6 +768,13 @@
         }, 200);
       });
     })();
+
+    // Flyer collapsible toggle
+    document.getElementById('flyerToggle').addEventListener('click', function() {
+      var expanded = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', !expanded);
+      document.getElementById('flyerCollapsible').classList.toggle('expanded', !expanded);
+    });
   </script>
   <script src="/map-viewer.js"></script>
 </body>
