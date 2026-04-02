@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voting Records — Walden's Revisited</title>
-  <meta name="description" content="Official voting records for Walden's Revisited community governance decisions, including the 2019 Restated Declaration of Protective Covenants.">
+  <title>Governance — Walden's Revisited</title>
+  <meta name="description" content="Community governance for Walden's Revisited, including elections, voting records, and the Restated Declaration of Protective Covenants.">
   <meta property="og:site_name" content="Walden's Revisited">
-  <meta property="og:title" content="Walden's Revisited — Community Governance Voting Records">
-  <meta property="og:description" content="Official archive of all community governance votes for Walden's Revisited, including the 2019 Restated Declaration that passed with 80% approval.">
+  <meta property="og:title" content="Walden's Revisited — Community Governance">
+  <meta property="og:description" content="Community governance for Walden's Revisited, including board elections, voting records, and the 2019 Restated Declaration of Protective Covenants.">
   <meta property="og:image" content="https://waldensrevisited.org/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://waldensrevisited.org/voting-records.html">
+  <meta property="og:url" content="https://waldensrevisited.org/governance.html">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://waldensrevisited.org/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,6 +171,10 @@
       background: rgba(46,80,56,0.12);
       color: var(--forest-deep);
     }
+    .result-badge.upcoming {
+      background: rgba(180,130,40,0.14);
+      color: #8a6d1b;
+    }
 
     body .section { padding: var(--space-md) 0 var(--space-md); }
     .empty-note {
@@ -211,11 +215,11 @@
       </button>
       <ul class="nav-links" id="navLinks">
         <li><a href="/">Home</a></li>
-        <li><a href="/#about">About</a></li>
+        <li><a href="/#history">History</a></li>
         <li><a href="/#community">Community</a></li>
         <li><a href="/#common-areas">Common Areas</a></li>
         <li><a href="/#covenants">Covenants</a></li>
-        <li><a href="/voting-records.html">Voting Records</a></li>
+        <li><a href="/governance.html">Governance</a></li>
       </ul>
     </div>
   </nav>
@@ -228,8 +232,8 @@
         Back to Home
       </a>
       <span class="section-tag">Community Governance</span>
-      <h1>Voting Records</h1>
-      <p>This page catalogs all formal votes conducted by the Walden's Revisited community. Each record links to the full details, including individual lot-owner signatures as they appear in the publicly filed instruments with the Delaware County Recorder's Office.</p>
+      <h1>Governance</h1>
+      <p>Community governance for Walden's Revisited, including board elections, voting records, and official decisions. Each record links to full details, documents, and&mdash;where applicable&mdash;individual lot-owner signatures as they appear in publicly filed instruments.</p>
     </div>
   </section>
 
@@ -237,6 +241,46 @@
   <section class="section">
     <div class="container">
       <div class="records-grid">
+
+        <!-- 2026 Board Election -->
+        <div class="record-card">
+          <div class="record-card-header">
+            <div class="record-date">2026 &mdash; Date TBD</div>
+            <h3>Special Meeting of Members &mdash; Board Election</h3>
+          </div>
+          <div class="record-card-body">
+            <p>A Special Meeting being called by members to elect three Directors to the Board, restoring governance after all prior Board members resigned in 2020. The newly elected Board will also elect officers (President, Secretary, Treasurer). Called pursuant to Bylaws &sect;3.02 and Ohio Revised Code &sect;1702.17(A)(3).</p>
+            <div class="record-stats">
+              <div class="record-stat">
+                <div class="num">25</div>
+                <div class="label">Voting Parcels</div>
+              </div>
+              <div class="record-stat">
+                <div class="num">13</div>
+                <div class="label">Quorum Required</div>
+              </div>
+              <div class="record-stat">
+                <div class="num">3</div>
+                <div class="label">Director Seats</div>
+              </div>
+            </div>
+            <span class="result-badge upcoming">Upcoming</span>
+          </div>
+          <div class="record-card-actions">
+            <a href="/governance/2026-board-election/" class="record-btn record-btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              View Election Details
+            </a>
+            <button onclick="openPdfViewer('/governance/2026-board-election/Special_Meeting_Notice_Fillable.pdf', 'Special Meeting Notice &amp; Proxy Form (6 pages)')" class="record-btn record-btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              View Meeting Notice (PDF)
+            </button>
+            <a href="/governance/2026-board-election/Special_Meeting_Notice_Fillable.pdf" download class="record-btn record-btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Meeting Notice &amp; Proxy Form
+            </a>
+          </div>
+        </div>
 
         <!-- 2019 Restated Declaration -->
         <div class="record-card">
@@ -288,7 +332,7 @@
       </div>
 
       <div class="empty-note">
-        <p>This archive currently contains only the 2019 Restated Declaration vote. Additional voting records will be added here as future community governance actions are conducted and recorded.</p>
+        <p>Additional governance records will be added here as community actions are conducted and recorded.</p>
       </div>
     </div>
   </section>
@@ -303,11 +347,11 @@
         </div>
         <div class="footer-links">
           <a href="/">Home</a>
-          <a href="/#about">About</a>
+          <a href="/#history">History</a>
           <a href="/#community">Community</a>
           <a href="/#common-areas">Common Areas</a>
           <a href="/#covenants">Covenants</a>
-          <a href="/voting-records.html">Voting Records</a>
+          <a href="/governance.html">Governance</a>
         </div>
       </div>
       <div class="footer-bottom">

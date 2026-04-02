@@ -92,8 +92,13 @@ export default {
       colo: colo,
     }));
 
-    // Check for individual signer URLs: /votes/2019-restated-declaration/{signer-key}
+    // Redirect old voting-records URL to governance
     const pathname = url.pathname.replace(/\/$/, ''); // strip trailing slash
+    if (pathname === '/voting-records.html' || pathname === '/voting-records') {
+      return Response.redirect(new URL('/governance.html', url.origin).toString(), 301);
+    }
+
+    // Check for individual signer URLs: /votes/2019-restated-declaration/{signer-key}
     if (pathname.startsWith(VOTE_BASE + '/') && pathname !== VOTE_BASE) {
       const signerKey = pathname.substring(VOTE_BASE.length + 1);
       const signer = signerData[signerKey];

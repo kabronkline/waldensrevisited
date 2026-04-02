@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 Board Election — Special Meeting of Members — Walden's Revisited</title>
+  <meta name="description" content="Special Meeting of Members to elect three Directors to the Board of Walden's Revisited Inc., restoring community governance after a six-year vacancy.">
+  <meta property="og:site_name" content="Walden's Revisited">
+  <meta property="og:title" content="Walden's Revisited — 2026 Board Election">
+  <meta property="og:description" content="Special Meeting of Members to elect three Directors to the Board of Walden's Revisited Inc., restoring community governance after a six-year vacancy.">
+  <meta property="og:image" content="https://waldensrevisited.org/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://waldensrevisited.org/governance/2026-board-election/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://waldensrevisited.org/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .vr-hero {
+      padding: calc(var(--space-xl) + 20px) 0 var(--space-md);
+      background: var(--mist);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
+    }
+    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
+    .vr-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+    .vr-hero p { max-width: 700px; color: var(--stone); line-height: 1.8; margin: 0; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; color: var(--forest-mid);
+      margin-bottom: var(--space-sm); transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--forest-deep); }
+    .vr-hero .section-tag {
+      display: block; padding: 0; margin-bottom: var(--space-xs);
+    }
+    .vr-hero .section-tag::before,
+    .vr-hero .section-tag::after { display: none; }
+
+    body .section { padding: var(--space-md) 0 var(--space-md); }
+
+    .meeting-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .meeting-detail {
+      background: var(--parchment);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: 4px;
+      border-left: 3px solid var(--pond-reflect);
+    }
+    .meeting-detail .detail-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--stone);
+      margin-bottom: 4px;
+    }
+    .meeting-detail .detail-value {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--forest-deep);
+      font-weight: 600;
+    }
+    .meeting-detail .detail-value.tbd {
+      color: var(--stone);
+      font-style: italic;
+    }
+
+    .election-stats {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-md);
+    }
+    .election-stat {
+      background: var(--parchment);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: 4px;
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    .election-stat .num {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      line-height: 1.2;
+    }
+    .election-stat .label {
+      font-size: 0.75rem;
+      color: var(--stone);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .subsection {
+      margin-bottom: var(--space-md);
+    }
+    .subsection h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-sm);
+    }
+    .subsection p {
+      color: var(--stone);
+      line-height: 1.8;
+      max-width: 700px;
+    }
+
+    .nominees-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+    .nominee-card {
+      background: var(--parchment);
+      padding: var(--space-md);
+      border-radius: 4px;
+      border-top: 3px solid var(--forest-mid);
+    }
+    .nominee-card .nominee-name {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      margin-bottom: 4px;
+    }
+    .nominee-card .nominee-detail {
+      font-size: 0.85rem;
+      color: var(--stone);
+      line-height: 1.6;
+    }
+
+    .callers-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 var(--space-sm);
+    }
+    .callers-list li {
+      padding: var(--space-xs) 0;
+      border-bottom: 1px solid rgba(139,115,85,0.1);
+      color: var(--stone);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .callers-list li:last-child { border-bottom: none; }
+    .callers-list li strong {
+      color: var(--earth);
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: var(--space-md);
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .action-btn:hover { transform: translateY(-1px); }
+    .action-btn svg { width: 16px; height: 16px; }
+    .action-btn-primary {
+      background: var(--forest-mid);
+      color: #fff;
+    }
+    .action-btn-primary:hover { background: var(--forest-deep); }
+    .action-btn-secondary {
+      background: rgba(139,115,85,0.1);
+      color: var(--earth);
+    }
+    .action-btn-secondary:hover { background: rgba(139,115,85,0.18); }
+
+    .info-note {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--linen);
+      border-radius: 4px;
+      border-left: 3px solid var(--stone);
+    }
+    .info-note p {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .info-note p + p { margin-top: var(--space-xs); }
+
+    @media (max-width: 768px) {
+      .meeting-details { grid-template-columns: 1fr 1fr; }
+      .nominees-grid { grid-template-columns: 1fr; }
+      .election-stats { flex-direction: row; }
+      .action-buttons { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .meeting-details { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 6C16 6 10 11 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 11 16 6 16 6Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14V20M14 16L16 14L18 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/governance.html">Governance</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="vr-hero">
+    <div class="container">
+      <a href="/governance.html" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Governance
+      </a>
+      <span class="section-tag">2026 Board Election</span>
+      <h1>Special Meeting of Members</h1>
+      <p>A Special Meeting of the Members of Walden's Revisited Inc. is being called to elect three Directors to the Board and restore community governance. All prior Board members resigned in 2020, and no elections have been held since that time. This page will be updated once the meeting has been formally called.</p>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <section class="section">
+    <div class="container">
+
+      <!-- Meeting Details -->
+      <div class="subsection">
+        <h2>Meeting Details</h2>
+        <div class="meeting-details">
+          <div class="meeting-detail">
+            <div class="detail-label">Date</div>
+            <div class="detail-value tbd">To Be Determined</div>
+          </div>
+          <div class="meeting-detail">
+            <div class="detail-label">Time</div>
+            <div class="detail-value tbd">To Be Determined</div>
+          </div>
+          <div class="meeting-detail">
+            <div class="detail-label">Location</div>
+            <div class="detail-value tbd">To Be Determined</div>
+          </div>
+          <div class="meeting-detail">
+            <div class="detail-label">Date of Notice</div>
+            <div class="detail-value">April 4, 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Numbers -->
+      <div class="election-stats">
+        <div class="election-stat">
+          <div class="num">25</div>
+          <div class="label">Voting Parcels</div>
+        </div>
+        <div class="election-stat">
+          <div class="num">13</div>
+          <div class="label">Quorum Required</div>
+        </div>
+        <div class="election-stat">
+          <div class="num">3</div>
+          <div class="label">Director Seats</div>
+        </div>
+      </div>
+
+      <!-- Purpose -->
+      <div class="subsection">
+        <h2>Purpose of the Meeting</h2>
+        <p><strong>1. Election of Directors</strong> &mdash; To elect three Directors to the Board of Directors to serve staggered terms of one, two, and three years, per Bylaws &sect;4.01.</p>
+        <p><strong>2. Election of Officers</strong> &mdash; The newly elected Board will elect officers (President, Secretary, Treasurer) from among the Directors, per Bylaws &sect;5.01.</p>
+        <p><strong>3. Other Business</strong> &mdash; Any other business that may properly come before the meeting or any adjournment thereof.</p>
+      </div>
+
+      <!-- Nominees -->
+      <div class="subsection">
+        <h2>Nominees for Director</h2>
+        <p>The following individuals have been nominated and have confirmed their willingness to serve:</p>
+        <div class="nominees-grid">
+          <div class="nominee-card">
+            <div class="nominee-name">Kabron Kline</div>
+            <div class="nominee-detail">Tract 25 &mdash; 480 Brindle Rd</div>
+          </div>
+          <div class="nominee-card">
+            <div class="nominee-name">Bobbie Fussichen</div>
+            <div class="nominee-detail">Tract 22 &mdash; 554 Brindle Rd</div>
+          </div>
+          <div class="nominee-card">
+            <div class="nominee-name">John F. Dranschak</div>
+            <div class="nominee-detail">Tract 24 &mdash; 494 Brindle Rd</div>
+          </div>
+        </div>
+        <p>Additional nominees are welcome. Submit nominations by email to <a href="mailto:elections@waldensrevisited.org">elections@waldensrevisited.org</a>, by mail to 480 Brindle Rd, Delaware, OH 43015, or in person at the same address. Nominations may also be made from the floor at the meeting. A Nomination Form is included in the meeting notice PDF.</p>
+      </div>
+
+      <!-- Authority -->
+      <div class="subsection">
+        <h2>Authority for This Meeting</h2>
+        <p>This Special Meeting will be called pursuant to Bylaws &sect;3.02 and Ohio Revised Code &sect;1702.17(A)(3), which permits the lesser of 10% or 25 voting members to call a meeting. Three members representing distinct parcels satisfy this threshold.</p>
+      </div>
+
+      <!-- Meeting Called By -->
+      <div class="subsection">
+        <h2>Meeting Called By</h2>
+        <ul class="callers-list">
+          <li><strong>Sean Avner</strong> &mdash; Tract 27, 420 Brindle Rd</li>
+          <li><strong>Kabron Kline</strong> &mdash; Tract 25, 480 Brindle Rd</li>
+          <li><strong>John F. Dranschak</strong> &mdash; Tract 24, 494 Brindle Rd</li>
+        </ul>
+      </div>
+
+      <!-- Proxy Voting -->
+      <div class="subsection">
+        <h2>Proxy Voting</h2>
+        <p>If you are unable to attend in person, you may appoint a proxy to vote on your behalf. A Proxy Form is included on pages 3&ndash;4 of the meeting notice. To be valid, your proxy must be in writing, signed by the Owner(s), and filed with the Secretary of the meeting before or at the time of the meeting.</p>
+        <p>Return completed proxy forms to: <strong>Kabron Kline</strong> &mdash; 480 Brindle Rd, Delaware, OH 43015 &mdash; <a href="mailto:elections@waldensrevisited.org">elections@waldensrevisited.org</a>. Email is preferable. Proxy forms must be received prior to the day of the meeting.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="action-buttons">
+        <button onclick="openPdfViewer('/governance/2026-board-election/Special_Meeting_Notice_Fillable.pdf', 'Special Meeting Notice &amp; Proxy Form (6 pages)')" class="action-btn action-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          View Meeting Notice (PDF)
+        </button>
+        <a href="/governance/2026-board-election/Special_Meeting_Notice_Fillable.pdf" download class="action-btn action-btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Meeting Notice &amp; Proxy Form
+        </a>
+        <a href="mailto:elections@waldensrevisited.org" class="action-btn action-btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email elections@waldensrevisited.org
+        </a>
+      </div>
+
+      <!-- Info Note -->
+      <div class="info-note">
+        <p>Every Owner of a Lot or Tract is a Member entitled to one vote per Lot or Tract owned. All current Owners are in good standing. Your participation&mdash;either in person or by proxy&mdash;is essential to reach quorum.</p>
+        <p>Questions? Contact Kabron Kline at <a href="mailto:elections@waldensrevisited.org">elections@waldensrevisited.org</a> or 480 Brindle Rd, Delaware, OH 43015.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/#history">History</a>
+          <a href="/#community">Community</a>
+          <a href="/#common-areas">Common Areas</a>
+          <a href="/#covenants">Covenants</a>
+          <a href="/governance.html">Governance</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script src="/pdf-viewer.js" type="module"></script>
+</body>
+</html>
