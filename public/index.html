@@ -744,21 +744,6 @@
         }
       }, { passive: false });
 
-      // Load PDF when viewer scrolls into view
-      var loaded = false;
-      var obs = new IntersectionObserver(function(entries) {
-        if (entries[0].isIntersecting && !loaded) {
-          loaded = true;
-          pdfjsLib.getDocument('/original-flyer.pdf').promise.then(function(d) {
-            doc = d;
-            document.querySelectorAll('.flyer-page-count').forEach(function(el) { el.textContent = d.numPages; });
-            buildPages();
-          });
-          obs.disconnect();
-        }
-      }, { threshold: 0.1 });
-      obs.observe(document.getElementById('flyerViewer'));
-
       // Refit on resize
       var resizeTimer;
       window.addEventListener('resize', function() {
@@ -767,6 +752,16 @@
           if (doc) { baseScale = 1.0; rerenderPages(); }
         }, 200);
       });
+
+      // Load PDF on first expand
+      window._flyerLoadPdf = function() {
+        if (doc) { baseScale = 1.0; rerenderPages(); return; }
+        pdfjsLib.getDocument('/original-flyer.pdf').promise.then(function(d) {
+          doc = d;
+          document.querySelectorAll('.flyer-page-count').forEach(function(el) { el.textContent = d.numPages; });
+          buildPages();
+        });
+      };
     })();
 
     // Flyer collapsible toggle
@@ -774,6 +769,9 @@
       var expanded = this.getAttribute('aria-expanded') === 'true';
       this.setAttribute('aria-expanded', !expanded);
       document.getElementById('flyerCollapsible').classList.toggle('expanded', !expanded);
+      if (!expanded && window._flyerLoadPdf) {
+        window._flyerLoadPdf();
+      }
     });
   </script>
   <script src="/map-viewer.js"></script>
