@@ -548,6 +548,7 @@ function openMapViewer() {
   ensureMapModal();
   document.getElementById('mapModal').classList.add('active');
   document.body.style.overflow = 'hidden';
+  history.replaceState(null, '', '#interactive-map');
 
   if (!mapInstance) {
     loadLeaflet(function() {
@@ -563,6 +564,9 @@ function closeMapViewer() {
   if (modal) modal.classList.remove('active');
   document.body.style.overflow = '';
   stopGeolocation();
+  if (window.location.hash === '#interactive-map') {
+    history.replaceState(null, '', window.location.pathname + '#common-areas');
+  }
 }
 
 // Keyboard shortcut
@@ -570,6 +574,23 @@ document.addEventListener('keydown', function(e) {
   var modal = document.getElementById('mapModal');
   if (!modal || !modal.classList.contains('active')) return;
   if (e.key === 'Escape') closeMapViewer();
+});
+
+// Auto-open from URL hash
+if (window.location.hash === '#interactive-map') {
+  openMapViewer();
+}
+
+// Handle back/forward navigation
+window.addEventListener('hashchange', function() {
+  if (window.location.hash === '#interactive-map') {
+    openMapViewer();
+  } else {
+    var modal = document.getElementById('mapModal');
+    if (modal && modal.classList.contains('active')) {
+      closeMapViewer();
+    }
+  }
 });
 
 // Export
