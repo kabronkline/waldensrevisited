@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Board Roles &amp; Responsibilities — Walden's Revisited</title>
+  <meta name="description" content="Roles and responsibilities of the Board of Directors and Officers of Walden's Revisited Inc., as defined by the 2019 Restated Declaration and Code of Regulations.">
+  <meta property="og:site_name" content="Walden's Revisited">
+  <meta property="og:title" content="Walden's Revisited — Board Roles & Responsibilities">
+  <meta property="og:description" content="Roles and responsibilities of the Board of Directors and Officers of Walden's Revisited Inc., as defined by the 2019 Restated Declaration and Code of Regulations.">
+  <meta property="og:image" content="https://waldensrevisited.org/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://waldensrevisited.org/governance/board-roles/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://waldensrevisited.org/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .vr-hero {
+      padding: calc(var(--space-xl) + 20px) 0 var(--space-md);
+      background: var(--mist);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
+    }
+    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
+    .vr-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+    .vr-hero p { color: var(--stone); line-height: 1.8; margin: 0; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; color: var(--forest-mid);
+      margin-bottom: var(--space-sm); transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--forest-deep); }
+    .vr-hero .section-tag {
+      display: block; padding: 0; margin-bottom: var(--space-xs);
+    }
+    .vr-hero .section-tag::before,
+    .vr-hero .section-tag::after { display: none; }
+
+    body .section { padding: var(--space-md) 0 var(--space-md); }
+
+    .subsection {
+      margin-bottom: var(--space-md);
+    }
+    .subsection h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-sm);
+    }
+    .subsection h3 {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: var(--forest-deep);
+      margin-bottom: var(--space-xs);
+    }
+    .subsection p {
+      color: var(--stone);
+      line-height: 1.8;
+    }
+    .subsection ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 var(--space-sm);
+    }
+    .subsection ul li {
+      padding: var(--space-xs) 0;
+      border-bottom: 1px solid rgba(139,115,85,0.1);
+      color: var(--stone);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding-left: 1.2em;
+      position: relative;
+    }
+    .subsection ul li::before {
+      content: "\2022";
+      color: var(--forest-mid);
+      font-weight: 700;
+      position: absolute;
+      left: 0;
+    }
+    .subsection ul li:last-child { border-bottom: none; }
+
+    .role-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+    .role-card {
+      background: var(--parchment);
+      padding: var(--space-md);
+      border-radius: 4px;
+      border-top: 3px solid var(--forest-mid);
+    }
+    .role-card .role-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      margin-bottom: 8px;
+    }
+    .role-card p {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .board-stats {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-md);
+    }
+    .board-stat {
+      background: var(--parchment);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: 4px;
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    .board-stat .num {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--forest-deep);
+      line-height: 1.2;
+    }
+    .board-stat .label {
+      font-size: 0.75rem;
+      color: var(--stone);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .info-note {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--linen);
+      border-radius: 4px;
+      border-left: 3px solid var(--stone);
+    }
+    .info-note p {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .info-note p + p { margin-top: var(--space-xs); }
+
+    @media (max-width: 768px) {
+      .role-cards { grid-template-columns: 1fr; }
+      .board-stats { flex-direction: row; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 6C16 6 10 11 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 11 16 6 16 6Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14V20M14 16L16 14L18 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/governance.html">Governance</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="vr-hero">
+    <div class="container">
+      <a href="/governance.html" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Governance
+      </a>
+      <span class="section-tag">Governance</span>
+      <h1>Board Roles &amp; Responsibilities</h1>
+      <p>The powers, duties, and qualifications of Directors and Officers as defined by the 2019 Restated Declaration and Code of Regulations (Bylaws) of Walden's Revisited Inc.</p>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <section class="section">
+    <div class="container">
+
+      <!-- At a Glance -->
+      <div class="board-stats">
+        <div class="board-stat">
+          <div class="num">3</div>
+          <div class="label">Directors</div>
+        </div>
+        <div class="board-stat">
+          <div class="num">3</div>
+          <div class="label">Officers</div>
+        </div>
+        <div class="board-stat">
+          <div class="num">3 yr</div>
+          <div class="label">Director Terms</div>
+        </div>
+        <div class="board-stat">
+          <div class="num">4/yr</div>
+          <div class="label">Minimum Meetings</div>
+        </div>
+      </div>
+
+      <!-- Board of Directors -->
+      <div class="subsection">
+        <h2>Board of Directors</h2>
+        <p>The Board of Directors holds all power and authority of the Association. It consists of three individuals who serve staggered three-year terms&mdash;initially one Director receives a one-year term, one receives two years, and one receives three years&mdash;so that one seat is up for election each year thereafter. A majority of Directors (two) constitutes a quorum. The Board must meet at least once per calendar quarter.</p>
+
+        <h3>Eligibility</h3>
+        <p>Directors must be an Owner, the spouse of an Owner, or a principal, member, partner, director, officer, trustee, or employee of an entity that is an Owner. Directors receive no compensation but may be reimbursed for actual expenses incurred on behalf of the Association.</p>
+
+        <h3>Powers &amp; Duties</h3>
+        <ul>
+          <li>Exclusive management and control of the Common Areas</li>
+          <li>Making and enforcing rules and regulations governing property use</li>
+          <li>Imposing sanctions on Owners for violations&mdash;monetary fines, suspension of voting rights, and suspension of Common Area access</li>
+          <li>Establishing, levying, and collecting Assessments</li>
+          <li>Obtaining and maintaining insurance for the Association</li>
+          <li>Employing a manager or managing agent</li>
+          <li>Granting easements over Common Areas</li>
+          <li>Taking legal action to enforce the Declaration</li>
+          <li>Borrowing funds and investing excess funds</li>
+          <li>Creating committees and authorizing contracts</li>
+        </ul>
+      </div>
+
+      <!-- Officers -->
+      <div class="subsection">
+        <h2>Officers</h2>
+        <p>The Association has three required officers&mdash;President, Secretary, and Treasurer&mdash;all elected by the Board from among its own members. Two or more offices may be held by the same person. Officers serve at the pleasure of the Board and receive no compensation.</p>
+      </div>
+
+      <!-- Officer Cards -->
+      <div class="role-cards">
+        <div class="role-card">
+          <div class="role-title">President</div>
+          <p>Presides at all meetings of Members and the Board. Exercises general supervision over the Association&rsquo;s affairs and performs all duties incident to the office.</p>
+        </div>
+        <div class="role-card">
+          <div class="role-title">Secretary</div>
+          <p>Keeps accurate records of all proceedings of Members and the Board, including records of names and addresses of Members. Upon leaving office, delivers all books, records, and documents to their successor or to the President.</p>
+        </div>
+        <div class="role-card">
+          <div class="role-title">Treasurer</div>
+          <p>Receives and safely keeps all money, securities, and intangible property. Disburses funds under the Board&rsquo;s direction. Keeps correct and complete books and records of account. Presents financial abstracts at annual meetings. Gives bond as required. Upon leaving office, delivers all money and property to their successor or the President.</p>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div class="info-note">
+        <p><strong>Sources:</strong> 2019 Restated Declaration of Covenants, Easements, Conditions, Restrictions and Assessments for Walden&rsquo;s Revisited&mdash;Sections VII (Membership and Voting Rights) and VIII (Rights and Obligations of the Association); Code of Regulations (Bylaws)&mdash;Articles IV (Board of Directors) and V (Officers and Committees).</p>
+        <p>Recorded April 25, 2019 &mdash; Book 1631, Page 2716 &mdash; Delaware County Recorder&rsquo;s Office.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Walden's Revisited</span>
+          <p>A covenant-protected community in Delaware County, Ohio.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/#history">History</a>
+          <a href="/#community">Community</a>
+          <a href="/#common-areas">Common Areas</a>
+          <a href="/#covenants">Covenants</a>
+          <a href="/governance.html">Governance</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
