@@ -3,12 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Membership Agreement — Walden's Revisited</title>
+  <title>Terms of Service — Walden's Revisited</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
+  <style>
+    .tos-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(72px + var(--space-md)) var(--space-md) var(--space-md);
+      background: var(--mist);
+    }
+    .tos-card {
+      background: var(--parchment);
+      border: 1px solid rgba(139, 115, 85, 0.12);
+      border-radius: 12px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(45, 74, 62, 0.06);
+      overflow: hidden;
+    }
+    .tos-header {
+      padding: var(--space-md) var(--space-md) var(--space-sm);
+      text-align: center;
+    }
+    .tos-header h1 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--forest-deep);
+      margin-bottom: 4px;
+    }
+    .tos-header p {
+      font-size: 0.85rem;
+      color: var(--stone);
+    }
+    .tos-scroll {
+      margin: 0 var(--space-md);
+      border: 1px solid rgba(139, 115, 85, 0.1);
+      border-radius: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: var(--space-sm);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--stone);
+      background: var(--mist);
+    }
+    .tos-scroll h3 { font-size: 0.8rem; color: var(--charcoal); margin: 8px 0 2px; }
+    .tos-scroll ol { padding-left: 16px; }
+    .tos-scroll li { margin-bottom: 4px; }
+    .tos-footer {
+      padding: var(--space-sm) var(--space-md) var(--space-md);
+    }
+    .tos-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: var(--space-sm) 0;
+      font-size: 0.85rem;
+      color: var(--charcoal);
+      line-height: 1.4;
+    }
+    .tos-check input { margin-top: 2px; accent-color: var(--forest-deep); flex-shrink: 0; }
+    .tos-privacy {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+      padding: 8px 12px;
+      background: var(--mist);
+      border-radius: 6px;
+      margin-bottom: var(--space-sm);
+      font-size: 0.85rem;
+      color: var(--charcoal);
+    }
+    .tos-privacy select {
+      padding: 4px 8px;
+      border: 1px solid rgba(139,115,85,0.2);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      background: white;
+    }
+  </style>
 </head>
 <body>
 
@@ -26,84 +106,59 @@
     </div>
   </nav>
 
-  <div class="agreement-page">
-    <div class="agreement-card">
-      <h1>Membership Agreement</h1>
+  <div class="tos-page">
+    <div class="tos-card">
+      <div class="tos-header">
+        <h1>Welcome to Walden's Revisited</h1>
+        <p>Please review and accept the terms of service to continue.</p>
+      </div>
 
-      <div class="agreement-text">
-        <h2>Walden's Revisited Homeowners Association — Member Acknowledgment and Agreement</h2>
-
-        <p>By signing this agreement, I hereby acknowledge and affirm the following:</p>
-
+      <div class="tos-scroll">
+        <h3>Walden's Revisited HOA &mdash; Terms of Service</h3>
         <ol>
-          <li><strong>Membership Status.</strong> I am a property owner, co-owner, authorized agent of a property-owning entity, or authorized resident of a lot or tract within the Walden's Revisited subdivision located in Scioto Township, Delaware County, Ohio, and am therefore a member of the Walden's Revisited Homeowners Association ("Association").</li>
-
-          <li><strong>Acknowledgment of Governing Declaration.</strong> I acknowledge that I have fully read and agree to be bound by the <strong>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</strong>, filed March 9, 2019, as Instrument #2019-00009690 with the Delaware County Recorder's Office (the "2019 Restated Declaration"), together with any amendments thereto. I understand that the 2019 Restated Declaration is the currently effective governing document for the Association and that my property and my conduct as a member are subject to all terms, conditions, covenants, restrictions, and obligations set forth therein, including but not limited to provisions regarding assessments, common areas, easements, and use restrictions.</li>
-
-          <li><strong>Bylaws.</strong> I acknowledge that I have read and agree to the Bylaws of the Association as attached to and incorporated within the 2019 Restated Declaration, and that I will comply with all governance procedures set forth therein.</li>
-
-          <li><strong>Good Faith Participation.</strong> I agree to participate in Association governance in good faith, including but not limited to voting on matters presented to the membership, attending meetings when reasonably possible, and cooperating with the Board of Directors in the administration of Association affairs.</li>
-
-          <li><strong>Accurate Information.</strong> I certify that all information I provide through this members portal is true, accurate, and complete to the best of my knowledge. I agree to update my information promptly if it changes.</li>
-
-          <li><strong>Acceptable Use.</strong> I agree to use this members portal solely for purposes related to my membership in the Association. I will not share my login credentials, misrepresent my identity, or use the portal in any manner that is harmful, fraudulent, or inconsistent with the purposes of the Association.</li>
-
-          <li><strong>Privacy and Confidentiality.</strong> I understand that information shared within the members area may include personal information of other members. I agree not to use, disclose, or distribute other members' personal information for any purpose outside of legitimate Association business without their express consent.</li>
-
-          <li><strong>Content Standards.</strong> I understand that any content I upload, including profile pictures and pet profiles, may be reviewed by Association officers or administrators. Content that is inappropriate, offensive, or unrelated to the community may be removed.</li>
-
-          <li><strong>Electronic Agreement.</strong> I understand that this electronic acknowledgment constitutes a legally binding agreement, equivalent to a handwritten signature, pursuant to the Electronic Signatures in Global and National Commerce Act (E-SIGN Act, 15 U.S.C. &sect; 7001 et seq.) and the Uniform Electronic Transactions Act as adopted in Ohio (Ohio Rev. Code &sect; 1306.01 et seq.).</li>
+          <li><strong>Membership.</strong> I am a property owner, co-owner, authorized agent, or authorized resident within the Walden's Revisited subdivision, Scioto Township, Delaware County, Ohio.</li>
+          <li><strong>Governing Documents.</strong> I have read and agree to be bound by the Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, filed March 9, 2019, Instrument #2019-00009690, Delaware County Recorder's Office, and its attached Bylaws (collectively, the "Declaration").</li>
+          <li><strong>Compliance.</strong> My property and conduct are subject to all terms, covenants, restrictions, and obligations in the Declaration, including assessments, common areas, easements, and use restrictions.</li>
+          <li><strong>Good Faith.</strong> I will participate in Association governance in good faith, vote on matters presented, attend meetings when possible, and cooperate with the Board of Directors.</li>
+          <li><strong>Accurate Information.</strong> All information I provide is true, accurate, and complete. I will update it promptly if it changes.</li>
+          <li><strong>Acceptable Use.</strong> I will use this portal solely for Association purposes. I will not share credentials, misrepresent my identity, or act in a harmful or fraudulent manner.</li>
+          <li><strong>Privacy.</strong> I will not use, disclose, or distribute other members' personal information outside of legitimate Association business.</li>
+          <li><strong>Content.</strong> Uploaded content may be reviewed by officers or administrators and removed if inappropriate.</li>
+          <li><strong>Electronic Signature.</strong> This acknowledgment is a legally binding electronic signature under the E-SIGN Act (15 U.S.C. &sect; 7001) and Ohio Rev. Code &sect; 1306.01.</li>
         </ol>
       </div>
 
-      <label class="agreement-checkbox">
-        <input type="checkbox" id="agreeCheck">
-        <span>I have fully read the 2019 Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited and its attached Bylaws. I understand, accept, and agree to be bound by their terms. I confirm that I am a property owner, authorized agent, or authorized resident of Walden's Revisited.</span>
-      </label>
-
-      <!-- Privacy preference -->
-      <div style="background:var(--mist);border:1px solid rgba(139,115,85,0.1);border-radius:8px;padding:var(--space-sm);margin-bottom:var(--space-md);">
-        <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">Privacy Preference</h3>
-        <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-xs);">Choose whether other members can see your name and profile in the community directory. You can change this anytime in your profile settings.</p>
-        <label style="display:flex;align-items:center;gap:10px;font-size:0.95rem;cursor:pointer;margin-bottom:6px;">
-          <input type="radio" name="privacy" value="visible" checked style="accent-color:var(--forest-deep);"> <strong>Visible</strong> — My name and profile are visible to other members
+      <div class="tos-footer">
+        <label class="tos-check">
+          <input type="checkbox" id="agreeCheck">
+          <span>I agree to the Terms of Service and the 2019 Restated Declaration.</span>
         </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:0.95rem;cursor:pointer;">
-          <input type="radio" name="privacy" value="anonymous" style="accent-color:var(--forest-deep);"> <strong>Anonymous</strong> — Hide my name and profile from other members
-        </label>
-      </div>
 
-      <div class="agreement-meta" id="agreeMeta">
-        <strong>Date:</strong> <span id="agreeDate"></span><br>
-        <strong>Signed by:</strong> <span id="agreeName"></span> (<span id="agreeEmail"></span>)
-      </div>
+        <div class="tos-privacy">
+          <span>Profile visibility:</span>
+          <select id="privacySelect">
+            <option value="visible">Visible to members</option>
+            <option value="anonymous">Anonymous</option>
+          </select>
+        </div>
 
-      <button class="btn btn-primary btn-block" id="agreeBtn" disabled>I Agree</button>
+        <button class="btn btn-primary btn-block" id="agreeBtn" disabled>Continue</button>
+      </div>
     </div>
   </div>
 
   <script>
     const session = window.__session;
-
-    document.getElementById('agreeDate').textContent = new Date().toLocaleString();
-    if (session) {
-      document.getElementById('agreeName').textContent = session.name;
-      document.getElementById('agreeEmail').textContent = session.email;
-    }
-
     const checkbox = document.getElementById('agreeCheck');
     const btn = document.getElementById('agreeBtn');
 
-    checkbox.addEventListener('change', () => {
-      btn.disabled = !checkbox.checked;
-    });
+    checkbox.addEventListener('change', () => { btn.disabled = !checkbox.checked; });
 
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      btn.textContent = 'Submitting...';
-
+      btn.textContent = 'Please wait...';
       try {
-        const isAnonymous = document.querySelector('input[name="privacy"]:checked').value === 'anonymous';
+        const isAnonymous = document.getElementById('privacySelect').value === 'anonymous';
         const res = await fetch('/api/me/agreement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -111,16 +166,16 @@
         });
         const data = await res.json();
         if (data.success) {
-          window.location.href = session.role === 'pending' ? '/members/pending.html' : '/members/';
+          window.location.href = session && session.role === 'pending' ? '/members/pending.html' : '/members/';
         } else {
-          alert('Error: ' + (data.error || 'Unknown error'));
+          alert(data.error || 'Error');
           btn.disabled = false;
-          btn.textContent = 'I Agree';
+          btn.textContent = 'Continue';
         }
       } catch (e) {
         alert('Network error. Please try again.');
         btn.disabled = false;
-        btn.textContent = 'I Agree';
+        btn.textContent = 'Continue';
       }
     });
   </script>
