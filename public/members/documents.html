@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documents — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+  <style>
+    .doc-list { list-style: none; padding: 0; }
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.08);
+      transition: background 0.15s;
+    }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-item:hover { background: var(--mist); border-radius: 8px; }
+    .doc-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(107, 143, 122, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--forest-deep);
+    }
+    .doc-info { flex: 1; }
+    .doc-info h4 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      color: var(--forest-deep);
+      margin-bottom: 2px;
+    }
+    .doc-info p {
+      font-size: 0.85rem;
+      color: var(--stone);
+      line-height: 1.4;
+    }
+    .doc-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/documents.html">Documents</a></li>
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container" style="max-width:750px;">
+
+      <div class="members-header">
+        <h1>Documents</h1>
+        <p>Official governing documents for the Walden's Revisited Homeowners Association.</p>
+      </div>
+
+      <!-- Governing Documents -->
+      <div class="profile-section">
+        <h2>Governing Documents</h2>
+        <ul class="doc-list">
+          <li class="doc-item">
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="doc-info">
+              <h4>Restated Declaration of Protective Covenants &amp; Restrictions</h4>
+              <p>Filed March 9, 2019 &middot; Instrument #2019-00009690 &middot; Delaware County Recorder's Office. Includes attached Bylaws.</p>
+            </div>
+            <div class="doc-actions">
+              <a href="/restated-declaration-2019.pdf" class="btn btn-secondary btn-sm" download>Download</a>
+              <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/restated-declaration-2019.pdf', 'Restated Declaration (2019)')">View</button>
+            </div>
+          </li>
+          <li class="doc-item">
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="doc-info">
+              <h4>Metes and Bounds — Common Area</h4>
+              <p>Legal description and survey of the common use easement areas within Walden's Revisited. Recorded 2018.</p>
+            </div>
+            <div class="doc-actions">
+              <a href="/metes-and-bounds-2018.pdf" class="btn btn-secondary btn-sm" download>Download</a>
+              <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/metes-and-bounds-2018.pdf', 'Metes and Bounds (2018)')">View</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Historical Documents -->
+      <div class="profile-section">
+        <h2>Historical Documents</h2>
+        <ul class="doc-list">
+          <li class="doc-item">
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="doc-info">
+              <h4>Original Declaration of Protective Covenants</h4>
+              <p>The original 2015 declaration, superseded by the 2019 Restated Declaration.</p>
+            </div>
+            <div class="doc-actions">
+              <a href="/original-declaration-2015.pdf" class="btn btn-secondary btn-sm" download>Download</a>
+              <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/original-declaration-2015.pdf', 'Original Declaration (2015)')">View</button>
+            </div>
+          </li>
+          <li class="doc-item">
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="doc-info">
+              <h4>Plat Map</h4>
+              <p>Recorded plat map showing lot and tract boundaries for Walden's Revisited subdivision (2016).</p>
+            </div>
+            <div class="doc-actions">
+              <a href="/plat-map-2016.pdf" class="btn btn-secondary btn-sm" download>Download</a>
+              <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/plat-map-2016.pdf', 'Plat Map (2016)')">View</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PDF Viewer (reuse existing) -->
+  <script type="module" src="/pdf-viewer.js"></script>
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>
