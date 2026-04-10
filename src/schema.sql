@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
   profile_picture TEXT,
   address_id INTEGER REFERENCES addresses(id),
   is_anonymous INTEGER DEFAULT 0,
+  show_name INTEGER DEFAULT 1,
+  show_contact INTEGER DEFAULT 1,
   role TEXT DEFAULT 'pending',
   roles TEXT DEFAULT 'pending',
   avatar_id INTEGER,

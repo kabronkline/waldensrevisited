@@ -70,6 +70,24 @@
 
 .sidebar-link.active svg { opacity: 1; }
 
+.sidebar-sub {
+  padding-left: 34px;
+  font-size: 0.85rem;
+}
+
+.sidebar-badge {
+  background: #dc2626;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .sidebar-divider {
   height: 1px;
   background: rgba(139, 115, 85, 0.08);

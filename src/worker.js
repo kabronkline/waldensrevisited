@@ -124,6 +124,18 @@ export default {
         return Response.redirect(new URL(loginUrl, url.origin).toString(), 302);
       }
 
+      // Re-check DB for role/agreement updates (so users don't need to re-login after approval)
+      if (session.user.role === 'pending' || !session.user.agreementSigned) {
+        const freshUser = await env.DB.prepare('SELECT role, agreement_signed_at FROM users WHERE id = ?').bind(session.user.userId).first();
+        if (freshUser) {
+          if (freshUser.role !== session.user.role || !!freshUser.agreement_signed_at !== session.user.agreementSigned) {
+            session.user.role = freshUser.role;
+            session.user.agreementSigned = !!freshUser.agreement_signed_at;
+            await env.SESSIONS.put(`session:${session.id}`, JSON.stringify(session.user), { expirationTtl: 60 * 60 * 24 * 7 });
+          }
+        }
+      }
+
       // Pending users go straight to contact-admin page (no agreement needed yet)
       if (session.user.role === 'pending' && !pathname.startsWith('/members/pending')) {
         return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);

@@ -17,11 +17,23 @@ function hasAccess(role) {
   return role && role !== 'pending';
 }
 
-function maskIfAnonymous(record, nameField, picFields, role) {
-  if (record && record.is_anonymous && !OFFICER_ROLES.includes(role)) {
-    record[nameField] = record.address_label ? 'Neighbor at ' + record.address_label.split('—')[0].trim() : 'Anonymous Neighbor';
+// Privacy masking: respects show_name and show_contact fields
+// is_anonymous=1 is treated as show_name=0 AND show_contact=0 (legacy compat)
+// Friendship does NOT override privacy — only officers/admins can see hidden PII
+function maskIfAnonymous(record, nameField, picFields, viewerRole) {
+  if (!record || OFFICER_ROLES.includes(viewerRole)) return record;
+
+  const hideName = record.is_anonymous || record.show_name === 0;
+  const hideContact = record.is_anonymous || record.show_contact === 0;
+
+  if (hideName) {
+    const tract = record.address_label ? record.address_label.split('—')[0].trim() : null;
+    record[nameField] = tract ? 'Neighbor at ' + tract : 'Anonymous Neighbor';
     for (const f of picFields) { if (record[f] !== undefined) record[f] = null; }
+  }
+  if (hideContact) {
     if (record.email) record.email = null;
+    // Keep address_label for tract reference only (public county data), but hide street address details
   }
   return record;
 }
@@ -55,11 +67,17 @@ export async function handleApi(request, env, session) {
   // --- Agreement (pre-access) ---
   if (path === '/api/me/agreement' && method === 'POST') {
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    let isAnonymous = 0;
-    try { const body = await request.json(); if (body.is_anonymous) isAnonymous = 1; } catch (e) {}
+    let isAnonymous = 0, showName = 1, showContact = 1;
+    try {
+      const body = await request.json();
+      if (body.is_anonymous) isAnonymous = 1;
+      if (body.show_name !== undefined) showName = body.show_name ? 1 : 0;
+      if (body.show_contact !== undefined) showContact = body.show_contact ? 1 : 0;
+      if (!showName && !showContact) isAnonymous = 1;
+    } catch (e) {}
     await env.DB.prepare(
-      "UPDATE users SET agreement_signed_at = datetime('now'), agreement_ip = ?, is_anonymous = ?, updated_at = datetime('now') WHERE id = ?"
-    ).bind(ip, isAnonymous, userId).run();
+      "UPDATE users SET agreement_signed_at = datetime('now'), agreement_ip = ?, is_anonymous = ?, show_name = ?, show_contact = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(ip, isAnonymous, showName, showContact, userId).run();
 
     const sessionData = { ...session.user, agreementSigned: true };
     await env.SESSIONS.put(`session:${session.id}`, JSON.stringify(sessionData), { expirationTtl: 60 * 60 * 24 * 7 });
@@ -76,8 +94,16 @@ export async function handleApi(request, env, session) {
     return json(safe);
   }
 
-  // --- Access gate ---
-  if (!session.user.agreementSigned) return json({ error: 'Agreement not signed' }, 403);
+  // --- Access gate (re-check DB for fresh role) ---
+  if (!session.user.agreementSigned || !hasAccess(session.user.role)) {
+    const fresh = await env.DB.prepare('SELECT role, agreement_signed_at FROM users WHERE id = ?').bind(userId).first();
+    if (fresh) {
+      session.user.role = fresh.role;
+      session.user.agreementSigned = !!fresh.agreement_signed_at;
+      await env.SESSIONS.put(`session:${session.id}`, JSON.stringify(session.user), { expirationTtl: 60 * 60 * 24 * 7 });
+    }
+  }
+  if (!session.user.agreementSigned && session.user.role !== 'auditor') return json({ error: 'Agreement not signed' }, 403);
   if (!hasAccess(session.user.role)) return json({ error: 'Account pending approval' }, 403);
 
   // --- Profile ---
@@ -95,6 +121,8 @@ export async function handleApi(request, env, session) {
       params.push(body.address_id);
     }
     if (body.is_anonymous !== undefined) { updates.push('is_anonymous = ?'); params.push(body.is_anonymous ? 1 : 0); }
+    if (body.show_name !== undefined) { updates.push('show_name = ?'); params.push(body.show_name ? 1 : 0); }
+    if (body.show_contact !== undefined) { updates.push('show_contact = ?'); params.push(body.show_contact ? 1 : 0); }
     if (body.name !== undefined) { updates.push('name = ?'); params.push(body.name); }
     if (body.avatar_id !== undefined) { updates.push('avatar_id = ?'); params.push(body.avatar_id); }
 
@@ -220,7 +248,7 @@ export async function handleApi(request, env, session) {
     const { results } = await env.DB.prepare(
       `SELECT p.*, u.name as author_name, u.role as author_role,
               u.profile_picture as author_profile_picture, u.google_picture as author_google_picture,
-              u.is_anonymous as author_anonymous, u.avatar_id as author_avatar_id,
+              u.is_anonymous, u.show_name, u.show_contact as author_anonymous, u.avatar_id as author_avatar_id,
               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
        FROM posts p
        JOIN users u ON p.user_id = u.id
@@ -294,7 +322,7 @@ export async function handleApi(request, env, session) {
     const postId = parseInt(commentsGetMatch[1]);
     const { results } = await env.DB.prepare(
       `SELECT c.*, u.name as author_name, u.profile_picture as author_profile_picture,
-              u.google_picture as author_google_picture, u.is_anonymous as author_anonymous
+              u.google_picture as author_google_picture, u.is_anonymous, u.show_name, u.show_contact as author_anonymous
        FROM comments c JOIN users u ON c.user_id = u.id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`
@@ -524,7 +552,7 @@ export async function handleApi(request, env, session) {
     if (friendIds.length > 0) {
       const placeholders = friendIds.map(() => '?').join(',');
       candidate = await env.DB.prepare(
-        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, u.is_anonymous, pd.tagline
+        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, u.is_anonymous, u.show_name, u.show_contact, pd.tagline
          FROM playdate_dogs pd
          JOIN dogs d ON pd.dog_id = d.id
          JOIN users u ON d.user_id = u.id
@@ -648,7 +676,7 @@ export async function handleApi(request, env, session) {
   if (path === '/api/friends/requests' && method === 'GET') {
     const { results } = await env.DB.prepare(
       `SELECT fr.id, fr.from_user_id, fr.created_at,
-              u.name, u.profile_picture, u.google_picture, u.is_anonymous,
+              u.name, u.profile_picture, u.google_picture, u.is_anonymous, u.show_name, u.show_contact,
               a.full_label as address_label
        FROM friend_requests fr
        JOIN users u ON fr.from_user_id = u.id
@@ -699,7 +727,7 @@ export async function handleApi(request, env, session) {
     const { results } = await env.DB.prepare(
       `SELECT f.id as friendship_id, f.created_at as friends_since,
               u.id as user_id, u.name, u.profile_picture, u.google_picture, u.email,
-              u.is_anonymous, a.full_label as address_label
+              u.is_anonymous, u.show_name, u.show_contact, a.full_label as address_label
        FROM friendships f
        JOIN users u ON (CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END) = u.id
        LEFT JOIN addresses a ON u.address_id = a.id
@@ -740,6 +768,8 @@ export async function handleApi(request, env, session) {
               CASE WHEN ct.user_a_id = ? THEN ub.profile_picture ELSE ua.profile_picture END as other_user_picture,
               CASE WHEN ct.user_a_id = ? THEN ub.google_picture ELSE ua.google_picture END as other_user_google_picture,
               CASE WHEN ct.user_a_id = ? THEN ub.is_anonymous ELSE ua.is_anonymous END as is_anonymous,
+              CASE WHEN ct.user_a_id = ? THEN ub.show_name ELSE ua.show_name END as show_name,
+              CASE WHEN ct.user_a_id = ? THEN ub.show_contact ELSE ua.show_contact END as show_contact,
               CASE WHEN ct.user_a_id = ? THEN ab.full_label ELSE aa.full_label END as address_label,
               (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
               (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
@@ -750,7 +780,7 @@ export async function handleApi(request, env, session) {
        LEFT JOIN addresses ab ON ub.address_id = ab.id
        WHERE ct.user_a_id = ? OR ct.user_b_id = ?
        ORDER BY latest_message_at DESC NULLS LAST`
-    ).bind(userId, userId, userId, userId, userId, userId, userId, userId).all();
+    ).bind(userId, userId, userId, userId, userId, userId, userId, userId, userId, userId).all();
     const viewerRole = session.user.role;
     results.forEach(r => maskIfAnonymous(r, 'other_user_name', ['other_user_picture', 'other_user_google_picture'], viewerRole));
     return json(results);
@@ -774,7 +804,7 @@ export async function handleApi(request, env, session) {
     let results;
     if (before) {
       const resp = await env.DB.prepare(
-        `SELECT cm.*, u.name as sender_name, u.is_anonymous
+        `SELECT cm.*, u.name as sender_name, u.is_anonymous, u.show_name, u.show_contact
          FROM chat_messages cm
          JOIN users u ON cm.sender_user_id = u.id
          WHERE cm.thread_id = ? AND cm.id < ?
@@ -784,7 +814,7 @@ export async function handleApi(request, env, session) {
       results = resp.results;
     } else {
       const resp = await env.DB.prepare(
-        `SELECT cm.*, u.name as sender_name, u.is_anonymous
+        `SELECT cm.*, u.name as sender_name, u.is_anonymous, u.show_name, u.show_contact
          FROM chat_messages cm
          JOIN users u ON cm.sender_user_id = u.id
          WHERE cm.thread_id = ?
@@ -837,7 +867,7 @@ export async function handleApi(request, env, session) {
     if (!thread) return json({ error: 'Thread not found' }, 404);
 
     const user = await env.DB.prepare(
-      'SELECT u.name, u.email, u.is_anonymous, a.full_label as address_label FROM users u LEFT JOIN addresses a ON u.address_id = a.id WHERE u.id = ?'
+      'SELECT u.name, u.email, u.is_anonymous, u.show_name, u.show_contact, a.full_label as address_label FROM users u LEFT JOIN addresses a ON u.address_id = a.id WHERE u.id = ?'
     ).bind(userId).first();
 
     if (user.is_anonymous) {
@@ -873,8 +903,8 @@ export async function handleApi(request, env, session) {
     if (path === '/api/admin/users' && method === 'GET') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const { results } = await env.DB.prepare(
-        `SELECT u.id, u.email, u.name, u.role, u.google_picture, u.profile_picture,
-                u.agreement_signed_at, u.created_at, a.full_label as address_label
+        `SELECT u.id, u.email, u.name, u.role, u.roles, u.address_id, u.google_picture, u.profile_picture,
+                u.agreement_signed_at, u.agreement_ip, u.created_at, a.full_label as address_label
          FROM users u LEFT JOIN addresses a ON u.address_id = a.id
          ORDER BY u.created_at DESC`
       ).all();
@@ -951,6 +981,13 @@ export async function handleApi(request, env, session) {
         'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
       ).bind(userId, 'role_change', targetId, `${target.roles || target.role} -> ${rolesStr}`).run();
       return json({ success: true });
+    }
+
+    // GET /api/admin/pending-count — count of items needing approval
+    if (path === '/api/admin/pending-count' && method === 'GET') {
+      const users = await env.DB.prepare("SELECT COUNT(*) as cnt FROM users WHERE role = 'pending'").first();
+      const posts = await env.DB.prepare("SELECT COUNT(*) as cnt FROM posts WHERE approved = 0").first();
+      return json({ users: users.cnt, posts: posts.cnt, total: users.cnt + posts.cnt });
     }
 
     // GET /api/admin/pending-users — users awaiting role assignment

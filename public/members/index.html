@@ -49,6 +49,18 @@
         <p>Share updates with your Walden's Revisited neighbors.</p>
       </div>
 
+      <!-- Admin: Pending Approvals Banner -->
+      <div id="pendingBanner" style="display:none;" class="profile-section" onclick="window.location.href='/members/admin.html?tab=posts';" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:var(--space-sm);cursor:pointer;">
+          <div style="background:#dc2626;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;flex-shrink:0;" id="pendingCount">0</div>
+          <div>
+            <strong style="color:var(--forest-deep);">Pending Approvals</strong>
+            <p style="font-size:0.85rem;color:var(--stone);margin:0;" id="pendingDesc">Items need your attention</p>
+          </div>
+          <span style="margin-left:auto;color:var(--pond-surface);font-size:0.85rem;">Review &rarr;</span>
+        </div>
+      </div>
+
       <!-- New Post Form -->
       <div class="profile-section" id="newPostSection">
         <div style="display:flex; gap: var(--space-sm); align-items:flex-start;">
@@ -140,6 +152,21 @@
     if (elevatedRoles.includes(session.role)) {
       const adminCard = document.getElementById('adminCard');
       if (adminCard) adminCard.style.display = '';
+    }
+
+    // Admin: show pending approvals banner
+    if (elevatedRoles.includes(session.role)) {
+      fetch('/api/admin/pending-count').then(r => r.json()).then(data => {
+        if (data.total > 0) {
+          const banner = document.getElementById('pendingBanner');
+          banner.style.display = '';
+          document.getElementById('pendingCount').textContent = data.total;
+          const parts = [];
+          if (data.users > 0) parts.push(`${data.users} user${data.users > 1 ? 's' : ''} awaiting access`);
+          if (data.posts > 0) parts.push(`${data.posts} post${data.posts > 1 ? 's' : ''} pending review`);
+          document.getElementById('pendingDesc').textContent = parts.join(', ');
+        }
+      }).catch(() => {});
     }
 
     // Set avatar from user profile (fetch to get custom pic/avatar)

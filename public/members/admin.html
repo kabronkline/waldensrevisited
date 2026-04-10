@@ -184,10 +184,10 @@
               <tr>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Role</th>
+                <th>Roles</th>
                 <th>Agreement</th>
                 <th>Joined</th>
-                <th>Actions</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -221,6 +221,13 @@
     </div>
   </div>
 
+    <div class="modal-overlay" id="editUserModal" style="display:none;" onclick="if(event.target===this)closeEditUser()">
+      <div class="modal" style="max-width:520px;">
+        <h2 id="editUserTitle">Edit User</h2>
+        <div id="editUserContent"></div>
+      </div>
+    </div>
+
     </main>
   </div>
 
@@ -230,6 +237,20 @@
     if (!session) window.location.href = '/login.html';
 
     initMembersSidebar('admin');
+
+    // Auto-select tab from URL parameter (e.g. ?tab=users)
+    (function() {
+      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      if (urlTab) {
+        const tabBtn = document.querySelector(`.admin-tab[data-tab="${urlTab}"]`);
+        if (tabBtn) {
+          document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+          tabBtn.classList.add('active');
+          document.getElementById(`tab-${urlTab}`).style.display = '';
+        }
+      }
+    })();
 
     const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'contributor'];
     if (!elevatedRoles.includes(session.role)) {
@@ -436,25 +457,35 @@
     }
 
     // Load users (admin only)
+    let allUsers = [];
+    let allAddresses = [];
+
     async function loadUsers() {
       if (session.role !== 'admin') return;
       try {
-        const res = await fetch('/api/admin/users');
-        const users = await res.json();
+        const [usersRes, addrRes] = await Promise.all([
+          fetch('/api/admin/users'),
+          fetch('/api/addresses')
+        ]);
+        allUsers = await usersRes.json();
+        allAddresses = await addrRes.json();
+
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
 
-        const roleOptions = ['pending', 'member', 'contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
-
-        users.forEach(user => {
+        allUsers.forEach(user => {
           const tr = document.createElement('tr');
+          const userRoles = user.roles ? user.roles.split(',') : [user.role];
+          // Display roles: show meaningful roles (skip 'officer' meta-role, skip 'pending')
+          const displayRoles = userRoles.filter(r => r !== 'officer' && r !== 'pending');
+
+          const roleBadges = displayRoles.length > 0
+            ? displayRoles.map(r => `<span class="role-badge ${getRoleBadgeClass(r)}" style="font-size:0.75rem;">${formatRole(r)}</span>`).join(' ')
+            : `<span class="role-badge pending" style="font-size:0.75rem;">Pending</span>`;
+
           const agreementStatus = user.agreement_signed_at
             ? `<span class="approval-badge approved">Signed</span>`
             : `<span class="approval-badge pending">Not signed</span>`;
-
-          const roleSelect = roleOptions.map(r =>
-            `<option value="${r}" ${user.role === r ? 'selected' : ''}>${formatRole(r)}</option>`
-          ).join('');
 
           tr.innerHTML = `
             <td>
@@ -468,14 +499,10 @@
               </div>
             </td>
             <td>${escapeHtml(user.email)}</td>
-            <td>
-              <select class="role-select" onchange="changeRole(${user.id}, this.value, '${user.role}', this)">
-                ${roleSelect}
-              </select>
-            </td>
+            <td>${roleBadges}</td>
             <td>${agreementStatus}</td>
             <td>${new Date(user.created_at).toLocaleDateString()}</td>
-            <td>${user.address_label ? escapeHtml(user.address_label) : '<span style="color:var(--lichen);">Not set</span>'}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick="openEditUser(${user.id})">Edit</button></td>
           `;
           tbody.appendChild(tr);
         });
@@ -484,30 +511,158 @@
       }
     }
 
-    async function changeRole(userId, newRole, oldRole, selectEl) {
-      if (newRole === oldRole) return;
-      if (!confirm(`Change role from "${formatRole(oldRole)}" to "${formatRole(newRole)}"?`)) {
-        selectEl.value = oldRole;
+    // Edit User Modal
+    function openEditUser(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      const userRoles = user.roles ? user.roles.split(',') : [user.role];
+
+      document.getElementById('editUserTitle').textContent = 'Edit User';
+
+      const addressOptions = allAddresses.map(a =>
+        `<option value="${a.id}" ${user.address_id === a.id ? 'selected' : ''}>${escapeHtml(a.full_label)}</option>`
+      ).join('');
+
+      // Agreement status
+      let agreementHtml = '';
+      if (user.agreement_signed_at) {
+        const signedDate = new Date(user.agreement_signed_at + 'Z').toLocaleDateString();
+        agreementHtml = `<a href="#" onclick="event.preventDefault();generateCertificate(${JSON.stringify({
+          name: user.name, email: user.email, role: user.role,
+          address: user.address_label, signed: user.agreement_signed_at, ip: user.agreement_ip || ''
+        }).replace(/"/g, '&quot;')})" style="color:var(--forest-deep);">Signed ${signedDate}</a>`;
+      } else {
+        agreementHtml = '<span style="color:var(--lichen);">Not signed</span>';
+      }
+
+      const roleCheckboxes = [
+        { value: 'member', label: 'Member' },
+        { value: 'contributor', label: 'Contributor' },
+        { value: 'president', label: 'President' },
+        { value: 'secretary', label: 'Secretary' },
+        { value: 'treasurer', label: 'Treasurer' },
+        { value: 'other_officer', label: 'Other Officer' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'auditor', label: 'Auditor' },
+      ];
+
+      const checkboxesHtml = roleCheckboxes.map(r => {
+        const checked = userRoles.includes(r.value) ? 'checked' : '';
+        const disabled = r.value === 'member' ? 'disabled checked' : '';
+        return `<label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" class="edit-role-cb" value="${r.value}" ${checked} ${disabled}
+            onchange="handleEditRoleCb()"> ${r.label}
+        </label>`;
+      }).join('\n');
+
+      document.getElementById('editUserContent').innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--space-sm);padding-bottom:var(--space-xs);border-bottom:1px solid var(--sage);">
+          <div class="directory-avatar" style="width:48px;height:48px;">
+            ${user.profile_picture || user.google_picture
+              ? `<img src="${escapeHtml(user.profile_picture || user.google_picture)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+              : ''}
+          </div>
+          <div>
+            <div style="font-weight:500;">${escapeHtml(user.name)}</div>
+            <div style="font-size:0.85rem;color:var(--stone);">${escapeHtml(user.email)}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:var(--space-sm);">
+          <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:6px;">Roles</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="editRoleCheckboxes">
+            ${checkboxesHtml}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:var(--space-sm);">
+          <label style="font-size:0.85rem;font-weight:500;">Property Address</label>
+          <select id="editUserAddress" class="role-select" style="width:100%;margin-top:4px;padding:6px 10px;">
+            <option value="">Select address...</option>
+            ${addressOptions}
+          </select>
+        </div>
+
+        <div style="margin-bottom:var(--space-md);font-size:0.85rem;">
+          <span style="font-weight:500;">Agreement:</span> ${agreementHtml}
+        </div>
+
+        <button class="btn btn-primary" onclick="saveUserRoles(${user.id})" style="width:100%;">Save Changes</button>
+      `;
+
+      // Apply initial hierarchy state
+      handleEditRoleCb();
+
+      document.getElementById('editUserModal').style.display = '';
+    }
+
+    function handleEditRoleCb() {
+      const cbs = document.querySelectorAll('.edit-role-cb');
+      const get = v => [...cbs].find(c => c.value === v);
+      const isChecked = v => { const cb = get(v); return cb && cb.checked; };
+
+      const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
+      const anyOfficer = officerTitles.some(r => isChecked(r));
+      const memberCb = get('member');
+      const auditorCb = get('auditor');
+
+      // Auditor is mutually exclusive
+      if (isChecked('auditor')) {
+        cbs.forEach(cb => {
+          if (cb.value !== 'auditor') {
+            cb.checked = false;
+            cb.disabled = true;
+          }
+        });
+        if (memberCb) { memberCb.checked = false; memberCb.disabled = true; }
         return;
       }
+
+      // Re-enable all if auditor unchecked
+      cbs.forEach(cb => {
+        if (cb.value !== 'member') cb.disabled = false;
+      });
+
+      // Officer titles auto-check member
+      if (anyOfficer || isChecked('contributor') || isChecked('admin')) {
+        if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+      } else {
+        if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+      }
+    }
+
+    async function saveUserRoles(userId) {
+      const cbs = document.querySelectorAll('.edit-role-cb');
+      const roles = [...cbs].filter(c => c.checked).map(c => c.value);
+      if (roles.length === 0) roles.push('member');
+
+      const addressId = parseInt(document.getElementById('editUserAddress').value) || undefined;
+
+      const body = { roles };
+      if (addressId) body.address_id = addressId;
 
       try {
         const res = await fetch(`/api/admin/users/${userId}/role`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: newRole }),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (data.success) {
-          showToast('Role updated', 'success');
+          showToast('User updated', 'success');
+          closeEditUser();
+          loadUsers();
         } else {
           showToast(data.error || 'Error', 'error');
-          selectEl.value = oldRole;
         }
       } catch (e) {
-        showToast('Error updating role', 'error');
-        selectEl.value = oldRole;
+        showToast('Error updating user', 'error');
       }
+    }
+
+    function closeEditUser() {
+      document.getElementById('editUserModal').style.display = 'none';
     }
 
     // Load audit log

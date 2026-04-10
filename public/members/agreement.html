@@ -134,12 +134,16 @@
           <span>I agree to the Terms of Service and the 2019 Restated Declaration.</span>
         </label>
 
-        <div class="tos-privacy">
-          <span>Profile visibility:</span>
-          <select id="privacySelect">
-            <option value="visible">Visible to members</option>
-            <option value="anonymous">Anonymous</option>
-          </select>
+        <div style="margin:var(--space-xs) 0 var(--space-sm);font-size:0.85rem;color:var(--charcoal);">
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;">
+            <input type="checkbox" id="tosShowName" checked style="accent-color:var(--forest-deep);">
+            Show my name to other members
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="tosShowContact" checked style="accent-color:var(--forest-deep);">
+            Share my contact info with other members
+          </label>
+          <p style="font-size:0.8rem;color:var(--lichen);margin-top:4px;">You can change these anytime in your profile. Officers and admins can always see your info.</p>
         </div>
 
         <button class="btn btn-primary btn-block" id="agreeBtn" disabled>Continue</button>
@@ -158,11 +162,12 @@
       btn.disabled = true;
       btn.textContent = 'Please wait...';
       try {
-        const isAnonymous = document.getElementById('privacySelect').value === 'anonymous';
+        const showName = document.getElementById('tosShowName').checked;
+        const showContact = document.getElementById('tosShowContact').checked;
         const res = await fetch('/api/me/agreement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ is_anonymous: isAnonymous }),
+          body: JSON.stringify({ show_name: showName ? 1 : 0, show_contact: showContact ? 1 : 0, is_anonymous: (!showName && !showContact) ? 1 : 0 }),
         });
         const data = await res.json();
         if (data.success) {

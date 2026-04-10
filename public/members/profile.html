@@ -106,15 +106,30 @@
       <!-- Privacy -->
       <div class="profile-section">
         <h2>Privacy</h2>
+        <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Control what other members can see. Officers and admins can always see your full profile for governance purposes.</p>
+
         <div class="form-group">
           <div class="toggle-group">
             <label class="toggle">
-              <input type="checkbox" id="anonymousToggle">
+              <input type="checkbox" id="showNameToggle" checked>
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <strong style="font-size:0.95rem;">Anonymous Mode</strong>
-              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When enabled, your name and profile will be hidden from other members in the directory. You are <strong>not</strong> anonymous by default.</p>
+              <strong style="font-size:0.95rem;">Show my name</strong>
+              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When off, other members see you as "Neighbor at [your tract]" instead of your real name. Friends included — becoming friends does not reveal your name.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="toggle-group">
+            <label class="toggle">
+              <input type="checkbox" id="showContactToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <strong style="font-size:0.95rem;">Share contact info</strong>
+              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When off, your email and address are hidden from other members, including friends. You can still communicate via the in-app chat.</p>
             </div>
           </div>
         </div>
@@ -196,8 +211,9 @@
           select.appendChild(opt);
         });
 
-        // Anonymous toggle
-        document.getElementById('anonymousToggle').checked = !!currentUser.is_anonymous;
+        // Privacy toggles
+        document.getElementById('showNameToggle').checked = currentUser.show_name !== 0;
+        document.getElementById('showContactToggle').checked = currentUser.show_contact !== 0;
 
       } catch (e) {
         showToast('Failed to load profile', 'error');
@@ -262,7 +278,9 @@
           body: JSON.stringify({
             name: document.getElementById('displayName').value.trim(),
             address_id: addressVal ? parseInt(addressVal) : null,
-            is_anonymous: document.getElementById('anonymousToggle').checked,
+            show_name: document.getElementById('showNameToggle').checked ? 1 : 0,
+            show_contact: document.getElementById('showContactToggle').checked ? 1 : 0,
+            is_anonymous: (!document.getElementById('showNameToggle').checked && !document.getElementById('showContactToggle').checked) ? 1 : 0,
           }),
         });
         const data = await res.json();

@@ -116,9 +116,12 @@ function initMembersSidebar(activePage) {
         My Profile
       </a>
       ${isElevated ? `
-      <a href="/members/admin.html" class="sidebar-link ${activePage === 'admin' ? 'active' : ''}">
+      <a href="/members/admin.html" class="sidebar-link ${activePage === 'admin' ? 'active' : ''}" id="adminSidebarLink">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Admin
+        Admin <span id="adminBadge" class="sidebar-badge" style="display:none;"></span>
+      </a>
+      <a href="/members/admin.html?tab=posts" class="sidebar-link sidebar-sub ${activePage === 'admin-approvals' ? 'active' : ''}" id="approvalsSidebarLink">
+        Pending Approvals <span id="approvalsBadge" class="sidebar-badge" style="display:none;"></span>
       </a>` : ''}
       <a href="/auth/logout" class="sidebar-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -129,6 +132,18 @@ function initMembersSidebar(activePage) {
 
   const sidebar = document.getElementById('membersSidebar');
   if (sidebar) sidebar.innerHTML = sidebarHtml;
+
+  // Fetch pending count for admin badge
+  if (isElevated) {
+    fetch('/api/admin/pending-count').then(r => r.json()).then(data => {
+      if (data.total > 0) {
+        const badge = document.getElementById('adminBadge');
+        const appBadge = document.getElementById('approvalsBadge');
+        if (badge) { badge.textContent = data.total; badge.style.display = ''; }
+        if (appBadge) { appBadge.textContent = data.total; appBadge.style.display = ''; }
+      }
+    }).catch(() => {});
+  }
 
   // Mobile toggle
   const toggle = document.getElementById('sidebarToggle');
