@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/surveys.html">Surveys</a></li>
+
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container" style="max-width:700px;">
+
+      <div class="members-header">
+        <h1>My Profile</h1>
+        <p>Manage your profile information and privacy settings.</p>
+      </div>
+
+      <!-- Profile Picture -->
+      <div class="profile-section">
+        <h2>Profile Picture</h2>
+        <div class="avatar-upload">
+          <div class="avatar-preview" id="avatarPreview">
+            <span class="placeholder">?</span>
+          </div>
+          <div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              <input type="file" id="avatarFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+              Change Photo
+            </label>
+            <button class="btn btn-danger btn-sm" id="removeAvatar" style="display:none;">Remove</button>
+            <p style="font-size:0.8rem;color:var(--lichen);margin-top:6px;">Max 2MB. JPEG, PNG, WebP, or GIF.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Info -->
+      <div class="profile-section">
+        <h2>Basic Information</h2>
+        <div class="form-group">
+          <label for="displayName">Display Name</label>
+          <input type="text" id="displayName" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" disabled style="background:var(--mist);cursor:not-allowed;">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <div id="roleDisplay" class="role-badge" style="display:inline-block;"></div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="profile-section">
+        <h2>Address</h2>
+        <div class="form-group">
+          <label for="addressSelect">Your Property</label>
+          <select id="addressSelect">
+            <option value="">Select your address...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="profile-section">
+        <h2>Privacy</h2>
+        <div class="form-group">
+          <div class="toggle-group">
+            <label class="toggle">
+              <input type="checkbox" id="anonymousToggle">
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <strong style="font-size:0.95rem;">Anonymous Mode</strong>
+              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When enabled, your name and profile will be hidden from other members in the directory. You are <strong>not</strong> anonymous by default.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="saveBtn">Save Changes</button>
+
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    let currentUser = null;
+
+    // Load profile data
+    async function loadProfile() {
+      try {
+        const [userRes, addrRes] = await Promise.all([
+          fetch('/api/me'),
+          fetch('/api/addresses'),
+        ]);
+        currentUser = await userRes.json();
+        const addresses = await addrRes.json();
+
+        // Populate fields
+        document.getElementById('displayName').value = currentUser.name || '';
+        document.getElementById('email').value = currentUser.email || '';
+
+        // Role
+        const roleEl = document.getElementById('roleDisplay');
+        roleEl.textContent = formatRole(currentUser.role);
+        roleEl.className = `role-badge ${getRoleBadgeClass(currentUser.role)}`;
+
+        // Avatar
+        const avatarEl = document.getElementById('avatarPreview');
+        const pic = currentUser.profile_picture || currentUser.google_picture;
+        if (pic) {
+          avatarEl.innerHTML = `<img src="${escapeHtml(pic)}" alt="">`;
+        }
+        document.getElementById('removeAvatar').style.display = currentUser.profile_picture ? '' : 'none';
+
+        // Address dropdown
+        const select = document.getElementById('addressSelect');
+        addresses.forEach(addr => {
+          const opt = document.createElement('option');
+          opt.value = addr.id;
+          opt.textContent = addr.full_label;
+          if (currentUser.address_id === addr.id) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        // Anonymous toggle
+        document.getElementById('anonymousToggle').checked = !!currentUser.is_anonymous;
+
+      } catch (e) {
+        showToast('Failed to load profile', 'error');
+      }
+    }
+
+    // Upload profile picture
+    document.getElementById('avatarFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('Image too large (max 2MB)', 'error'); return; }
+
+      const base64 = await fileToBase64(file);
+      try {
+        const res = await fetch('/api/me/profile-picture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('avatarPreview').innerHTML = `<img src="${escapeHtml(base64)}" alt="">`;
+          document.getElementById('removeAvatar').style.display = '';
+          showToast('Profile picture updated', 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Upload failed', 'error');
+      }
+    });
+
+    // Remove profile picture
+    document.getElementById('removeAvatar').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/me/profile-picture', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          const gPic = currentUser.google_picture;
+          document.getElementById('avatarPreview').innerHTML = gPic
+            ? `<img src="${escapeHtml(gPic)}" alt="">`
+            : '<span class="placeholder">?</span>';
+          document.getElementById('removeAvatar').style.display = 'none';
+          showToast('Profile picture removed', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to remove picture', 'error');
+      }
+    });
+
+    // Save profile
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const addressVal = document.getElementById('addressSelect').value;
+        const res = await fetch('/api/me', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('displayName').value.trim(),
+            address_id: addressVal ? parseInt(addressVal) : null,
+            is_anonymous: document.getElementById('anonymousToggle').checked,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Profile saved', 'success');
+        } else {
+          showToast(data.error || 'Error saving profile', 'error');
+        }
+      } catch (e) {
+        showToast('Network error', 'error');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membership Agreement — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+    </div>
+  </nav>
+
+  <div class="agreement-page">
+    <div class="agreement-card">
+      <h1>Membership Agreement</h1>
+
+      <div class="agreement-text">
+        <h2>Walden's Revisited Homeowners Association — Member Acknowledgment and Agreement</h2>
+
+        <p>By signing this agreement, I hereby acknowledge and affirm the following:</p>
+
+        <ol>
+          <li><strong>Membership Status.</strong> I am a property owner, co-owner, or authorized resident of a lot or tract within the Walden's Revisited subdivision located in Scioto Township, Delaware County, Ohio, and am therefore a member of the Walden's Revisited Homeowners Association ("Association").</li>
+
+          <li><strong>Governing Documents.</strong> I acknowledge that the Association is governed by the Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited, filed March 9, 2019, as Instrument #2019-00009690 with the Delaware County Recorder's Office, together with any amendments thereto (collectively, the "Declaration"), and that my property is subject to the terms, conditions, covenants, and restrictions set forth therein.</li>
+
+          <li><strong>Good Faith Participation.</strong> I agree to participate in Association governance in good faith, including but not limited to voting on matters presented to the membership, attending meetings when reasonably possible, and cooperating with the Board of Directors in the administration of Association affairs.</li>
+
+          <li><strong>Accurate Information.</strong> I certify that all information I provide through this members portal is true, accurate, and complete to the best of my knowledge. I agree to update my information promptly if it changes.</li>
+
+          <li><strong>Acceptable Use.</strong> I agree to use this members portal solely for purposes related to my membership in the Association. I will not share my login credentials, misrepresent my identity, or use the portal in any manner that is harmful, fraudulent, or inconsistent with the purposes of the Association.</li>
+
+          <li><strong>Privacy and Confidentiality.</strong> I understand that information shared within the members area may include personal information of other members. I agree not to use, disclose, or distribute other members' personal information for any purpose outside of legitimate Association business without their express consent.</li>
+
+          <li><strong>Content Standards.</strong> I understand that any content I upload, including profile pictures and pet profiles, is subject to review and approval by Association officers or administrators before being visible to other members. Content that is inappropriate, offensive, or unrelated to the community may be rejected.</li>
+
+          <li><strong>Electronic Agreement.</strong> I understand that this electronic acknowledgment constitutes a legally binding agreement, equivalent to a handwritten signature, pursuant to the Electronic Signatures in Global and National Commerce Act (E-SIGN Act, 15 U.S.C. &sect; 7001 et seq.) and the Uniform Electronic Transactions Act as adopted in Ohio (Ohio Rev. Code &sect; 1306.01 et seq.).</li>
+        </ol>
+      </div>
+
+      <label class="agreement-checkbox">
+        <input type="checkbox" id="agreeCheck">
+        <span>I have read, understand, and agree to the above terms. I confirm that I am a property owner or authorized resident of Walden's Revisited.</span>
+      </label>
+
+      <div class="agreement-meta" id="agreeMeta">
+        <strong>Date:</strong> <span id="agreeDate"></span><br>
+        <strong>Signed by:</strong> <span id="agreeName"></span> (<span id="agreeEmail"></span>)
+      </div>
+
+      <button class="btn btn-primary btn-block" id="agreeBtn" disabled>I Agree</button>
+    </div>
+  </div>
+
+  <script>
+    const session = window.__session;
+
+    document.getElementById('agreeDate').textContent = new Date().toLocaleString();
+    if (session) {
+      document.getElementById('agreeName').textContent = session.name;
+      document.getElementById('agreeEmail').textContent = session.email;
+    }
+
+    const checkbox = document.getElementById('agreeCheck');
+    const btn = document.getElementById('agreeBtn');
+
+    checkbox.addEventListener('change', () => {
+      btn.disabled = !checkbox.checked;
+    });
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('/api/me/agreement', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = session.role === 'pending' ? '/members/pending.html' : '/members/';
+        } else {
+          alert('Error: ' + (data.error || 'Unknown error'));
+          btn.disabled = false;
+          btn.textContent = 'I Agree';
+        }
+      } catch (e) {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'I Agree';
+      }
+    });
+  </script>
+</body>
+</html>

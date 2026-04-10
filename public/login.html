@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Walden's Revisited</title>
+  <meta name="description" content="Sign in to the Walden's Revisited members area.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+    </div>
+  </nav>
+
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <svg class="login-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.15"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1>Members Area</h1>
+        <p>Sign in to access governance documents, community features, and the Neighbor Dogs directory.</p>
+      </div>
+
+      <div id="errorMsg" class="login-error" style="display:none;"></div>
+
+      <a href="/auth/login" class="google-btn" id="googleBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Sign in with Google
+      </a>
+
+      <p class="login-note">Only members of the Walden's Revisited HOA may access this area. Your account will need to be approved by an administrator after your first sign-in.</p>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error) {
+      const el = document.getElementById('errorMsg');
+      el.style.display = 'block';
+      const messages = {
+        missing_params: 'Authentication failed. Please try again.',
+        invalid_state: 'Session expired. Please try again.',
+        token_exchange_failed: 'Could not verify your Google account. Please try again.',
+      };
+      el.textContent = messages[error] || 'An error occurred. Please try again.';
+    }
+    // Pass redirect to auth/login
+    const redirect = params.get('redirect');
+    if (redirect) {
+      const btn = document.getElementById('googleBtn');
+      btn.href = `/auth/login?redirect=${encodeURIComponent(redirect)}`;
+    }
+  </script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+// Walden's Revisited — Cloudflare Worker
+
+import { handleLogin, handleCallback, handleLogout } from './auth.js';
+import { getSession } from './session.js';
+import { handleApi } from './api.js';
+
 // Signer data for dynamic OG tags on individual vote record URLs
 const signerData = {
   'lot-1-snyder':        { type:'Lot',   num:'1',     owner:'David & Corey Snyder',           address:'423 Brindle Road' },
@@ -24,111 +30,146 @@ const signerData = {
 
 const VOTE_BASE = '/votes/2019-restated-declaration';
 
-// HTMLRewriter handler to replace OG meta tag content attributes
+// Protected paths that require authentication
+const PROTECTED_PREFIXES = [
+  '/governance',
+  '/voting-register',
+  '/votes/',
+  '/members/',
+];
+
+function isProtectedPath(pathname) {
+  if (pathname === '/governance.html') return true;
+  if (pathname === '/voting-register.html') return true;
+  return PROTECTED_PREFIXES.some(prefix => pathname.startsWith(prefix));
+}
+
+// HTMLRewriter handlers
 class OGMetaRewriter {
-  constructor(replacements) {
-    this.replacements = replacements;
-  }
+  constructor(replacements) { this.replacements = replacements; }
   element(el) {
-    const property = el.getAttribute('property') || '';
-    const name = el.getAttribute('name') || '';
-    const key = property || name;
-    if (this.replacements[key]) {
-      el.setAttribute('content', this.replacements[key]);
-    }
+    const key = el.getAttribute('property') || el.getAttribute('name') || '';
+    if (this.replacements[key]) el.setAttribute('content', this.replacements[key]);
   }
 }
 
-// HTMLRewriter handler to replace <title> text
 class TitleRewriter {
-  constructor(newTitle) {
-    this.newTitle = newTitle;
-  }
-  element(el) {
-    el.setInnerContent(this.newTitle);
-  }
+  constructor(newTitle) { this.newTitle = newTitle; }
+  element(el) { el.setInnerContent(this.newTitle); }
 }
 
-// HTMLRewriter handler to inject a script before </body>
 class BodyEndRewriter {
-  constructor(signerKey) {
-    this.signerKey = signerKey;
-  }
+  constructor(signerKey) { this.signerKey = signerKey; }
   element(el) {
     el.prepend(`<script>window.__signerKey = '${this.signerKey}';</script>`, { html: true });
   }
 }
 
-function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Inject session data into protected pages so client JS can use it
+class SessionInjector {
+  constructor(session) { this.session = session; }
+  element(el) {
+    const safeData = JSON.stringify(this.session.user).replace(/</g, '\\u003c');
+    el.prepend(`<script>window.__session = ${safeData};</script>`, { html: true });
+  }
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    const userAgent = request.headers.get('user-agent') || '';
-    const referer = request.headers.get('referer') || '';
-    const country = request.cf?.country || '';
-    const city = request.cf?.city || '';
-    const region = request.cf?.region || '';
-    const asn = request.cf?.asn || '';
-    const colo = request.cf?.colo || '';
+    const pathname = url.pathname.replace(/\/$/, '') || '/';
 
-    // Log visitor data — captured by Workers Logs (viewable in CF dashboard)
+    // --- Logging ---
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     console.log(JSON.stringify({
       type: 'pageview',
       timestamp: new Date().toISOString(),
-      ip: ip,
+      ip,
       path: url.pathname,
       query: url.search || '',
       method: request.method,
-      userAgent: userAgent,
-      referer: referer,
-      country: country,
-      city: city,
-      region: region,
-      asn: asn,
-      colo: colo,
+      userAgent: request.headers.get('user-agent') || '',
+      referer: request.headers.get('referer') || '',
+      country: request.cf?.country || '',
+      city: request.cf?.city || '',
+      region: request.cf?.region || '',
+      asn: request.cf?.asn || '',
+      colo: request.cf?.colo || '',
     }));
 
-    // Redirect old voting-records URL to governance
-    const pathname = url.pathname.replace(/\/$/, ''); // strip trailing slash
+    // --- Auth routes ---
+    if (pathname === '/auth/login') return handleLogin(request, env);
+    if (pathname === '/auth/callback') return handleCallback(request, env);
+    if (pathname === '/auth/logout') return handleLogout(request, env);
+
+    // --- API routes ---
+    if (pathname.startsWith('/api/')) {
+      const session = await getSession(env, request);
+      return handleApi(request, env, session);
+    }
+
+    // --- Legacy redirect ---
     if (pathname === '/voting-records.html' || pathname === '/voting-records') {
       return Response.redirect(new URL('/governance.html', url.origin).toString(), 301);
     }
 
-    // Check for individual signer URLs: /votes/2019-restated-declaration/{signer-key}
-    if (pathname.startsWith(VOTE_BASE + '/') && pathname !== VOTE_BASE) {
-      const signerKey = pathname.substring(VOTE_BASE.length + 1);
-      const signer = signerData[signerKey];
+    // --- Protected pages ---
+    if (isProtectedPath(pathname)) {
+      const session = await getSession(env, request);
 
-      if (signer) {
-        // Fetch the base vote page HTML
-        const baseUrl = new URL(VOTE_BASE + '/', url.origin);
-        const response = await env.ASSETS.fetch(new Request(baseUrl.toString(), request));
-
-        const ownerName = signer.owner;
-        const tractLabel = signer.type + ' ' + signer.num;
-        const newTitle = `${ownerName} (${tractLabel}) — 2019 Restated Declaration Vote — Walden's Revisited`;
-        const newOgTitle = `${ownerName} — Signed the 2019 Restated Declaration`;
-        const newOgDesc = `${ownerName} (${tractLabel}, ${signer.address}) voted to adopt the Restated Declaration of Protective Covenants & Restrictions for Walden's Revisited on March 9, 2019.`;
-        const newOgUrl = `https://waldensrevisited.org${VOTE_BASE}/${signerKey}`;
-
-        const rewritten = new HTMLRewriter()
-          .on('title', new TitleRewriter(newTitle))
-          .on('meta[property="og:title"]', new OGMetaRewriter({ 'og:title': newOgTitle }))
-          .on('meta[property="og:description"]', new OGMetaRewriter({ 'og:description': newOgDesc }))
-          .on('meta[property="og:url"]', new OGMetaRewriter({ 'og:url': newOgUrl }))
-          .on('meta[name="description"]', new OGMetaRewriter({ 'description': newOgDesc }))
-          .on('body', new BodyEndRewriter(signerKey))
-          .transform(response);
-
-        return rewritten;
+      if (!session) {
+        const loginUrl = `/login.html?redirect=${encodeURIComponent(url.pathname + url.search)}`;
+        return Response.redirect(new URL(loginUrl, url.origin).toString(), 302);
       }
+
+      // Check agreement
+      if (!session.user.agreementSigned && !pathname.startsWith('/members/agreement')) {
+        return Response.redirect(new URL('/members/agreement.html', url.origin).toString(), 302);
+      }
+
+      // Check pending (allow agreement and pending pages)
+      if (session.user.role === 'pending' && !pathname.startsWith('/members/agreement') && !pathname.startsWith('/members/pending')) {
+        return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);
+      }
+
+      // Dynamic signer URL handling (within protected section)
+      if (pathname.startsWith(VOTE_BASE + '/') && pathname !== VOTE_BASE) {
+        const signerKey = pathname.substring(VOTE_BASE.length + 1);
+        const signer = signerData[signerKey];
+
+        if (signer) {
+          const baseUrl = new URL(VOTE_BASE + '/', url.origin);
+          const response = await env.ASSETS.fetch(new Request(baseUrl.toString(), request));
+
+          const ownerName = signer.owner;
+          const tractLabel = signer.type + ' ' + signer.num;
+          const newTitle = `${ownerName} (${tractLabel}) — 2019 Restated Declaration Vote — Walden's Revisited`;
+          const newOgTitle = `${ownerName} — Signed the 2019 Restated Declaration`;
+          const newOgDesc = `${ownerName} (${tractLabel}, ${signer.address}) voted to adopt the Restated Declaration of Protective Covenants & Restrictions for Walden's Revisited on March 9, 2019.`;
+          const newOgUrl = `https://waldensrevisited.org${VOTE_BASE}/${signerKey}`;
+
+          return new HTMLRewriter()
+            .on('title', new TitleRewriter(newTitle))
+            .on('meta[property="og:title"]', new OGMetaRewriter({ 'og:title': newOgTitle }))
+            .on('meta[property="og:description"]', new OGMetaRewriter({ 'og:description': newOgDesc }))
+            .on('meta[property="og:url"]', new OGMetaRewriter({ 'og:url': newOgUrl }))
+            .on('meta[name="description"]', new OGMetaRewriter({ 'description': newOgDesc }))
+            .on('body', new BodyEndRewriter(signerKey))
+            .on('body', new SessionInjector(session))
+            .transform(response);
+        }
+      }
+
+      // Serve protected static page with session data injected
+      const response = await env.ASSETS.fetch(request);
+      if (response.status === 404) return response;
+
+      return new HTMLRewriter()
+        .on('body', new SessionInjector(session))
+        .transform(response);
     }
 
-    // Serve the static asset
+    // --- Public static assets ---
     return env.ASSETS.fetch(request);
   },
 };

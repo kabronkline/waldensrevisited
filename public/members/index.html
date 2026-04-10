@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/surveys.html">Surveys</a></li>
+
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li id="adminLink" style="display:none;"><a href="/members/admin.html">Admin</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container">
+
+      <div class="members-header">
+        <h1>Community Wall</h1>
+        <p>Share updates with your Walden's Revisited neighbors.</p>
+      </div>
+
+      <!-- New Post Form -->
+      <div class="profile-section" id="newPostSection">
+        <div style="display:flex; gap: var(--space-sm); align-items:flex-start;">
+          <div class="avatar-preview" id="postAvatar" style="width:44px;height:44px;">
+            <span class="placeholder">?</span>
+          </div>
+          <div style="flex:1;">
+            <textarea id="postContent" placeholder="What's happening in the neighborhood?" rows="3" style="width:100%; padding:10px 14px; border:1px solid rgba(139,115,85,0.2); border-radius:8px; font-family:var(--font-body); font-size:0.95rem; resize:vertical;"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <div>
+                <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+                  <input type="file" id="postImage" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+                  Add Photo
+                </label>
+                <span id="postImageName" style="font-size:0.8rem; color:var(--stone); margin-left:8px;"></span>
+              </div>
+              <button class="btn btn-primary btn-sm" id="postBtn">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Posts Feed -->
+      <div id="postsFeed"></div>
+      <div id="loadMore" style="text-align:center; margin-top:var(--space-md); display:none;">
+        <button class="btn btn-secondary" id="loadMoreBtn">Load More</button>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="members-grid" style="margin-top: var(--space-xl);">
+        <a href="/members/dogs.html" class="member-card">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.855-1.076 2.344-2.5"/>
+            <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.076-2.344-2.5"/>
+            <path d="M8 14v.5"/>
+            <path d="M16 14v.5"/>
+            <path d="M11.25 16.25h1.5L12 17l-.75-.75z"/>
+            <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"/>
+          </svg>
+          <h3>Neighbor Dogs</h3>
+          <p>Meet the four-legged residents of Walden's Revisited.</p>
+        </a>
+        <a href="/governance.html" class="member-card">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <h3>Governance</h3>
+          <p>Board elections, voting records, and governing documents.</p>
+        </a>
+        <a href="/members/profile.html" class="member-card">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <h3>My Profile</h3>
+          <p>Manage your profile, address, and privacy settings.</p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    // Show admin link for officers and admins
+    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'contributor'];
+    if (elevatedRoles.includes(session.role)) {
+      document.getElementById('adminLink').style.display = '';
+    }
+
+    // Set avatar
+    const avatarEl = document.getElementById('postAvatar');
+    const pic = session.picture;
+    if (pic) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(pic)}" alt="">`;
+    }
+
+    // Nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // Image attachment
+    let postImageData = null;
+    document.getElementById('postImage').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) { postImageData = null; document.getElementById('postImageName').textContent = ''; return; }
+      if (file.size > 2 * 1024 * 1024) { showToast('Image too large (max 2MB)', 'error'); return; }
+      postImageData = await fileToBase64(file);
+      document.getElementById('postImageName').textContent = file.name;
+    });
+
+    // Submit post
+    document.getElementById('postBtn').addEventListener('click', async () => {
+      const content = document.getElementById('postContent').value.trim();
+      if (!content) { showToast('Write something first', 'error'); return; }
+
+      const btn = document.getElementById('postBtn');
+      btn.disabled = true;
+      btn.textContent = 'Posting...';
+
+      try {
+        const body = { content };
+        if (postImageData) body.image = postImageData;
+
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          document.getElementById('postContent').value = '';
+          postImageData = null;
+          document.getElementById('postImageName').textContent = '';
+          document.getElementById('postImage').value = '';
+          loadPosts(true);
+        } else {
+          showToast(data.error || 'Error creating post', 'error');
+        }
+      } catch (e) {
+        showToast('Network error', 'error');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Post';
+    });
+
+    // Load posts
+    let currentPage = 1;
+    async function loadPosts(reset) {
+      if (reset) { currentPage = 1; }
+      try {
+        const res = await fetch(`/api/posts?page=${currentPage}`);
+        const posts = await res.json();
+        const feed = document.getElementById('postsFeed');
+
+        if (reset) feed.innerHTML = '';
+
+        if (posts.length === 0 && currentPage === 1) {
+          feed.innerHTML = '<div class="profile-section" style="text-align:center;color:var(--stone);">No posts yet. Be the first to share something with the community!</div>';
+        }
+
+        posts.forEach(post => {
+          feed.appendChild(createPostEl(post));
+        });
+
+        document.getElementById('loadMore').style.display = posts.length >= 20 ? '' : 'none';
+      } catch (e) {
+        showToast('Failed to load posts', 'error');
+      }
+    }
+
+    function createPostEl(post) {
+      const div = document.createElement('div');
+      div.className = 'profile-section';
+      div.style.marginBottom = 'var(--space-sm)';
+
+      const authorPic = post.author_profile_picture || post.author_google_picture || '';
+      const authorName = post.author_anonymous ? 'Anonymous Member' : escapeHtml(post.author_name);
+      const roleLabel = formatRole(post.author_role);
+      const timeAgo = formatTimeAgo(post.created_at);
+      const isPending = !post.approved;
+      const isOwn = post.user_id === session.userId;
+
+      let imageHtml = '';
+      if (post.image) {
+        imageHtml = `<div style="margin-top:var(--space-xs);border-radius:8px;overflow:hidden;"><img src="${escapeHtml(post.image)}" alt="" style="max-width:100%;max-height:400px;object-fit:cover;"></div>`;
+      }
+
+      let pendingBadge = '';
+      if (isPending) {
+        pendingBadge = '<span class="approval-badge pending" style="margin-left:8px;">Pending Approval</span>';
+      }
+
+      let deleteBtn = '';
+      if (isOwn) {
+        deleteBtn = `<button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">Delete</button>`;
+      }
+
+      div.innerHTML = `
+        <div style="display:flex;gap:var(--space-xs);align-items:flex-start;">
+          <div class="avatar-preview" style="width:40px;height:40px;flex-shrink:0;">
+            ${authorPic ? `<img src="${escapeHtml(authorPic)}" alt="">` : '<span class="placeholder">?</span>'}
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <strong style="font-size:0.95rem;color:var(--forest-deep);">${authorName}</strong>
+              <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.7rem;">${roleLabel}</span>
+              ${pendingBadge}
+              <span style="font-size:0.8rem;color:var(--lichen);margin-left:auto;">${timeAgo}</span>
+            </div>
+            <div style="margin-top:6px;font-size:0.95rem;line-height:1.6;white-space:pre-wrap;">${renderWithMentions(post.content)}</div>
+            ${imageHtml}
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+              <span class="toggle-comments" onclick="toggleComments(${post.id}, this)">
+                ${post.comment_count > 0 ? `${post.comment_count} comment${post.comment_count !== 1 ? 's' : ''}` : 'Comment'}
+              </span>
+              ${deleteBtn}
+            </div>
+            <div class="comments-section" id="comments-${post.id}" style="display:none;"></div>
+          </div>
+        </div>
+      `;
+      return div;
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Delete this post?')) return;
+      try {
+        const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Post deleted', 'success');
+          loadPosts(true);
+        }
+      } catch (e) {
+        showToast('Error deleting post', 'error');
+      }
+    }
+
+    // Comments
+    async function toggleComments(postId, el) {
+      const section = document.getElementById(`comments-${postId}`);
+      if (section.style.display === 'none') {
+        section.style.display = '';
+        await loadComments(postId);
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    async function loadComments(postId) {
+      const section = document.getElementById(`comments-${postId}`);
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`);
+        const comments = await res.json();
+
+        let html = '';
+        comments.forEach(c => {
+          const cPic = c.author_profile_picture || c.author_google_picture || '';
+          const cName = c.author_anonymous ? 'Anonymous' : escapeHtml(c.author_name);
+          const canDelete = c.user_id === session.userId || session.role === 'admin';
+          html += `
+            <div class="comment">
+              <div class="avatar-preview" style="width:28px;height:28px;">
+                ${cPic ? `<img src="${escapeHtml(cPic)}" alt="">` : '<span class="placeholder" style="font-size:0.8rem;">?</span>'}
+              </div>
+              <div class="comment-body">
+                <strong>${cName}</strong>
+                <span class="comment-time">${formatTimeAgo(c.created_at)}</span>
+                ${canDelete ? `<span class="comment-delete" onclick="deleteComment(${c.id}, ${postId})">delete</span>` : ''}
+                <div style="white-space:pre-wrap;">${renderWithMentions(c.content)}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+          <div class="comment-input">
+            <input type="text" id="comment-input-${postId}" placeholder="Write a comment... Use @ to mention" maxlength="1000"
+              onkeydown="if(event.key==='Enter')postComment(${postId})">
+            <button class="btn btn-primary btn-sm" onclick="postComment(${postId})">Reply</button>
+          </div>
+        `;
+        section.innerHTML = html;
+
+        // Setup @mention on comment input
+        setupMentionAutocomplete(`comment-input-${postId}`);
+      } catch (e) {
+        section.innerHTML = '<p style="color:var(--stone);font-size:0.85rem;">Failed to load comments.</p>';
+      }
+    }
+
+    async function postComment(postId) {
+      const input = document.getElementById(`comment-input-${postId}`);
+      const content = input.value.trim();
+      if (!content) return;
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadComments(postId);
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Error posting comment', 'error');
+      }
+    }
+
+    async function deleteComment(commentId, postId) {
+      try {
+        await fetch(`/api/comments/${commentId}`, { method: 'DELETE' });
+        loadComments(postId);
+      } catch (e) {
+        showToast('Error deleting comment', 'error');
+      }
+    }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', () => {
+      currentPage++;
+      loadPosts(false);
+    });
+
+    // Setup @mention on post textarea
+    setupMentionAutocomplete('postContent');
+
+    loadPosts(true);
+  </script>
+</body>
+</html>

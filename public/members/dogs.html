@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neighbor Dogs — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/surveys.html">Surveys</a></li>
+
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container">
+
+      <div class="members-header">
+        <h1>Neighbor Dogs</h1>
+        <p>Meet the four-legged residents of Walden's Revisited. You can add up to 5 dog profiles.</p>
+      </div>
+
+      <!-- My Dogs -->
+      <div class="profile-section">
+        <h2>My Dogs</h2>
+        <div class="dogs-grid" id="myDogsGrid"></div>
+      </div>
+
+      <!-- Community Dogs -->
+      <div class="profile-section">
+        <h2>Community Dogs</h2>
+        <div class="dogs-grid" id="communityDogsGrid">
+          <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add/Edit Dog Modal -->
+  <div class="modal-overlay" id="dogModal" style="display:none;">
+    <div class="modal">
+      <h2 id="dogModalTitle">Add Dog</h2>
+      <input type="hidden" id="dogEditId">
+      <div class="form-group">
+        <label for="dogName">Name *</label>
+        <input type="text" id="dogName" placeholder="Dog's name" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="dogBreed">Breed</label>
+        <input type="text" id="dogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="dogAge">Age</label>
+        <input type="text" id="dogAge" placeholder="e.g., 3 years" maxlength="50">
+      </div>
+      <div class="form-group">
+        <label for="dogBio">About</label>
+        <textarea id="dogBio" placeholder="Tell us about your dog..." maxlength="500"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Photo</label>
+        <div class="avatar-upload">
+          <div class="dog-card-image" id="dogPhotoPreview" style="width:120px;height:120px;border-radius:8px;">
+            <span class="dog-placeholder">&#128054;</span>
+          </div>
+          <div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              <input type="file" id="dogPhotoFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+              Choose Photo
+            </label>
+            <p style="font-size:0.8rem;color:var(--lichen);margin-top:6px;">Max 2MB</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="dogCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="dogSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    let dogPhotoData = null;
+
+    // Load my dogs
+    async function loadMyDogs() {
+      try {
+        const res = await fetch('/api/dogs');
+        const dogs = await res.json();
+        const grid = document.getElementById('myDogsGrid');
+        grid.innerHTML = '';
+
+        dogs.forEach(dog => {
+          grid.appendChild(createDogCard(dog, true));
+        });
+
+        // Add button (if under limit)
+        if (dogs.length < 5) {
+          const addCard = document.createElement('div');
+          addCard.className = 'add-dog-card';
+          addCard.onclick = () => openDogModal();
+          addCard.innerHTML = '<span class="plus-icon">+</span><span>Add Dog</span>';
+          grid.appendChild(addCard);
+        }
+      } catch (e) {
+        showToast('Failed to load dogs', 'error');
+      }
+    }
+
+    // Load community dogs
+    async function loadCommunityDogs() {
+      try {
+        const membersRes = await fetch('/api/members');
+        const members = await membersRes.json();
+        const grid = document.getElementById('communityDogsGrid');
+        grid.innerHTML = '';
+
+        let totalDogs = 0;
+        for (const member of members) {
+          if (member.id === session.userId) continue; // Skip own dogs (shown above)
+          try {
+            const dogsRes = await fetch(`/api/members/${member.id}/dogs`);
+            const dogs = await dogsRes.json();
+            dogs.forEach(dog => {
+              const card = createDogCard({ ...dog, ownerName: member.name }, false);
+              grid.appendChild(card);
+              totalDogs++;
+            });
+          } catch (e) { /* skip */ }
+        }
+
+        if (totalDogs === 0) {
+          grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">No community dogs yet.</p>';
+        }
+      } catch (e) {
+        showToast('Failed to load community dogs', 'error');
+      }
+    }
+
+    function createDogCard(dog, isOwn) {
+      const card = document.createElement('div');
+      card.className = 'dog-card';
+
+      const imgHtml = dog.picture
+        ? `<img src="${escapeHtml(dog.picture)}" alt="${escapeHtml(dog.name)}">`
+        : '<span class="dog-placeholder">&#128054;</span>';
+
+      const metaParts = [];
+      if (dog.breed) metaParts.push(dog.breed);
+      if (dog.age) metaParts.push(dog.age);
+      if (dog.ownerName) metaParts.push(`Owner: ${dog.ownerName}`);
+
+      let actionsHtml = '';
+      if (isOwn) {
+        actionsHtml = `
+          <div class="dog-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openDogModal(${dog.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDog(${dog.id})">Delete</button>
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="dog-card-image">${imgHtml}</div>
+        <div class="dog-card-body">
+          <h3>${escapeHtml(dog.name)}</h3>
+          ${metaParts.length ? `<div class="dog-meta">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
+          ${dog.bio ? `<p class="dog-bio">${escapeHtml(dog.bio)}</p>` : ''}
+          ${actionsHtml}
+        </div>
+      `;
+      return card;
+    }
+
+    // Modal controls
+    let editingDog = null;
+
+    function openDogModal(dogId) {
+      const modal = document.getElementById('dogModal');
+      modal.style.display = 'flex';
+      dogPhotoData = null;
+
+      if (dogId) {
+        // Edit mode - fetch dog data
+        document.getElementById('dogModalTitle').textContent = 'Edit Dog';
+        document.getElementById('dogEditId').value = dogId;
+        fetch(`/api/dogs`).then(r => r.json()).then(dogs => {
+          const dog = dogs.find(d => d.id === dogId);
+          if (dog) {
+            document.getElementById('dogName').value = dog.name || '';
+            document.getElementById('dogBreed').value = dog.breed || '';
+            document.getElementById('dogAge').value = dog.age || '';
+            document.getElementById('dogBio').value = dog.bio || '';
+            if (dog.picture) {
+              document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(dog.picture)}" alt="">`;
+              dogPhotoData = dog.picture;
+            }
+          }
+        });
+      } else {
+        // Add mode
+        document.getElementById('dogModalTitle').textContent = 'Add Dog';
+        document.getElementById('dogEditId').value = '';
+        document.getElementById('dogName').value = '';
+        document.getElementById('dogBreed').value = '';
+        document.getElementById('dogAge').value = '';
+        document.getElementById('dogBio').value = '';
+        document.getElementById('dogPhotoPreview').innerHTML = '<span class="dog-placeholder">&#128054;</span>';
+      }
+    }
+
+    document.getElementById('dogCancelBtn').addEventListener('click', () => {
+      document.getElementById('dogModal').style.display = 'none';
+    });
+
+    document.getElementById('dogModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('dogModal')) {
+        document.getElementById('dogModal').style.display = 'none';
+      }
+    });
+
+    document.getElementById('dogPhotoFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('Image too large (max 2MB)', 'error'); return; }
+      dogPhotoData = await fileToBase64(file);
+      document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(dogPhotoData)}" alt="">`;
+    });
+
+    document.getElementById('dogSaveBtn').addEventListener('click', async () => {
+      const name = document.getElementById('dogName').value.trim();
+      if (!name) { showToast('Dog name is required', 'error'); return; }
+
+      const btn = document.getElementById('dogSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const dogId = document.getElementById('dogEditId').value;
+      const body = {
+        name,
+        breed: document.getElementById('dogBreed').value.trim() || null,
+        age: document.getElementById('dogAge').value.trim() || null,
+        bio: document.getElementById('dogBio').value.trim() || null,
+      };
+
+      try {
+        if (dogId) {
+          // Update
+          await fetch(`/api/dogs/${dogId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          // Upload photo if changed
+          if (dogPhotoData && !dogPhotoData.startsWith('data:')) {
+            // Already existing photo, no change
+          } else if (dogPhotoData) {
+            await fetch(`/api/dogs/${dogId}/picture`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: dogPhotoData }),
+            });
+          }
+          showToast('Dog updated', 'success');
+        } else {
+          // Create
+          const res = await fetch('/api/dogs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (data.success && dogPhotoData) {
+            await fetch(`/api/dogs/${data.id}/picture`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: dogPhotoData }),
+            });
+          }
+          showToast('Dog added', 'success');
+        }
+
+        document.getElementById('dogModal').style.display = 'none';
+        loadMyDogs();
+        loadCommunityDogs();
+      } catch (e) {
+        showToast('Error saving dog', 'error');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Save';
+    });
+
+    async function deleteDog(id) {
+      if (!confirm('Remove this dog profile?')) return;
+      try {
+        await fetch(`/api/dogs/${id}`, { method: 'DELETE' });
+        showToast('Dog removed', 'success');
+        loadMyDogs();
+      } catch (e) {
+        showToast('Error removing dog', 'error');
+      }
+    }
+
+    loadMyDogs();
+    loadCommunityDogs();
+  </script>
+</body>
+</html>

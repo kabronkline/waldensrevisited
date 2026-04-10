@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "/opt/homebrew/Cellar/node/25.8.2/bin/node",
+      "runtimeExecutable": "/usr/local/bin/node",
       "runtimeArgs": ["node_modules/.bin/wrangler", "dev", "--port", "8787"],
       "port": 8787
     }

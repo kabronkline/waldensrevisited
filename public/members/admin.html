@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/surveys.html">Surveys</a></li>
+
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li><a href="/members/admin.html">Admin</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container">
+
+      <div class="members-header">
+        <h1>Admin Panel</h1>
+        <p>Manage users, approve content, and view audit logs.</p>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="posts">Approval Queue</button>
+        <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
+        <button class="admin-tab" data-tab="audit">Audit Log</button>
+      </div>
+
+      <!-- Approval Queue Tab -->
+      <div class="tab-content" id="tab-posts">
+        <div class="profile-section">
+          <h2>Pending Posts</h2>
+          <div id="pendingPosts"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Users Tab (Admin only) -->
+      <div class="tab-content" id="tab-users" style="display:none;">
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>All Users</h2>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Agreement</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="6" style="color:var(--stone);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audit Log Tab -->
+      <div class="tab-content" id="tab-audit" style="display:none;">
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>Recent Activity</h2>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'contributor'];
+    if (!elevatedRoles.includes(session.role)) {
+      document.body.innerHTML = '<div class="pending-page"><div class="pending-card"><h1>Access Denied</h1><p>You do not have permission to access this page.</p><a href="/members/" class="btn btn-secondary">Back to Members</a></div></div>';
+    }
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // Hide users tab for non-admins
+    if (session.role !== 'admin') {
+      document.getElementById('usersTab').style.display = 'none';
+    }
+
+    // Tab switching
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).style.display = '';
+      });
+    });
+
+    // Load pending posts
+    async function loadPendingPosts() {
+      try {
+        const res = await fetch('/api/admin/pending-posts');
+        const posts = await res.json();
+        const container = document.getElementById('pendingPosts');
+
+        if (posts.length === 0) {
+          container.innerHTML = '<p style="color:var(--stone);">No posts pending approval.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        posts.forEach(post => {
+          const item = document.createElement('div');
+          item.className = 'pending-item';
+
+          let previewHtml = '';
+          if (post.image) {
+            previewHtml = `<div class="pending-item-preview"><img src="${escapeHtml(post.image)}" alt=""></div>`;
+          }
+
+          item.innerHTML = `
+            ${previewHtml}
+            <div class="pending-item-info">
+              <h4>${escapeHtml(post.author_name)}</h4>
+              <span>${escapeHtml(post.author_email)} &middot; ${formatTimeAgo(post.created_at)}</span>
+              <p style="margin-top:4px;font-size:0.9rem;color:var(--charcoal);white-space:pre-wrap;">${escapeHtml(post.content.substring(0, 200))}${post.content.length > 200 ? '...' : ''}</p>
+            </div>
+            <div class="pending-item-actions" style="flex-direction:column;">
+              <button class="btn btn-primary btn-sm" onclick="approvePost(${post.id})">Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectPost(${post.id})">Reject</button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (e) {
+        showToast('Failed to load pending posts', 'error');
+      }
+    }
+
+    async function approvePost(id) {
+      try {
+        await fetch(`/api/admin/approve/post/${id}`, { method: 'PUT' });
+        showToast('Post approved', 'success');
+        loadPendingPosts();
+      } catch (e) {
+        showToast('Error approving post', 'error');
+      }
+    }
+
+    async function rejectPost(id) {
+      if (!confirm('Reject and delete this post?')) return;
+      try {
+        await fetch(`/api/admin/reject/post/${id}`, { method: 'DELETE' });
+        showToast('Post rejected', 'success');
+        loadPendingPosts();
+      } catch (e) {
+        showToast('Error rejecting post', 'error');
+      }
+    }
+
+    // Load users (admin only)
+    async function loadUsers() {
+      if (session.role !== 'admin') return;
+      try {
+        const res = await fetch('/api/admin/users');
+        const users = await res.json();
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+
+        const roleOptions = ['pending', 'member', 'contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+
+        users.forEach(user => {
+          const tr = document.createElement('tr');
+          const agreementStatus = user.agreement_signed_at
+            ? `<span class="approval-badge approved">Signed</span>`
+            : `<span class="approval-badge pending">Not signed</span>`;
+
+          const roleSelect = roleOptions.map(r =>
+            `<option value="${r}" ${user.role === r ? 'selected' : ''}>${formatRole(r)}</option>`
+          ).join('');
+
+          tr.innerHTML = `
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="directory-avatar">
+                  ${user.profile_picture || user.google_picture
+                    ? `<img src="${escapeHtml(user.profile_picture || user.google_picture)}" alt="">`
+                    : ''}
+                </div>
+                ${escapeHtml(user.name)}
+              </div>
+            </td>
+            <td>${escapeHtml(user.email)}</td>
+            <td>
+              <select class="role-select" onchange="changeRole(${user.id}, this.value, '${user.role}', this)">
+                ${roleSelect}
+              </select>
+            </td>
+            <td>${agreementStatus}</td>
+            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+            <td>${user.address_label ? escapeHtml(user.address_label) : '<span style="color:var(--lichen);">Not set</span>'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        showToast('Failed to load users', 'error');
+      }
+    }
+
+    async function changeRole(userId, newRole, oldRole, selectEl) {
+      if (newRole === oldRole) return;
+      if (!confirm(`Change role from "${formatRole(oldRole)}" to "${formatRole(newRole)}"?`)) {
+        selectEl.value = oldRole;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/role`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: newRole }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Role updated', 'success');
+        } else {
+          showToast(data.error || 'Error', 'error');
+          selectEl.value = oldRole;
+        }
+      } catch (e) {
+        showToast('Error updating role', 'error');
+        selectEl.value = oldRole;
+      }
+    }
+
+    // Load audit log
+    async function loadAuditLog() {
+      try {
+        const res = await fetch('/api/admin/audit-log');
+        const logs = await res.json();
+        const tbody = document.getElementById('auditTableBody');
+        tbody.innerHTML = '';
+
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No activity yet.</td></tr>';
+          return;
+        }
+
+        logs.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(log.created_at).toLocaleString()}</td>
+            <td>${escapeHtml(log.admin_name)}</td>
+            <td>${escapeHtml(log.action)}</td>
+            <td>${log.target_name ? escapeHtml(log.target_name) : '-'}</td>
+            <td>${log.details ? escapeHtml(log.details) : '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        showToast('Failed to load audit log', 'error');
+      }
+    }
+
+    loadPendingPosts();
+    loadUsers();
+    loadAuditLog();
+  </script>
+</body>
+</html>

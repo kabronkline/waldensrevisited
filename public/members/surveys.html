@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surveys — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+  <style>
+    .survey-card {
+      background: var(--parchment);
+      border: 1px solid rgba(139, 115, 85, 0.12);
+      border-radius: 12px;
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .survey-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--forest-deep);
+      margin-bottom: 4px;
+    }
+    .survey-meta {
+      font-size: 0.85rem;
+      color: var(--stone);
+      margin-bottom: var(--space-sm);
+    }
+    .survey-description {
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      margin-bottom: var(--space-sm);
+      line-height: 1.6;
+    }
+    .survey-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      background: var(--mist);
+      border: 1px solid rgba(139, 115, 85, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .survey-option:hover { border-color: var(--pond-surface); }
+    .survey-option.selected {
+      border-color: var(--forest-deep);
+      background: rgba(61, 94, 74, 0.08);
+    }
+    .survey-option.voted { cursor: default; }
+    .survey-option input { accent-color: var(--forest-deep); }
+    .survey-option-label { flex: 1; font-size: 0.95rem; }
+    .survey-option-count {
+      font-size: 0.85rem;
+      color: var(--stone);
+      font-weight: 500;
+    }
+    .survey-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: rgba(107, 143, 122, 0.12);
+      transition: width 0.4s ease;
+      z-index: 0;
+    }
+    .survey-option > * { position: relative; z-index: 1; }
+    .survey-voters {
+      font-size: 0.8rem;
+      color: var(--lichen);
+      margin-top: var(--space-xs);
+    }
+    .survey-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: var(--space-sm);
+    }
+    .create-survey-form .option-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .create-survey-form .option-row input { flex: 1; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/members/">Wall</a></li>
+        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
+        <li><a href="/members/surveys.html">Surveys</a></li>
+        <li><a href="/members/profile.html">My Profile</a></li>
+        <li><a href="/governance.html">Governance</a></li>
+        <li><a href="/auth/logout">Sign Out</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-page">
+    <div class="container" style="max-width:750px;">
+
+      <div class="members-header">
+        <h1>Community Surveys</h1>
+        <p>Vote on neighborhood topics and see what your neighbors think.</p>
+      </div>
+
+      <!-- Create Survey (officers/contributors/admins) -->
+      <div class="profile-section" id="createSurveySection" style="display:none;">
+        <h2>Create Survey</h2>
+        <div class="create-survey-form">
+          <div class="form-group">
+            <label for="surveyTitle">Question / Title *</label>
+            <input type="text" id="surveyTitle" placeholder="e.g., Should we add a dog park?" maxlength="200">
+          </div>
+          <div class="form-group">
+            <label for="surveyDesc">Description (optional)</label>
+            <textarea id="surveyDesc" placeholder="Provide more context..." maxlength="1000" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Options * (2-10)</label>
+            <div id="optionsContainer">
+              <div class="option-row"><input type="text" placeholder="Option 1" maxlength="100"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Remove">&times;</button></div>
+              <div class="option-row"><input type="text" placeholder="Option 2" maxlength="100"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Remove">&times;</button></div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="addOptionBtn" style="margin-top:4px;">+ Add Option</button>
+          </div>
+          <div class="form-group">
+            <div class="toggle-group">
+              <label class="toggle">
+                <input type="checkbox" id="allowMultiple">
+                <span class="toggle-slider"></span>
+              </label>
+              <span>Allow multiple selections</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="closesAt">Closes on (optional)</label>
+            <input type="date" id="closesAt" style="width:100%;padding:10px 14px;border:1px solid rgba(139,115,85,0.2);border-radius:8px;font-family:var(--font-body);font-size:0.95rem;">
+          </div>
+          <button class="btn btn-primary" id="createSurveyBtn">Create Survey</button>
+        </div>
+      </div>
+
+      <!-- Survey List -->
+      <div id="surveysList"><p style="color:var(--stone);">Loading surveys...</p></div>
+
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    const canCreate = ['contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'].includes(session.role);
+    if (canCreate) {
+      document.getElementById('createSurveySection').style.display = '';
+    }
+
+    // Add option
+    document.getElementById('addOptionBtn').addEventListener('click', () => {
+      const container = document.getElementById('optionsContainer');
+      if (container.children.length >= 10) { showToast('Maximum 10 options', 'error'); return; }
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.innerHTML = `<input type="text" placeholder="Option ${container.children.length + 1}" maxlength="100"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Remove">&times;</button>`;
+      container.appendChild(row);
+    });
+
+    // Create survey
+    document.getElementById('createSurveyBtn').addEventListener('click', async () => {
+      const title = document.getElementById('surveyTitle').value.trim();
+      if (!title) { showToast('Title is required', 'error'); return; }
+
+      const optionInputs = document.querySelectorAll('#optionsContainer input');
+      const options = Array.from(optionInputs).map(i => i.value.trim()).filter(v => v);
+      if (options.length < 2) { showToast('At least 2 options required', 'error'); return; }
+
+      const btn = document.getElementById('createSurveyBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        const body = {
+          title,
+          description: document.getElementById('surveyDesc').value.trim() || null,
+          options,
+          allow_multiple: document.getElementById('allowMultiple').checked,
+          closes_at: document.getElementById('closesAt').value || null,
+        };
+        const res = await fetch('/api/surveys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Survey created', 'success');
+          document.getElementById('surveyTitle').value = '';
+          document.getElementById('surveyDesc').value = '';
+          document.getElementById('closesAt').value = '';
+          document.getElementById('allowMultiple').checked = false;
+          document.getElementById('optionsContainer').innerHTML = `
+            <div class="option-row"><input type="text" placeholder="Option 1" maxlength="100"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Remove">&times;</button></div>
+            <div class="option-row"><input type="text" placeholder="Option 2" maxlength="100"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Remove">&times;</button></div>
+          `;
+          loadSurveys();
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Error creating survey', 'error');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Create Survey';
+    });
+
+    // Load surveys
+    async function loadSurveys() {
+      try {
+        const res = await fetch('/api/surveys');
+        const surveys = await res.json();
+        const container = document.getElementById('surveysList');
+        container.innerHTML = '';
+
+        if (surveys.length === 0) {
+          container.innerHTML = '<div class="profile-section" style="text-align:center;color:var(--stone);">No active surveys.</div>';
+          return;
+        }
+
+        surveys.forEach(survey => {
+          container.appendChild(createSurveyCard(survey));
+        });
+      } catch (e) {
+        showToast('Failed to load surveys', 'error');
+      }
+    }
+
+    function createSurveyCard(survey) {
+      const card = document.createElement('div');
+      card.className = 'survey-card';
+
+      const options = JSON.parse(survey.options);
+      const hasVoted = survey.my_votes.length > 0;
+      const voteCounts = {};
+      (survey.vote_counts || []).forEach(vc => { voteCounts[vc.selected_option] = vc.count; });
+      const totalVotes = Object.values(voteCounts).reduce((a, b) => a + b, 0);
+
+      const isCreator = survey.user_id === session.userId;
+      const isOfficer = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'].includes(session.role);
+
+      let optionsHtml = options.map((opt, i) => {
+        const count = voteCounts[i] || 0;
+        const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+        const selected = survey.my_votes.includes(i);
+        const inputType = survey.allow_multiple ? 'checkbox' : 'radio';
+
+        if (hasVoted) {
+          return `
+            <div class="survey-option voted ${selected ? 'selected' : ''}">
+              <div class="survey-bar" style="width:${pct}%"></div>
+              <span class="survey-option-label">${escapeHtml(opt)}</span>
+              <span class="survey-option-count">${count} (${pct}%)</span>
+            </div>`;
+        } else {
+          return `
+            <div class="survey-option" onclick="castVote(${survey.id}, ${i}, ${survey.allow_multiple ? 'true' : 'false'}, this)">
+              <input type="${inputType}" name="survey-${survey.id}" ${selected ? 'checked' : ''}>
+              <span class="survey-option-label">${escapeHtml(opt)}</span>
+            </div>`;
+        }
+      }).join('');
+
+      let actionsHtml = '';
+      if (!hasVoted && !survey.allow_multiple) {
+        // Single-select: clicking votes immediately
+      } else if (!hasVoted && survey.allow_multiple) {
+        actionsHtml = `<button class="btn btn-primary btn-sm" onclick="submitMultiVote(${survey.id})">Submit Vote</button>`;
+      }
+      if (isCreator || isOfficer) {
+        actionsHtml += `<button class="btn btn-secondary btn-sm" onclick="closeSurvey(${survey.id})">Close Survey</button>`;
+      }
+      if (isCreator || session.role === 'admin') {
+        actionsHtml += `<button class="btn btn-danger btn-sm" onclick="deleteSurvey(${survey.id})">Delete</button>`;
+      }
+
+      const roleLabel = formatRole(survey.author_role);
+
+      card.innerHTML = `
+        <h3>${escapeHtml(survey.title)}</h3>
+        <div class="survey-meta">
+          by ${escapeHtml(survey.author_name)}
+          <span class="role-badge ${getRoleBadgeClass(survey.author_role)}" style="font-size:0.7rem;">${roleLabel}</span>
+          &middot; ${formatTimeAgo(survey.created_at)}
+          ${survey.closes_at ? `&middot; Closes ${new Date(survey.closes_at).toLocaleDateString()}` : ''}
+        </div>
+        ${survey.description ? `<p class="survey-description">${escapeHtml(survey.description)}</p>` : ''}
+        <div id="options-${survey.id}">${optionsHtml}</div>
+        <div class="survey-voters">${survey.total_voters} voter${survey.total_voters !== 1 ? 's' : ''}</div>
+        ${actionsHtml ? `<div class="survey-actions">${actionsHtml}</div>` : ''}
+      `;
+      return card;
+    }
+
+    async function castVote(surveyId, optionIndex, isMultiple, el) {
+      if (isMultiple) {
+        // For multi-select, just toggle the checkbox
+        const checkbox = el.querySelector('input');
+        checkbox.checked = !checkbox.checked;
+        el.classList.toggle('selected');
+        return;
+      }
+
+      // Single-select: vote immediately
+      try {
+        const res = await fetch(`/api/surveys/${surveyId}/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected: optionIndex }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Vote recorded', 'success');
+          loadSurveys();
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Error voting', 'error');
+      }
+    }
+
+    async function submitMultiVote(surveyId) {
+      const checked = document.querySelectorAll(`#options-${surveyId} input:checked`);
+      if (checked.length === 0) { showToast('Select at least one option', 'error'); return; }
+
+      const selected = Array.from(checked).map(input => {
+        const option = input.closest('.survey-option');
+        const allOptions = Array.from(document.querySelectorAll(`#options-${surveyId} .survey-option`));
+        return allOptions.indexOf(option);
+      });
+
+      try {
+        const res = await fetch(`/api/surveys/${surveyId}/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Vote recorded', 'success');
+          loadSurveys();
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Error voting', 'error');
+      }
+    }
+
+    async function closeSurvey(id) {
+      if (!confirm('Close this survey? Members will no longer be able to vote.')) return;
+      try {
+        await fetch(`/api/surveys/${id}/close`, { method: 'PUT' });
+        showToast('Survey closed', 'success');
+        loadSurveys();
+      } catch (e) {
+        showToast('Error closing survey', 'error');
+      }
+    }
+
+    async function deleteSurvey(id) {
+      if (!confirm('Delete this survey and all its responses?')) return;
+      try {
+        await fetch(`/api/surveys/${id}`, { method: 'DELETE' });
+        showToast('Survey deleted', 'success');
+        loadSurveys();
+      } catch (e) {
+        showToast('Error deleting survey', 'error');
+      }
+    }
+
+    loadSurveys();
+  </script>
+</body>
+</html>
