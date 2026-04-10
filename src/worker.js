@@ -129,8 +129,8 @@ export default {
         return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);
       }
 
-      // Users with a role but no agreement must sign first
-      if (!session.user.agreementSigned && session.user.role !== 'pending' && !pathname.startsWith('/members/agreement')) {
+      // Users with a role but no agreement must sign first (auditors exempt)
+      if (!session.user.agreementSigned && session.user.role !== 'pending' && session.user.role !== 'auditor' && !pathname.startsWith('/members/agreement')) {
         return Response.redirect(new URL('/members/agreement.html', url.origin).toString(), 302);
       }
 

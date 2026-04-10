@@ -21,6 +21,7 @@ function formatRole(role) {
     treasurer: 'Treasurer',
     other_officer: 'Officer',
     admin: 'Admin',
+    auditor: 'Auditor',
   };
   return labels[role] || role;
 }
@@ -71,7 +72,7 @@ function initMembersSidebar(activePage) {
   const session = window.__session;
   if (!session) return;
 
-  const isElevated = ['admin','president','secretary','treasurer','other_officer','contributor'].includes(session.role);
+  const isElevated = ['admin','president','secretary','treasurer','other_officer','contributor','auditor'].includes(session.role);
 
   const sidebarHtml = `
     <div class="sidebar-section">

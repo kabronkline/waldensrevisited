@@ -45,8 +45,7 @@
         <li><a href="/#covenants">Covenants</a></li>
         <li id="navGovernance"><a href="/governance.html">Governance</a></li>
         <li id="navSignIn"><a href="/members/" class="nav-signin">Sign In</a></li>
-        <li id="navMembers" style="display:none;"><a href="/members/">Members</a></li>
-        <li id="navUserMenu" style="display:none;"><a href="/members/profile.html" class="nav-user-link"><span id="navUserName"></span></a></li>
+        <li id="navMembers" style="display:none;"><a href="/members/" class="nav-signin">Members</a></li>
       </ul>
     </div>
   </nav>
@@ -783,19 +782,12 @@
     (function() {
       var session = window.__session;
       if (session) {
-        // Hide Sign In and Governance (it's under Members now), show Members + user menu
         var signIn = document.getElementById('navSignIn');
         var governance = document.getElementById('navGovernance');
         var members = document.getElementById('navMembers');
-        var userMenu = document.getElementById('navUserMenu');
-        var userName = document.getElementById('navUserName');
         if (signIn) signIn.style.display = 'none';
         if (governance) governance.style.display = 'none';
         if (members) members.style.display = '';
-        if (userMenu) {
-          userMenu.style.display = '';
-          userName.textContent = session.name || 'Profile';
-        }
       }
     })();
   </script>

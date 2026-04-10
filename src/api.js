@@ -1,6 +1,6 @@
 // API route handlers for members section
 
-const VALID_ROLES = ['pending', 'member', 'contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+const VALID_ROLES = ['pending', 'member', 'contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
 const OFFICER_ROLES = ['president', 'secretary', 'treasurer', 'other_officer', 'admin'];
 const AUTO_APPROVE_ROLES = ['contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
 const MAX_DOGS = 5;
@@ -304,7 +304,7 @@ export async function handleApi(request, env, session) {
       `SELECT u.id, u.name, u.role, u.profile_picture, u.google_picture, a.full_label as address_label
        FROM users u
        LEFT JOIN addresses a ON u.address_id = a.id
-       WHERE u.is_anonymous = 0 AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
+       WHERE u.is_anonymous = 0 AND u.role != 'pending' AND u.role != 'auditor' AND u.agreement_signed_at IS NOT NULL
        ORDER BY u.name`
     ).all();
     return json(results);
@@ -356,21 +356,26 @@ export async function handleApi(request, env, session) {
       if (typeof roles === 'string') roles = roles.split(',').map(r => r.trim());
 
       // Validate all roles
-      const validSet = ['member', 'contributor', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+      const validSet = ['member', 'contributor', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
       for (const r of roles) {
         if (!validSet.includes(r)) return json({ error: `Invalid role: ${r}` }, 400);
       }
 
-      // Enforce role hierarchy:
-      // President/Secretary/Treasurer/Other Officer → auto-include officer + member
-      const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
-      if (roles.some(r => officerTitles.includes(r))) {
-        if (!roles.includes('officer')) roles.push('officer');
+      // Auditor is mutually exclusive — cannot combine with any other role
+      if (roles.includes('auditor')) {
+        if (roles.length > 1) return json({ error: 'Auditor role is mutually exclusive and cannot be combined with other roles' }, 400);
+        roles = ['auditor'];
+      } else {
+        // Enforce role hierarchy:
+        // President/Secretary/Treasurer/Other Officer → auto-include officer + member
+        const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
+        if (roles.some(r => officerTitles.includes(r))) {
+          if (!roles.includes('officer')) roles.push('officer');
+        }
+        if (roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) {
+          if (!roles.includes('member')) roles.push('member');
+        }
       }
-      if (roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) {
-        if (!roles.includes('member')) roles.push('member');
-      }
-      // If just 'member' selected, that's fine
 
       // Member role requires address
       if (roles.includes('member') && body.address_id === undefined) {
