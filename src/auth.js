@@ -139,10 +139,12 @@ export async function handleCallback(request, env) {
 
   // Determine redirect
   let redirectTo = stateData.redirect || '/members/';
-  if (!user.agreement_signed_at) {
-    redirectTo = '/members/agreement.html';
-  } else if (user.role === 'pending') {
+  if (user.role === 'pending') {
+    // Pending users go straight to "contact admin" — no agreement needed yet
     redirectTo = '/members/pending.html';
+  } else if (!user.agreement_signed_at) {
+    // Users with a role but no agreement must sign first
+    redirectTo = '/members/agreement.html';
   }
 
   return new Response(null, {

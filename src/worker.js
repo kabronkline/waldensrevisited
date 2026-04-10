@@ -124,14 +124,14 @@ export default {
         return Response.redirect(new URL(loginUrl, url.origin).toString(), 302);
       }
 
-      // Check agreement
-      if (!session.user.agreementSigned && !pathname.startsWith('/members/agreement')) {
-        return Response.redirect(new URL('/members/agreement.html', url.origin).toString(), 302);
+      // Pending users go straight to contact-admin page (no agreement needed yet)
+      if (session.user.role === 'pending' && !pathname.startsWith('/members/pending')) {
+        return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);
       }
 
-      // Check pending (allow agreement and pending pages)
-      if (session.user.role === 'pending' && !pathname.startsWith('/members/agreement') && !pathname.startsWith('/members/pending')) {
-        return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);
+      // Users with a role but no agreement must sign first
+      if (!session.user.agreementSigned && session.user.role !== 'pending' && !pathname.startsWith('/members/agreement')) {
+        return Response.redirect(new URL('/members/agreement.html', url.origin).toString(), 302);
       }
 
       // Dynamic signer URL handling (within protected section)

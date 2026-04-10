@@ -480,6 +480,16 @@ export async function handleApi(request, env, session) {
       return json({ success: true });
     }
 
+    // GET /api/admin/pending-users — users awaiting role assignment
+    if (path === '/api/admin/pending-users' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT id, email, name, google_picture, created_at
+         FROM users WHERE role = 'pending'
+         ORDER BY created_at DESC`
+      ).all();
+      return json(results);
+    }
+
     // GET /api/admin/pending-posts — posts awaiting approval
     if (path === '/api/admin/pending-posts' && method === 'GET') {
       const { results } = await env.DB.prepare(
