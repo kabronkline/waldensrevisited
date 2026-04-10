@@ -48,21 +48,27 @@
         <p>Manage your profile information and privacy settings.</p>
       </div>
 
-      <!-- Profile Picture -->
+      <!-- Avatar / Profile Picture -->
       <div class="profile-section">
-        <h2>Profile Picture</h2>
-        <div class="avatar-upload">
-          <div class="avatar-preview" id="avatarPreview">
+        <h2>Avatar</h2>
+        <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Choose an icon or upload your own photo.</p>
+        <div class="avatar-upload" style="margin-bottom:var(--space-sm);">
+          <div class="avatar-preview" id="avatarPreview" style="width:80px;height:80px;">
             <span class="placeholder">?</span>
           </div>
           <div>
+            <button class="btn btn-secondary btn-sm" id="pickAvatarBtn">Choose Icon</button>
             <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
               <input type="file" id="avatarFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
-              Change Photo
+              Upload Photo
             </label>
             <button class="btn btn-danger btn-sm" id="removeAvatar" style="display:none;">Remove</button>
-            <p style="font-size:0.8rem;color:var(--lichen);margin-top:6px;">Max 2MB. JPEG, PNG, WebP, or GIF.</p>
+            <p style="font-size:0.8rem;color:var(--lichen);margin-top:6px;">Max 2MB for uploaded photos.</p>
           </div>
+        </div>
+        <!-- Avatar picker grid (hidden by default) -->
+        <div id="avatarPicker" style="display:none;background:var(--mist);border-radius:8px;padding:var(--space-sm);margin-top:var(--space-xs);">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px;" id="avatarGrid"></div>
         </div>
       </div>
 
@@ -116,6 +122,7 @@
     </div>
   </div>
 
+  <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
     const session = window.__session;
@@ -146,13 +153,30 @@
         roleEl.textContent = formatRole(currentUser.role);
         roleEl.className = `role-badge ${getRoleBadgeClass(currentUser.role)}`;
 
-        // Avatar
+        // Avatar — show uploaded photo, or icon avatar, or Google pic
         const avatarEl = document.getElementById('avatarPreview');
-        const pic = currentUser.profile_picture || currentUser.google_picture;
-        if (pic) {
-          avatarEl.innerHTML = `<img src="${escapeHtml(pic)}" alt="">`;
+        if (currentUser.profile_picture) {
+          avatarEl.innerHTML = `<img src="${escapeHtml(currentUser.profile_picture)}" alt="">`;
+          document.getElementById('removeAvatar').style.display = '';
+        } else if (currentUser.avatar_id) {
+          avatarEl.innerHTML = getAvatarSvg(currentUser.avatar_id);
+          document.getElementById('removeAvatar').style.display = '';
+        } else if (currentUser.google_picture) {
+          avatarEl.innerHTML = `<img src="${escapeHtml(currentUser.google_picture)}" alt="">`;
+          document.getElementById('removeAvatar').style.display = 'none';
         }
-        document.getElementById('removeAvatar').style.display = currentUser.profile_picture ? '' : 'none';
+
+        // Build avatar picker grid
+        const grid = document.getElementById('avatarGrid');
+        AVATARS.forEach(av => {
+          const btn = document.createElement('div');
+          btn.style.cssText = 'width:48px;height:48px;border-radius:8px;cursor:pointer;border:2px solid transparent;padding:2px;transition:border-color 0.15s;';
+          if (currentUser.avatar_id === av.id) btn.style.borderColor = 'var(--forest-deep)';
+          btn.innerHTML = av.svg;
+          btn.title = av.name;
+          btn.addEventListener('click', () => selectAvatar(av.id));
+          grid.appendChild(btn);
+        });
 
         // Address dropdown
         const select = document.getElementById('addressSelect');
@@ -245,6 +269,35 @@
       btn.disabled = false;
       btn.textContent = 'Save Changes';
     });
+
+    // Avatar picker toggle
+    document.getElementById('pickAvatarBtn').addEventListener('click', () => {
+      const picker = document.getElementById('avatarPicker');
+      picker.style.display = picker.style.display === 'none' ? '' : 'none';
+    });
+
+    async function selectAvatar(avatarId) {
+      try {
+        const res = await fetch('/api/me', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar_id: avatarId, profile_picture: null }),
+        });
+        // Also clear uploaded photo if any
+        await fetch('/api/me/profile-picture', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('avatarPreview').innerHTML = getAvatarSvg(avatarId);
+          document.getElementById('avatarPicker').style.display = 'none';
+          document.getElementById('removeAvatar').style.display = '';
+          // Update border highlight
+          document.querySelectorAll('#avatarGrid > div').forEach(d => d.style.borderColor = 'transparent');
+          showToast('Avatar updated', 'success');
+        }
+      } catch (e) {
+        showToast('Error updating avatar', 'error');
+      }
+    }
 
     loadProfile();
   </script>

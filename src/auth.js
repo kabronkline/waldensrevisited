@@ -111,9 +111,11 @@ export async function handleCallback(request, env) {
     }
   } else {
     const role = isAdmin ? 'admin' : 'pending';
+    const roles = isAdmin ? 'admin,member' : 'pending';
+    const avatarId = Math.floor(Math.random() * 50) + 1;
     const result = await env.DB.prepare(
-      'INSERT INTO users (google_id, email, name, google_picture, role) VALUES (?, ?, ?, ?, ?)'
-    ).bind(googleId, email, name, picture, role).run();
+      'INSERT INTO users (google_id, email, name, google_picture, role, roles, avatar_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(googleId, email, name, picture, role, roles, avatarId).run();
     user = {
       id: result.meta.last_row_id,
       google_id: googleId,

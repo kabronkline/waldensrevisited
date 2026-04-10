@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
   address_id INTEGER REFERENCES addresses(id),
   is_anonymous INTEGER DEFAULT 0,
   role TEXT DEFAULT 'pending',
+  roles TEXT DEFAULT 'pending',
+  avatar_id INTEGER,
   agreement_signed_at TEXT,
   agreement_ip TEXT,
   created_at TEXT DEFAULT (datetime('now')),

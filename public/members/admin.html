@@ -166,28 +166,47 @@
           return;
         }
 
+        // Load addresses for the picker
+        let addressOptions = '';
+        try {
+          const addrRes = await fetch('/api/addresses');
+          const addrs = await addrRes.json();
+          addressOptions = addrs.map(a => `<option value="${a.id}">${escapeHtml(a.full_label)}</option>`).join('');
+        } catch(e) {}
+
         container.innerHTML = '';
         users.forEach(user => {
           const item = document.createElement('div');
           item.className = 'pending-item';
+          item.style.flexDirection = 'column';
+          item.style.alignItems = 'stretch';
           item.innerHTML = `
-            <div class="pending-item-preview" style="border-radius:50%;">
-              ${user.google_picture ? `<img src="${escapeHtml(user.google_picture)}" alt="">` : ''}
+            <div style="display:flex;gap:var(--space-xs);align-items:center;margin-bottom:8px;">
+              <div class="pending-item-preview" style="border-radius:50%;">
+                ${user.google_picture ? `<img src="${escapeHtml(user.google_picture)}" alt="">` : ''}
+              </div>
+              <div class="pending-item-info">
+                <h4>${escapeHtml(user.name)}</h4>
+                <span>${escapeHtml(user.email)} &middot; Joined ${formatTimeAgo(user.created_at)}</span>
+              </div>
             </div>
-            <div class="pending-item-info">
-              <h4>${escapeHtml(user.name)}</h4>
-              <span>${escapeHtml(user.email)} &middot; Joined ${formatTimeAgo(user.created_at)}</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="member" checked disabled> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="contributor" onchange="handleRoleCb(${user.id})"> Contributor</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="president" onchange="handleOfficerCb(${user.id}, this)"> President</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="secretary" onchange="handleOfficerCb(${user.id}, this)"> Secretary</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="treasurer" onchange="handleOfficerCb(${user.id}, this)"> Treasurer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="other_officer" onchange="handleOfficerCb(${user.id}, this)"> Other Officer</label>
+              ${session.role === 'admin' ? '<label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type=checkbox class=role-cb data-uid=' + user.id + ' value=admin onchange="handleRoleCb(' + user.id + ')"> Admin</label>' : ''}
             </div>
-            <div class="pending-item-actions" style="flex-direction:column;">
-              <select class="role-select" id="role-for-${user.id}">
-                <option value="member">Member</option>
-                <option value="contributor">Contributor</option>
-                <option value="president">President</option>
-                <option value="secretary">Secretary</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="other_officer">Officer</option>
-                ${session.role === 'admin' ? '<option value="admin">Admin</option>' : ''}
+            <div style="margin-bottom:8px;">
+              <label style="font-size:0.85rem;font-weight:500;">Address (required):</label>
+              <select class="role-select" id="addr-for-${user.id}" style="width:100%;margin-top:4px;padding:6px 10px;">
+                <option value="">Select address...</option>
+                ${addressOptions}
               </select>
+            </div>
+            <div class="pending-item-actions">
               <button class="btn btn-primary btn-sm" onclick="approveUser(${user.id})">Approve</button>
               <button class="btn btn-danger btn-sm" onclick="rejectUser(${user.id})">Reject</button>
             </div>
@@ -199,18 +218,45 @@
       }
     }
 
-    async function approveUser(userId) {
-      const roleSelect = document.getElementById(`role-for-${userId}`);
-      const role = roleSelect ? roleSelect.value : 'member';
+    // Handle officer checkbox: auto-check officer + member
+    function handleOfficerCb(uid, el) {
+      const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
+      const memberCb = [...cbs].find(c => c.value === 'member');
+      const officerTitles = ['president','secretary','treasurer','other_officer'];
+      const anyOfficerChecked = [...cbs].some(c => officerTitles.includes(c.value) && c.checked);
+      if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+    }
+
+    function handleRoleCb(uid) {
+      const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
+      const memberCb = [...cbs].find(c => c.value === 'member');
+      const hasElevated = [...cbs].some(c => ['contributor','admin','president','secretary','treasurer','other_officer'].includes(c.value) && c.checked);
+      if (memberCb) { memberCb.checked = true; memberCb.disabled = hasElevated || true; }
+    }
+
+    async function approveUser(uid) {
+      const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
+      const roles = [...cbs].filter(c => c.checked).map(c => c.value);
+      if (roles.length === 0) roles.push('member');
+
+      const addrSelect = document.getElementById(`addr-for-${uid}`);
+      const addressId = addrSelect ? parseInt(addrSelect.value) : null;
+
+      if (!addressId) {
+        showToast('Address is required', 'error');
+        addrSelect.focus();
+        return;
+      }
+
       try {
-        const res = await fetch(`/api/admin/users/${userId}/role`, {
+        const res = await fetch(`/api/admin/users/${uid}/role`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role }),
+          body: JSON.stringify({ roles, address_id: addressId }),
         });
         const data = await res.json();
         if (data.success) {
-          showToast(`User approved as ${formatRole(role)}`, 'success');
+          showToast(`User approved as ${roles.map(formatRole).join(', ')}`, 'success');
           loadPendingUsers();
         } else {
           showToast(data.error || 'Error', 'error');
@@ -220,10 +266,8 @@
       }
     }
 
-    async function rejectUser(userId) {
-      if (!confirm('Reject this access request? The user will be deleted.')) return;
-      // For rejection, we could delete the user or keep as pending
-      // For now, we'll just leave them as pending with a note
+    async function rejectUser(uid) {
+      if (!confirm('Reject this access request?')) return;
       showToast('User request rejected', 'success');
       loadPendingUsers();
     }

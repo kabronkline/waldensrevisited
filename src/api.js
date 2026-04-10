@@ -85,6 +85,7 @@ export async function handleApi(request, env, session) {
     }
     if (body.is_anonymous !== undefined) { updates.push('is_anonymous = ?'); params.push(body.is_anonymous ? 1 : 0); }
     if (body.name !== undefined) { updates.push('name = ?'); params.push(body.name); }
+    if (body.avatar_id !== undefined) { updates.push('avatar_id = ?'); params.push(body.avatar_id); }
 
     if (updates.length > 0) {
       updates.push("updated_at = datetime('now')");
@@ -341,20 +342,69 @@ export async function handleApi(request, env, session) {
     }
 
     // PUT /api/admin/users/:id/role — admin only
+    // Now supports multi-role: body.roles is an array like ['member','officer','president']
     const roleMatch = path.match(/^\/api\/admin\/users\/(\d+)\/role$/);
     if (roleMatch && method === 'PUT') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const targetId = parseInt(roleMatch[1]);
       const body = await request.json();
-      if (!VALID_ROLES.includes(body.role)) return json({ error: 'Invalid role' }, 400);
+
+      // Support both old single-role and new multi-role format
+      let roles = body.roles || [body.role];
+      if (typeof roles === 'string') roles = roles.split(',').map(r => r.trim());
+
+      // Validate all roles
+      const validSet = ['member', 'contributor', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+      for (const r of roles) {
+        if (!validSet.includes(r)) return json({ error: `Invalid role: ${r}` }, 400);
+      }
+
+      // Enforce role hierarchy:
+      // President/Secretary/Treasurer/Other Officer → auto-include officer + member
+      const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
+      if (roles.some(r => officerTitles.includes(r))) {
+        if (!roles.includes('officer')) roles.push('officer');
+      }
+      if (roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) {
+        if (!roles.includes('member')) roles.push('member');
+      }
+      // If just 'member' selected, that's fine
+
+      // Member role requires address
+      if (roles.includes('member') && body.address_id === undefined) {
+        // Check if user already has an address
+        const target = await env.DB.prepare('SELECT address_id FROM users WHERE id = ?').bind(targetId).first();
+        if (!target || !target.address_id) {
+          if (!body.address_id) return json({ error: 'Address is required when assigning the Member role' }, 400);
+        }
+      }
 
       const target = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(targetId).first();
       if (!target) return json({ error: 'User not found' }, 404);
 
-      await env.DB.prepare("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?").bind(body.role, targetId).run();
+      // Determine primary role for backward compat (highest privilege)
+      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'contributor', 'member'];
+      const primaryRole = rolePriority.find(r => roles.includes(r)) || 'member';
+      const rolesStr = roles.join(',');
+
+      const updates = ["role = ?", "roles = ?", "updated_at = datetime('now')"];
+      const params = [primaryRole, rolesStr];
+
+      if (body.address_id !== undefined) {
+        if (body.address_id !== null) {
+          const addr = await env.DB.prepare('SELECT id FROM addresses WHERE id = ?').bind(body.address_id).first();
+          if (!addr) return json({ error: 'Invalid address' }, 400);
+        }
+        updates.push('address_id = ?');
+        params.push(body.address_id);
+      }
+
+      params.push(targetId);
+      await env.DB.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...params).run();
+
       await env.DB.prepare(
         'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
-      ).bind(userId, 'role_change', targetId, `${target.role} -> ${body.role}`).run();
+      ).bind(userId, 'role_change', targetId, `${target.roles || target.role} -> ${rolesStr}`).run();
       return json({ success: true });
     }
 
