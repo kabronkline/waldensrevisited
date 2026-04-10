@@ -455,6 +455,93 @@ export async function handleApi(request, env, session) {
       return json({ success: true });
     }
 
+    // --- Properties management (admin only) ---
+
+    // GET /api/admin/properties
+    if (path === '/api/admin/properties' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT p.*, a.full_label as address_label FROM properties p
+         JOIN addresses a ON p.address_id = a.id ORDER BY a.id`
+      ).all();
+      return json(results);
+    }
+
+    // PUT /api/admin/properties/:id
+    const propMatch = path.match(/^\/api\/admin\/properties\/(\d+)$/);
+    if (propMatch && method === 'PUT') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const propId = parseInt(propMatch[1]);
+      const body = await request.json();
+      const fields = [];
+      const params = [];
+      for (const key of ['owner_name', 'owner_type', 'parcel_number', 'acres', 'transfer_type', 'provenance']) {
+        if (body[key] !== undefined) { fields.push(`${key} = ?`); params.push(body[key]); }
+      }
+      if (fields.length > 0) {
+        fields.push("updated_at = datetime('now')");
+        params.push(propId);
+        await env.DB.prepare(`UPDATE properties SET ${fields.join(', ')} WHERE id = ?`).bind(...params).run();
+      }
+      return json({ success: true });
+    }
+
+    // --- Pre-registration (admin only) ---
+
+    // POST /api/admin/pre-register — create a user record before they log in
+    if (path === '/api/admin/pre-register' && method === 'POST') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const body = await request.json();
+
+      if (!body.email?.trim()) return json({ error: 'Email is required' }, 400);
+      if (!body.name?.trim()) return json({ error: 'Name is required' }, 400);
+      if (!body.address_id) return json({ error: 'Address is required' }, 400);
+
+      // Check email not already registered
+      const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ? OR pre_registered_email = ?')
+        .bind(body.email.trim().toLowerCase(), body.email.trim().toLowerCase()).first();
+      if (existing) return json({ error: 'A user with this email already exists' }, 400);
+
+      // Validate address
+      const addr = await env.DB.prepare('SELECT id FROM addresses WHERE id = ?').bind(body.address_id).first();
+      if (!addr) return json({ error: 'Invalid address' }, 400);
+
+      // Build roles
+      let roles = body.roles || ['member'];
+      if (typeof roles === 'string') roles = roles.split(',');
+      const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
+      if (roles.some(r => officerTitles.includes(r)) && !roles.includes('officer')) roles.push('officer');
+      if ((roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) && !roles.includes('member')) roles.push('member');
+      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'contributor', 'member'];
+      const primaryRole = rolePriority.find(r => roles.includes(r)) || 'member';
+
+      const avatarId = Math.floor(Math.random() * 50) + 1;
+
+      const result = await env.DB.prepare(
+        `INSERT INTO users (google_id, email, name, role, roles, address_id, avatar_id,
+         owner_type, is_authorized_agent, agent_for_entity, is_anonymous, pre_registered, pre_registered_email, profile_confirmed)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0)`
+      ).bind(
+        'pre_reg_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+        body.email.trim().toLowerCase(),
+        body.name.trim(),
+        primaryRole,
+        roles.join(','),
+        body.address_id,
+        avatarId,
+        body.owner_type || 'natural',
+        body.is_authorized_agent ? 1 : 0,
+        body.agent_for_entity || null,
+        body.is_anonymous ? 1 : 0,
+        body.email.trim().toLowerCase()
+      ).run();
+
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'pre_register', result.meta.last_row_id, `Pre-registered ${body.email} as ${roles.join(',')}`).run();
+
+      return json({ id: result.meta.last_row_id, success: true });
+    }
+
     // GET /api/admin/consent-records — users who signed the agreement
     if (path === '/api/admin/consent-records' && method === 'GET') {
       const { results } = await env.DB.prepare(

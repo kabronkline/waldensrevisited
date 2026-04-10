@@ -53,6 +53,8 @@
 
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="posts">Approval Queue</button>
+        <button class="admin-tab" data-tab="prereg" id="preregTab">Pre-Register</button>
+        <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
         <button class="admin-tab" data-tab="consent">Consent Records</button>
         <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
         <button class="admin-tab" data-tab="audit">Audit Log</button>
@@ -72,6 +74,98 @@
 
       <!-- Users Tab (Admin only) -->
       <!-- Consent Records Tab -->
+      <!-- Pre-Register Tab (admin only) -->
+      <div class="tab-content" id="tab-prereg" style="display:none;">
+        <div class="profile-section">
+          <h2>Pre-Register a Member</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in for the first time. When they sign in with Google using this email, they'll be automatically linked and won't see the "contact admin" screen.</p>
+
+          <div class="form-group">
+            <label>Google Email Address *</label>
+            <input type="email" id="preRegEmail" placeholder="user@gmail.com">
+          </div>
+          <div class="form-group">
+            <label>Display Name *</label>
+            <input type="text" id="preRegName" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Property Address *</label>
+            <select id="preRegAddress"><option value="">Select address...</option></select>
+          </div>
+
+          <div class="form-group">
+            <label>Owner Type</label>
+            <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
+              <strong>Natural person:</strong> A human being who owns property in their own right.<br>
+              <strong>Legal person:</strong> An entity (LLC, corporation, trust, estate, etc.) that holds title through a legal framework.
+            </div>
+            <select id="preRegOwnerType">
+              <option value="natural">Natural Person (individual)</option>
+              <option value="legal">Legal Person (trust, LLC, corporation, etc.)</option>
+            </select>
+          </div>
+
+          <div id="agentSection" style="display:none;">
+            <div class="form-group">
+              <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
+                When the owner is a legal person, an <strong>authorized agent</strong> is the natural person (human) who acts on behalf of that entity — e.g., a trustee acting for a trust.
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="preRegIsAgent" style="accent-color:var(--forest-deep);">
+                This user is an authorized agent acting on behalf of the legal entity
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Entity Name (the legal person)</label>
+              <input type="text" id="preRegEntityName" placeholder="e.g., Smith Family Trust, Walden Holdings LLC">
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
+            <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Roles</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="member" checked disabled> Member</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="contributor"> Contributor</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="president"> President</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="secretary"> Secretary</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="treasurer"> Treasurer</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="other_officer"> Other Officer</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="admin"> Admin</label>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="preRegAnonymous" style="accent-color:var(--forest-deep);">
+              Set as anonymous (hide name/PII from non-admin/non-officer users)
+            </label>
+          </div>
+
+          <button class="btn btn-primary" id="preRegBtn">Pre-Register User</button>
+        </div>
+      </div>
+
+      <!-- Properties Tab (admin only) -->
+      <div class="tab-content" id="tab-properties" style="display:none;">
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>Neighborhood Properties</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">All parcels within Walden's Revisited with current ownership records.</p>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Designation</th>
+                <th>Address</th>
+                <th>Owner</th>
+                <th>Type</th>
+                <th>Acres</th>
+                <th>Transfer</th>
+              </tr>
+            </thead>
+            <tbody id="propertiesTableBody">
+              <tr><td colspan="6" style="color:var(--stone);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="tab-content" id="tab-consent" style="display:none;">
         <div class="profile-section">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-sm);">
@@ -551,9 +645,84 @@
       certWindow.document.close();
     }
 
+    // Pre-registration
+    // Load addresses into pre-reg form
+    fetch('/api/addresses').then(r => r.json()).then(addrs => {
+      const sel = document.getElementById('preRegAddress');
+      addrs.forEach(a => { const o = document.createElement('option'); o.value = a.id; o.textContent = a.full_label; sel.appendChild(o); });
+    });
+
+    document.getElementById('preRegOwnerType').addEventListener('change', (e) => {
+      document.getElementById('agentSection').style.display = e.target.value === 'legal' ? '' : 'none';
+    });
+
+    document.getElementById('preRegBtn').addEventListener('click', async () => {
+      const email = document.getElementById('preRegEmail').value.trim();
+      const name = document.getElementById('preRegName').value.trim();
+      const addressId = parseInt(document.getElementById('preRegAddress').value);
+      if (!email || !name || !addressId) { showToast('Email, name, and address are required', 'error'); return; }
+
+      const roles = [...document.querySelectorAll('.prereg-role:checked')].map(c => c.value);
+      if (!roles.includes('member')) roles.push('member');
+
+      const body = {
+        email, name, address_id: addressId, roles,
+        owner_type: document.getElementById('preRegOwnerType').value,
+        is_authorized_agent: document.getElementById('preRegIsAgent')?.checked || false,
+        agent_for_entity: document.getElementById('preRegEntityName')?.value.trim() || null,
+        is_anonymous: document.getElementById('preRegAnonymous').checked,
+      };
+
+      const btn = document.getElementById('preRegBtn');
+      btn.disabled = true; btn.textContent = 'Registering...';
+      try {
+        const res = await fetch('/api/admin/pre-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`${name} pre-registered successfully`, 'success');
+          document.getElementById('preRegEmail').value = '';
+          document.getElementById('preRegName').value = '';
+          document.getElementById('preRegAddress').value = '';
+        } else { showToast(data.error, 'error'); }
+      } catch (e) { showToast('Error', 'error'); }
+      btn.disabled = false; btn.textContent = 'Pre-Register User';
+    });
+
+    // Properties
+    async function loadProperties() {
+      try {
+        const res = await fetch('/api/admin/properties');
+        const props = await res.json();
+        const tbody = document.getElementById('propertiesTableBody');
+        tbody.innerHTML = '';
+        props.forEach(p => {
+          const tr = document.createElement('tr');
+          const typeBadge = p.owner_type === 'legal'
+            ? '<span class="role-badge officer" style="font-size:0.7rem;">Legal Entity</span>'
+            : '<span class="role-badge member" style="font-size:0.7rem;">Natural Person</span>';
+          tr.innerHTML = `
+            <td style="font-weight:500;">${escapeHtml(p.wr_designation)}</td>
+            <td>${escapeHtml(p.address_label)}</td>
+            <td>${escapeHtml(p.owner_name)}</td>
+            <td>${typeBadge}</td>
+            <td>${p.acres || ''}</td>
+            <td style="font-size:0.8rem;color:var(--stone);">${escapeHtml(p.transfer_type || '')}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) { showToast('Failed to load properties', 'error'); }
+    }
+
+    // Hide admin-only tabs for non-admins
+    if (session.role !== 'admin') {
+      document.getElementById('preregTab').style.display = 'none';
+      document.getElementById('propsTab').style.display = 'none';
+    }
+
     loadPendingUsers();
     loadPendingPosts();
     loadConsentRecords();
+    loadProperties();
     loadUsers();
     loadAuditLog();
   </script>

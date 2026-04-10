@@ -96,17 +96,30 @@ export async function handleCallback(request, env) {
   const isAdmin = adminEmails.includes(email.toLowerCase());
 
   // Upsert user in D1
-  const existing = await env.DB.prepare('SELECT * FROM users WHERE google_id = ?').bind(googleId).first();
+  // First check by google_id, then check for pre-registered user by email
+  let existing = await env.DB.prepare('SELECT * FROM users WHERE google_id = ?').bind(googleId).first();
+
+  // Check for pre-registered user (admin created before first login)
+  if (!existing) {
+    const preReg = await env.DB.prepare('SELECT * FROM users WHERE pre_registered_email = ? AND pre_registered = 1').bind(email.toLowerCase()).first();
+    if (preReg) {
+      // Link pre-registered account to this Google login
+      await env.DB.prepare(
+        "UPDATE users SET google_id = ?, email = ?, google_picture = ?, pre_registered = 0, updated_at = datetime('now') WHERE id = ?"
+      ).bind(googleId, email, picture, preReg.id).run();
+      existing = { ...preReg, google_id: googleId, email, google_picture: picture, pre_registered: 0 };
+    }
+  }
 
   let user;
   if (existing) {
     await env.DB.prepare(
-      'UPDATE users SET name = ?, google_picture = ?, updated_at = datetime(\'now\') WHERE id = ?'
+      "UPDATE users SET name = ?, google_picture = ?, updated_at = datetime('now') WHERE id = ?"
     ).bind(name, picture, existing.id).run();
     user = { ...existing, name, google_picture: picture };
     // Promote to admin if in admin list and not already admin
     if (isAdmin && existing.role !== 'admin') {
-      await env.DB.prepare('UPDATE users SET role = \'admin\' WHERE id = ?').bind(existing.id).run();
+      await env.DB.prepare("UPDATE users SET role = 'admin' WHERE id = ?").bind(existing.id).run();
       user.role = 'admin';
     }
   } else {

@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT DEFAULT 'pending',
   roles TEXT DEFAULT 'pending',
   avatar_id INTEGER,
+  owner_type TEXT DEFAULT 'natural',
+  is_authorized_agent INTEGER DEFAULT 0,
+  agent_for_entity TEXT,
+  pre_registered INTEGER DEFAULT 0,
+  pre_registered_email TEXT,
+  profile_confirmed INTEGER DEFAULT 0,
   agreement_signed_at TEXT,
   agreement_ip TEXT,
   created_at TEXT DEFAULT (datetime('now')),
@@ -83,6 +89,21 @@ CREATE TABLE IF NOT EXISTS comments (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Properties / parcels in the neighborhood
+CREATE TABLE IF NOT EXISTS properties (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  address_id INTEGER NOT NULL REFERENCES addresses(id),
+  parcel_number TEXT,
+  acres REAL,
+  wr_designation TEXT,
+  owner_name TEXT NOT NULL,
+  owner_type TEXT DEFAULT 'natural',
+  transfer_type TEXT,
+  provenance TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 
 -- Audit log for admin actions
