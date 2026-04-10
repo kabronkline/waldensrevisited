@@ -30,3 +30,16 @@ id = "daa6aa2a8b2146f995f773106d070a8f"
 
 [env.beta]
 name = "waldensrevisited-beta"
+
+[env.beta.vars]
+GOOGLE_CLIENT_ID = "865105554486-uu5ilnjk0oshjlu4iib4aidaptii476r.apps.googleusercontent.com"
+ADMIN_EMAILS = "admin@waldensrevisited.org"
+
+[[env.beta.d1_databases]]
+binding = "DB"
+database_name = "waldensrevisited-db"
+database_id = "566ef81b-4b57-47f7-bc41-20c876df8743"
+
+[[env.beta.kv_namespaces]]
+binding = "SESSIONS"
+id = "daa6aa2a8b2146f995f773106d070a8f"
