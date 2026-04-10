@@ -18,11 +18,11 @@ ADMIN_EMAILS = "admin@waldensrevisited.org"
 [[d1_databases]]
 binding = "DB"
 database_name = "waldensrevisited-db"
-database_id = "566ef81b-4b57-47f7-bc41-20c876df8743"
+database_id = "2c1a9add-eed7-45ca-87f3-adf18a268764"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "daa6aa2a8b2146f995f773106d070a8f"
+id = "f52131d68309439a9a1b321113493321"
 
 # [[r2_buckets]]
 # binding = "UPLOADS"
@@ -38,8 +38,8 @@ ADMIN_EMAILS = "admin@waldensrevisited.org"
 [[env.beta.d1_databases]]
 binding = "DB"
 database_name = "waldensrevisited-db"
-database_id = "566ef81b-4b57-47f7-bc41-20c876df8743"
+database_id = "2c1a9add-eed7-45ca-87f3-adf18a268764"
 
 [[env.beta.kv_namespaces]]
 binding = "SESSIONS"
-id = "daa6aa2a8b2146f995f773106d070a8f"
+id = "f52131d68309439a9a1b321113493321"
