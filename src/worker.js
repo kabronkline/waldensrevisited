@@ -104,6 +104,18 @@ export default {
     if (pathname === '/auth/callback') return handleCallback(request, env);
     if (pathname === '/auth/logout') return handleLogout(request, env);
 
+    // --- Debug route (remove after testing) ---
+    if (pathname === '/auth/debug') {
+      const cookie = request.headers.get('Cookie') || '(none)';
+      const session = await getSession(env, request);
+      return new Response(JSON.stringify({
+        hasCookie: cookie !== '(none)',
+        cookiePreview: cookie.substring(0, 80),
+        sessionFound: !!session,
+        sessionData: session?.user || null,
+      }, null, 2), { headers: { 'Content-Type': 'application/json' } });
+    }
+
     // --- API routes ---
     if (pathname.startsWith('/api/')) {
       const session = await getSession(env, request);
