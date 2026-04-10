@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neighbors — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+  <style>
+    .neighbor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-sm); }
+    .neighbor-card {
+      background: var(--parchment);
+      border: 1px solid rgba(139,115,85,0.12);
+      border-radius: 10px;
+      padding: var(--space-sm) var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      transition: box-shadow 0.15s;
+    }
+    .neighbor-card:hover { box-shadow: 0 2px 12px rgba(45,74,62,0.06); }
+    .neighbor-card.is-self { border-left: 3px solid var(--forest-deep); }
+    .neighbor-card.is-friend { border-left: 3px solid var(--pond-surface); }
+    .neighbor-info h4 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      color: var(--forest-deep);
+      margin-bottom: 2px;
+    }
+    .neighbor-info span { font-size: 0.85rem; color: var(--stone); }
+    .neighbor-info .acres { font-size: 0.8rem; color: var(--lichen); }
+    .neighbor-status {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .neighbor-status.you { background: rgba(45,74,62,0.08); color: var(--forest-deep); font-weight: 500; }
+    .neighbor-status.friend { background: #d1fae5; color: #065f46; }
+    .neighbor-status.pending { background: #fef3c7; color: #92400e; }
+    .neighbor-status.incoming { background: #dbeafe; color: #1e40af; }
+    .connect-btn {
+      padding: 5px 12px;
+      border: 1px solid var(--pond-surface);
+      background: transparent;
+      color: var(--forest-deep);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .connect-btn:hover { background: var(--forest-deep); color: white; }
+    .connect-btn:disabled { opacity: 0.5; cursor: default; }
+    .neighbor-legend {
+      display: flex; gap: var(--space-md); flex-wrap: wrap;
+      font-size: 0.8rem; color: var(--stone); margin-bottom: var(--space-md);
+    }
+    .neighbor-legend span { display: flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+    @media (max-width: 768px) { .neighbor-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none"><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/members/" class="nav-signin">Members</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <main class="members-main">
+      <div class="container" style="max-width:900px;">
+
+        <div class="members-header">
+          <h1>Neighbors</h1>
+          <p>All properties in Walden's Revisited. Connect with your neighbors to chat, arrange dog play dates, and participate in the community. Owner identities are private — connecting sends a request that your neighbor can accept or decline.</p>
+        </div>
+
+        <div class="neighbor-legend">
+          <span><div class="legend-dot" style="background:var(--forest-deep);"></div> Your property</span>
+          <span><div class="legend-dot" style="background:var(--pond-surface);"></div> Connected</span>
+          <span><div class="legend-dot" style="background:#fef3c7;border:1px solid #fde68a;"></div> Pending</span>
+        </div>
+
+        <div class="neighbor-grid" id="neighborGrid">
+          <p style="color:var(--stone);grid-column:1/-1;">Loading properties...</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+    initMembersSidebar('neighbors');
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    async function loadNeighbors() {
+      try {
+        const res = await fetch('/api/neighbors');
+        const neighbors = await res.json();
+        const grid = document.getElementById('neighborGrid');
+        grid.innerHTML = '';
+
+        neighbors.forEach(n => {
+          const card = document.createElement('div');
+          card.className = 'neighbor-card' + (n.is_self ? ' is-self' : '') + (n.is_friend ? ' is-friend' : '');
+
+          let statusHtml = '';
+          if (n.is_self) {
+            statusHtml = '<span class="neighbor-status you">You</span>';
+          } else if (n.is_friend) {
+            statusHtml = '<span class="neighbor-status friend">Connected</span>';
+          } else if (n.request_sent) {
+            statusHtml = '<span class="neighbor-status pending">Pending</span>';
+          } else if (n.request_received) {
+            statusHtml = '<span class="neighbor-status incoming">Incoming</span>';
+          } else if (n.has_registered_user) {
+            statusHtml = `<button class="connect-btn" onclick="connectNeighbor(${n.address_id}, this)">Connect</button>`;
+          } else {
+            statusHtml = '<span style="font-size:0.8rem;color:var(--lichen);">Not registered</span>';
+          }
+
+          card.innerHTML = `
+            <div class="neighbor-info">
+              <h4>${escapeHtml(n.tract_lot || n.wr_designation || '')}</h4>
+              <span>${escapeHtml(n.street_address)}</span>
+              ${n.acres ? `<div class="acres">${n.acres} acres</div>` : ''}
+            </div>
+            ${statusHtml}
+          `;
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        showToast('Failed to load neighbors', 'error');
+      }
+    }
+
+    async function connectNeighbor(addressId, btn) {
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        const res = await fetch('/api/neighbors/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address_id: addressId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Connection request sent', 'success');
+          loadNeighbors();
+        } else {
+          showToast(data.error, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Connect';
+        }
+      } catch (e) {
+        showToast('Error sending request', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Connect';
+      }
+    }
+
+    loadNeighbors();
+  </script>
+</body>
+</html>

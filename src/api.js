@@ -17,6 +17,15 @@ function hasAccess(role) {
   return role && role !== 'pending';
 }
 
+function maskIfAnonymous(record, nameField, picFields, role) {
+  if (record && record.is_anonymous && !OFFICER_ROLES.includes(role)) {
+    record[nameField] = record.address_label ? 'Neighbor at ' + record.address_label.split('—')[0].trim() : 'Anonymous Neighbor';
+    for (const f of picFields) { if (record[f] !== undefined) record[f] = null; }
+    if (record.email) record.email = null;
+  }
+  return record;
+}
+
 function isOfficerOrAdmin(role) {
   return OFFICER_ROLES.includes(role);
 }
@@ -229,6 +238,16 @@ export async function handleApi(request, env, session) {
       if (vis === 'officers') return isOfficerOrAdmin;
       return true;
     });
+    // Defense-in-depth: mask anonymous authors at API level
+    if (!isOfficerOrAdmin) {
+      filtered.forEach(p => {
+        if (p.author_anonymous) {
+          p.author_name = 'Anonymous Member';
+          p.author_profile_picture = null;
+          p.author_google_picture = null;
+        }
+      });
+    }
     return json(filtered);
   }
 
@@ -280,6 +299,17 @@ export async function handleApi(request, env, session) {
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`
     ).bind(postId).all();
+    // Defense-in-depth: mask anonymous authors at API level
+    const viewerRole = session.user.role;
+    if (!OFFICER_ROLES.includes(viewerRole)) {
+      results.forEach(c => {
+        if (c.author_anonymous) {
+          c.author_name = 'Anonymous Member';
+          c.author_profile_picture = null;
+          c.author_google_picture = null;
+        }
+      });
+    }
     return json(results);
   }
 
@@ -313,16 +343,105 @@ export async function handleApi(request, env, session) {
     return json({ success: true });
   }
 
-  // GET /api/users/search?q=... — for @mention autocomplete
+  // GET /api/users/search?q=... — for @mention autocomplete (friends only)
   if (path === '/api/users/search' && method === 'GET') {
     const q = url.searchParams.get('q') || '';
     if (q.length < 1) return json([]);
     const { results } = await env.DB.prepare(
-      `SELECT id, name, profile_picture, google_picture FROM users
-       WHERE name LIKE ? AND role != 'pending' AND agreement_signed_at IS NOT NULL
+      `SELECT u.id, u.name, u.profile_picture, u.google_picture FROM users u
+       WHERE u.name LIKE ? AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
+       AND u.is_anonymous = 0
+       AND u.id IN (
+         SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END
+         FROM friendships WHERE user_a_id = ? OR user_b_id = ?
+       )
        LIMIT 10`
-    ).bind(`%${q}%`).all();
+    ).bind(`%${q}%`, userId, userId, userId).all();
     return json(results);
+  }
+
+  // --- Neighbors (properties without owner PII) ---
+  if (path === '/api/neighbors' && method === 'GET') {
+    // Return properties with address info but NO owner names
+    // Include whether the logged-in user is friends with the property's registered user
+    const { results } = await env.DB.prepare(
+      `SELECT a.id as address_id, a.tract_lot, a.street_address, a.full_label,
+              p.acres, p.wr_designation,
+              u.id as resident_user_id,
+              CASE WHEN u.id IS NOT NULL THEN 1 ELSE 0 END as has_registered_user,
+              CASE WHEN u.id = ? THEN 1 ELSE 0 END as is_self
+       FROM addresses a
+       LEFT JOIN properties pr ON a.id = pr.address_id
+       LEFT JOIN users u ON u.address_id = a.id AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
+       LEFT JOIN properties p ON a.id = p.address_id
+       ORDER BY a.id`
+    ).bind(userId).all();
+
+    // Check friendships for each neighbor
+    const { results: myFriends } = await env.DB.prepare(
+      `SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
+       FROM friendships WHERE user_a_id = ? OR user_b_id = ?`
+    ).bind(userId, userId, userId).all();
+    const friendSet = new Set(myFriends.map(f => f.fid));
+
+    // Check pending friend requests
+    const { results: sentReqs } = await env.DB.prepare(
+      `SELECT to_user_id FROM friend_requests WHERE from_user_id = ? AND status = 'pending'`
+    ).bind(userId).all();
+    const sentSet = new Set(sentReqs.map(r => r.to_user_id));
+
+    const { results: recvReqs } = await env.DB.prepare(
+      `SELECT from_user_id FROM friend_requests WHERE to_user_id = ? AND status = 'pending'`
+    ).bind(userId).all();
+    const recvSet = new Set(recvReqs.map(r => r.from_user_id));
+
+    const neighbors = results.map(r => ({
+      address_id: r.address_id,
+      tract_lot: r.tract_lot,
+      street_address: r.street_address,
+      full_label: r.full_label,
+      acres: r.acres,
+      wr_designation: r.wr_designation,
+      has_registered_user: !!r.has_registered_user,
+      is_self: !!r.is_self,
+      is_friend: r.resident_user_id ? friendSet.has(r.resident_user_id) : false,
+      request_sent: r.resident_user_id ? sentSet.has(r.resident_user_id) : false,
+      request_received: r.resident_user_id ? recvSet.has(r.resident_user_id) : false,
+      resident_user_id: r.resident_user_id || null,
+    }));
+
+    return json(neighbors);
+  }
+
+  // POST /api/neighbors/connect — send friend request to property resident
+  if (path === '/api/neighbors/connect' && method === 'POST') {
+    const body = await request.json();
+    if (!body.address_id) return json({ error: 'address_id required' }, 400);
+
+    // Find the registered user at this address
+    const resident = await env.DB.prepare(
+      `SELECT id FROM users WHERE address_id = ? AND role != 'pending' AND agreement_signed_at IS NOT NULL`
+    ).bind(body.address_id).first();
+    if (!resident) return json({ error: 'No registered member at this address' }, 404);
+    if (resident.id === userId) return json({ error: 'You cannot connect with yourself' }, 400);
+
+    // Check existing friendship
+    const existingFriend = await env.DB.prepare(
+      `SELECT id FROM friendships WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)`
+    ).bind(userId, resident.id, resident.id, userId).first();
+    if (existingFriend) return json({ error: 'Already connected' }, 400);
+
+    // Check existing request
+    const existingReq = await env.DB.prepare(
+      `SELECT id FROM friend_requests WHERE from_user_id = ? AND to_user_id = ? AND status = 'pending'`
+    ).bind(userId, resident.id).first();
+    if (existingReq) return json({ error: 'Request already sent' }, 400);
+
+    await env.DB.prepare(
+      "INSERT INTO friend_requests (from_user_id, to_user_id, status, created_at) VALUES (?, ?, 'pending', datetime('now'))"
+    ).bind(userId, resident.id).run();
+
+    return json({ success: true, message: 'Connection request sent' });
   }
 
   // --- Members directory ---
@@ -405,7 +524,7 @@ export async function handleApi(request, env, session) {
     if (friendIds.length > 0) {
       const placeholders = friendIds.map(() => '?').join(',');
       candidate = await env.DB.prepare(
-        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, pd.tagline
+        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, u.is_anonymous, pd.tagline
          FROM playdate_dogs pd
          JOIN dogs d ON pd.dog_id = d.id
          JOIN users u ON d.user_id = u.id
@@ -417,6 +536,9 @@ export async function handleApi(request, env, session) {
       ).bind(...friendIds, fromDogId).first();
     }
     if (!candidate) return json(null);
+    if (candidate.is_anonymous && !OFFICER_ROLES.includes(session.user.role)) {
+      candidate.owner_name = 'Anonymous Neighbor';
+    }
     return json(candidate);
   }
 
@@ -475,8 +597,8 @@ export async function handleApi(request, env, session) {
   if (path === '/api/playdate/matches' && method === 'GET') {
     const { results } = await env.DB.prepare(
       `SELECT pm.id as match_id, pm.created_at as matched_at,
-              da.id as dog_a_id, da.name as dog_a_name, da.picture as dog_a_picture, ua.name as owner_a_name,
-              db.id as dog_b_id, db.name as dog_b_name, db.picture as dog_b_picture, ub.name as owner_b_name,
+              da.id as dog_a_id, da.name as dog_a_name, da.picture as dog_a_picture, ua.name as owner_a_name, ua.is_anonymous as owner_a_anonymous,
+              db.id as dog_b_id, db.name as dog_b_name, db.picture as dog_b_picture, ub.name as owner_b_name, ub.is_anonymous as owner_b_anonymous,
               ct.id as thread_id,
               (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message
        FROM playdate_matches pm
@@ -488,6 +610,13 @@ export async function handleApi(request, env, session) {
        WHERE da.user_id = ? OR db.user_id = ?
        ORDER BY pm.created_at DESC`
     ).bind(userId, userId).all();
+    const viewerRole = session.user.role;
+    if (!OFFICER_ROLES.includes(viewerRole)) {
+      results.forEach(r => {
+        if (r.owner_a_anonymous) r.owner_a_name = 'Anonymous Neighbor';
+        if (r.owner_b_anonymous) r.owner_b_name = 'Anonymous Neighbor';
+      });
+    }
     return json(results);
   }
 
@@ -519,12 +648,16 @@ export async function handleApi(request, env, session) {
   if (path === '/api/friends/requests' && method === 'GET') {
     const { results } = await env.DB.prepare(
       `SELECT fr.id, fr.from_user_id, fr.created_at,
-              u.name, u.profile_picture, u.google_picture
+              u.name, u.profile_picture, u.google_picture, u.is_anonymous,
+              a.full_label as address_label
        FROM friend_requests fr
        JOIN users u ON fr.from_user_id = u.id
+       LEFT JOIN addresses a ON u.address_id = a.id
        WHERE fr.to_user_id = ? AND fr.status = 'pending'
        ORDER BY fr.created_at DESC`
     ).bind(userId).all();
+    const viewerRole = session.user.role;
+    results.forEach(r => maskIfAnonymous(r, 'name', ['profile_picture', 'google_picture'], viewerRole));
     return json(results);
   }
 
@@ -566,13 +699,15 @@ export async function handleApi(request, env, session) {
     const { results } = await env.DB.prepare(
       `SELECT f.id as friendship_id, f.created_at as friends_since,
               u.id as user_id, u.name, u.profile_picture, u.google_picture, u.email,
-              a.full_label as address_label
+              u.is_anonymous, a.full_label as address_label
        FROM friendships f
        JOIN users u ON (CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END) = u.id
        LEFT JOIN addresses a ON u.address_id = a.id
        WHERE f.user_a_id = ? OR f.user_b_id = ?
        ORDER BY u.name`
     ).bind(userId, userId, userId).all();
+    const viewerRole = session.user.role;
+    results.forEach(r => maskIfAnonymous(r, 'name', ['profile_picture', 'google_picture'], viewerRole));
     return json(results);
   }
 
@@ -604,14 +739,20 @@ export async function handleApi(request, env, session) {
               CASE WHEN ct.user_a_id = ? THEN ub.id ELSE ua.id END as other_user_id,
               CASE WHEN ct.user_a_id = ? THEN ub.profile_picture ELSE ua.profile_picture END as other_user_picture,
               CASE WHEN ct.user_a_id = ? THEN ub.google_picture ELSE ua.google_picture END as other_user_google_picture,
+              CASE WHEN ct.user_a_id = ? THEN ub.is_anonymous ELSE ua.is_anonymous END as is_anonymous,
+              CASE WHEN ct.user_a_id = ? THEN ab.full_label ELSE aa.full_label END as address_label,
               (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
               (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
        FROM chat_threads ct
        JOIN users ua ON ct.user_a_id = ua.id
        JOIN users ub ON ct.user_b_id = ub.id
+       LEFT JOIN addresses aa ON ua.address_id = aa.id
+       LEFT JOIN addresses ab ON ub.address_id = ab.id
        WHERE ct.user_a_id = ? OR ct.user_b_id = ?
        ORDER BY latest_message_at DESC NULLS LAST`
-    ).bind(userId, userId, userId, userId, userId, userId).all();
+    ).bind(userId, userId, userId, userId, userId, userId, userId, userId).all();
+    const viewerRole = session.user.role;
+    results.forEach(r => maskIfAnonymous(r, 'other_user_name', ['other_user_picture', 'other_user_google_picture'], viewerRole));
     return json(results);
   }
 
@@ -633,7 +774,7 @@ export async function handleApi(request, env, session) {
     let results;
     if (before) {
       const resp = await env.DB.prepare(
-        `SELECT cm.*, u.name as sender_name
+        `SELECT cm.*, u.name as sender_name, u.is_anonymous
          FROM chat_messages cm
          JOIN users u ON cm.sender_user_id = u.id
          WHERE cm.thread_id = ? AND cm.id < ?
@@ -643,7 +784,7 @@ export async function handleApi(request, env, session) {
       results = resp.results;
     } else {
       const resp = await env.DB.prepare(
-        `SELECT cm.*, u.name as sender_name
+        `SELECT cm.*, u.name as sender_name, u.is_anonymous
          FROM chat_messages cm
          JOIN users u ON cm.sender_user_id = u.id
          WHERE cm.thread_id = ?
@@ -651,6 +792,10 @@ export async function handleApi(request, env, session) {
          LIMIT 50`
       ).bind(threadId).all();
       results = resp.results;
+    }
+    const viewerRole = session.user.role;
+    if (!OFFICER_ROLES.includes(viewerRole)) {
+      results.forEach(r => { if (r.is_anonymous) r.sender_name = 'Anonymous Neighbor'; });
     }
     return json(results);
   }
@@ -692,8 +837,12 @@ export async function handleApi(request, env, session) {
     if (!thread) return json({ error: 'Thread not found' }, 404);
 
     const user = await env.DB.prepare(
-      'SELECT u.name, u.email, a.full_label as address_label FROM users u LEFT JOIN addresses a ON u.address_id = a.id WHERE u.id = ?'
+      'SELECT u.name, u.email, u.is_anonymous, a.full_label as address_label FROM users u LEFT JOIN addresses a ON u.address_id = a.id WHERE u.id = ?'
     ).bind(userId).first();
+
+    if (user.is_anonymous) {
+      return json({ error: 'Anonymous members cannot share contact details. Change your privacy settings in your profile first.' }, 403);
+    }
 
     const contactMessage = `[Contact Shared] ${user.name} | ${user.email || 'No email'}${user.address_label ? ' | ' + user.address_label : ''}`;
 
