@@ -35,7 +35,7 @@
 
         <li><a href="/governance.html">Governance</a></li>
         <li><a href="/members/profile.html">My Profile</a></li>
-        <li><a href="/members/admin.html">Admin</a></li>
+
         <li><a href="/auth/logout">Sign Out</a></li>
       </ul>
     </div>
@@ -46,11 +46,12 @@
 
       <div class="members-header">
         <h1>Admin Panel</h1>
-        <p>Manage users, approve content, and view audit logs.</p>
+        <p>Manage users, approve content, and view consent records.</p>
       </div>
 
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="posts">Approval Queue</button>
+        <button class="admin-tab" data-tab="consent">Consent Records</button>
         <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
         <button class="admin-tab" data-tab="audit">Audit Log</button>
       </div>
@@ -68,6 +69,17 @@
       </div>
 
       <!-- Users Tab (Admin only) -->
+      <!-- Consent Records Tab -->
+      <div class="tab-content" id="tab-consent" style="display:none;">
+        <div class="profile-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-sm);">
+            <h2 style="margin-bottom:0;">Membership Consent Records</h2>
+          </div>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-md);">All users who have digitally signed the Walden's Revisited HOA Membership Agreement. Click a record to generate a printable PDF certificate.</p>
+          <div id="consentRecords"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
       <div class="tab-content" id="tab-users" style="display:none;">
         <div class="profile-section" style="overflow-x:auto;">
           <h2>All Users</h2>
@@ -382,8 +394,115 @@
       }
     }
 
+    // Load consent records
+    async function loadConsentRecords() {
+      try {
+        const res = await fetch('/api/admin/consent-records');
+        const records = await res.json();
+        const container = document.getElementById('consentRecords');
+
+        if (records.length === 0) {
+          container.innerHTML = '<p style="color:var(--stone);">No consent records yet.</p>';
+          return;
+        }
+
+        let html = '<table class="users-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Address</th><th>Signed</th><th>IP</th><th></th></tr></thead><tbody>';
+        records.forEach(r => {
+          const signedDate = new Date(r.agreement_signed_at + 'Z').toLocaleString();
+          html += `
+            <tr>
+              <td>${escapeHtml(r.name)}</td>
+              <td>${escapeHtml(r.email)}</td>
+              <td><span class="role-badge ${getRoleBadgeClass(r.role)}">${formatRole(r.role)}</span></td>
+              <td>${r.address_label ? escapeHtml(r.address_label) : '<span style="color:var(--lichen);">Not set</span>'}</td>
+              <td>${signedDate}</td>
+              <td style="font-size:0.8rem;color:var(--lichen);">${escapeHtml(r.agreement_ip || '')}</td>
+              <td><button class="btn btn-secondary btn-sm" onclick='generateCertificate(${JSON.stringify({name: r.name, email: r.email, role: r.role, address: r.address_label, signed: r.agreement_signed_at, ip: r.agreement_ip})})'>Certificate</button></td>
+            </tr>
+          `;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      } catch (e) {
+        showToast('Failed to load consent records', 'error');
+      }
+    }
+
+    function generateCertificate(record) {
+      const signedDate = new Date(record.signed + 'Z').toLocaleString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+
+      const certWindow = window.open('', '_blank');
+      certWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>HOA Membership Agreement Certificate — ${record.name}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; color: #1a2e23; background: white; }
+    .cert { max-width: 750px; margin: 40px auto; padding: 50px; border: 3px solid #2d4a3e; position: relative; }
+    .cert::before { content: ''; position: absolute; inset: 6px; border: 1px solid #b8cec4; }
+    .cert-header { text-align: center; margin-bottom: 30px; }
+    .cert-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: #2d4a3e; margin-bottom: 4px; }
+    .cert-subtitle { font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: #6b8f7a; margin-bottom: 20px; }
+    .cert-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600; color: #2d4a3e; margin-bottom: 6px; }
+    .cert-desc { font-size: 0.9rem; color: #5a6b60; }
+    .cert-body { margin: 30px 0; line-height: 1.8; font-size: 0.95rem; }
+    .cert-name { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: #2d4a3e; text-align: center; margin: 20px 0; padding: 10px 0; border-bottom: 2px solid #2d4a3e; display: inline-block; }
+    .cert-details { margin: 20px 0; font-size: 0.85rem; color: #5a6b60; }
+    .cert-details dt { font-weight: 500; color: #2d3b33; float: left; width: 140px; clear: left; }
+    .cert-details dd { margin-left: 150px; margin-bottom: 6px; }
+    .cert-footer { margin-top: 40px; text-align: center; font-size: 0.75rem; color: #7a8b80; border-top: 1px solid #b8cec4; padding-top: 15px; }
+    .cert-legal { margin-top: 20px; font-size: 0.8rem; color: #5a6b60; line-height: 1.6; font-style: italic; }
+    @media print {
+      body { background: white; }
+      .cert { border: 3px solid #2d4a3e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cert::before { border: 1px solid #b8cec4 !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align:center;margin:20px;" class="no-print">
+    <button onclick="window.print()" style="padding:10px 24px;background:#2d4a3e;color:white;border:none;border-radius:6px;font-size:0.95rem;cursor:pointer;">Print Certificate</button>
+  </div>
+  <div class="cert">
+    <div class="cert-header">
+      <div class="cert-logo">Walden's Revisited</div>
+      <div class="cert-subtitle">Scioto Township &middot; Delaware County &middot; Ohio</div>
+      <div class="cert-title">Certificate of Digital Homeowners Agreement</div>
+      <div class="cert-desc">Walden's Revisited Homeowners Association Membership Acknowledgment</div>
+    </div>
+    <div class="cert-body">
+      <p>This certifies that the following individual has digitally executed the Walden's Revisited Homeowners Association Membership Agreement, affirming their status as a property owner or authorized resident and their agreement to abide by the Restated Declaration of Protective Covenants and Restrictions.</p>
+      <div style="text-align:center;">
+        <span class="cert-name">${record.name}</span>
+      </div>
+      <dl class="cert-details">
+        <dt>Email:</dt><dd>${record.email}</dd>
+        <dt>Role:</dt><dd>${record.role.charAt(0).toUpperCase() + record.role.slice(1)}</dd>
+        <dt>Property:</dt><dd>${record.address || 'Not specified'}</dd>
+        <dt>Date Signed:</dt><dd>${signedDate}</dd>
+        <dt>IP Address:</dt><dd>${record.ip || 'Not recorded'}</dd>
+      </dl>
+      <p class="cert-legal">This electronic acknowledgment constitutes a legally binding agreement, equivalent to a handwritten signature, pursuant to the Electronic Signatures in Global and National Commerce Act (E-SIGN Act, 15 U.S.C. &sect; 7001 et seq.) and the Uniform Electronic Transactions Act as adopted in Ohio (Ohio Rev. Code &sect; 1306.01 et seq.).</p>
+    </div>
+    <div class="cert-footer">
+      <p>Walden's Revisited Homeowners Association &middot; Brindle Road, Scioto Township, Delaware County, Ohio</p>
+      <p>Generated ${new Date().toLocaleDateString()} &middot; waldensrevisited.org</p>
+    </div>
+  </div>
+</body>
+</html>`);
+      certWindow.document.close();
+    }
+
     loadPendingUsers();
     loadPendingPosts();
+    loadConsentRecords();
     loadUsers();
     loadAuditLog();
   </script>

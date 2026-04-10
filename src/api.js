@@ -403,6 +403,18 @@ export async function handleApi(request, env, session) {
       return json({ success: true });
     }
 
+    // GET /api/admin/consent-records — users who signed the agreement
+    if (path === '/api/admin/consent-records' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT u.id, u.email, u.name, u.role, u.agreement_signed_at, u.agreement_ip,
+                u.google_picture, u.profile_picture, a.full_label as address_label
+         FROM users u LEFT JOIN addresses a ON u.address_id = a.id
+         WHERE u.agreement_signed_at IS NOT NULL
+         ORDER BY u.agreement_signed_at DESC`
+      ).all();
+      return json(results);
+    }
+
     // GET /api/admin/audit-log
     if (path === '/api/admin/audit-log' && method === 'GET') {
       const { results } = await env.DB.prepare(
