@@ -193,18 +193,43 @@ export async function handleApi(request, env, session) {
     const limit = 20;
     const offset = (page - 1) * limit;
 
+    // Get friend IDs for visibility filtering
+    const { results: myFriends } = await env.DB.prepare(
+      `SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
+       FROM friendships WHERE user_a_id = ? OR user_b_id = ?`
+    ).bind(userId, userId, userId).all();
+    const myFriendIds = myFriends.map(f => f.fid);
+
+    const userRole = session.user.role;
+    const isOfficerOrAdmin = OFFICER_ROLES.includes(userRole);
+
+    // Build visibility filter:
+    // - Own posts always visible
+    // - 'everybody' visible to all
+    // - 'friends' visible to poster's friends
+    // - 'officers' visible to officers/admins
     const { results } = await env.DB.prepare(
       `SELECT p.*, u.name as author_name, u.role as author_role,
               u.profile_picture as author_profile_picture, u.google_picture as author_google_picture,
-              u.is_anonymous as author_anonymous,
+              u.is_anonymous as author_anonymous, u.avatar_id as author_avatar_id,
               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
        FROM posts p
        JOIN users u ON p.user_id = u.id
-       WHERE p.approved = 1 OR p.user_id = ?
+       WHERE (p.approved = 1 OR p.user_id = ?)
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`
     ).bind(userId, limit, offset).all();
-    return json(results);
+
+    // Filter by visibility in JS (D1 doesn't support complex IN clauses well)
+    const filtered = results.filter(p => {
+      if (p.user_id === userId) return true; // own posts always visible
+      const vis = p.visibility || 'everybody';
+      if (vis === 'everybody') return true;
+      if (vis === 'friends') return myFriendIds.includes(p.user_id);
+      if (vis === 'officers') return isOfficerOrAdmin;
+      return true;
+    });
+    return json(filtered);
   }
 
   // POST /api/posts — create a post
@@ -222,9 +247,11 @@ export async function handleApi(request, env, session) {
     // Auto-approve for contributors, officers, and admins
     const autoApprove = canAutoApprovePost(session.user.role) ? 1 : 0;
 
+    const visibility = ['everybody', 'friends', 'officers'].includes(body.visibility) ? body.visibility : 'everybody';
+
     const result = await env.DB.prepare(
-      'INSERT INTO posts (user_id, content, image, approved) VALUES (?, ?, ?, ?)'
-    ).bind(userId, body.content.trim(), body.image || null, autoApprove).run();
+      'INSERT INTO posts (user_id, content, image, approved, visibility) VALUES (?, ?, ?, ?, ?)'
+    ).bind(userId, body.content.trim(), body.image || null, autoApprove, visibility).run();
 
     const message = autoApprove ? 'Post published.' : 'Post submitted for approval.';
     return json({ id: result.meta.last_row_id, approved: autoApprove, success: true, message }, 201);

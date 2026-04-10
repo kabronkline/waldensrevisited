@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS posts (
   content TEXT NOT NULL,
   image TEXT,
   approved INTEGER DEFAULT 0,
+  visibility TEXT DEFAULT 'everybody',
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

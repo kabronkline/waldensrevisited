@@ -65,6 +65,11 @@
                 </label>
                 <span id="postImageName" style="font-size:0.8rem; color:var(--stone); margin-left:8px;"></span>
               </div>
+              <select id="postVisibility" style="padding:5px 8px;border:1px solid rgba(139,115,85,0.2);border-radius:6px;font-size:0.8rem;font-family:var(--font-body);background:white;margin-right:6px;">
+                <option value="everybody">Everybody</option>
+                <option value="friends">Friends Only</option>
+                <option value="officers">Officers Only</option>
+              </select>
               <button class="btn btn-primary btn-sm" id="postBtn">Post</button>
             </div>
           </div>
@@ -122,6 +127,7 @@
   </main>
   </div>
 
+  <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
     const session = window.__session;
@@ -136,12 +142,19 @@
       if (adminCard) adminCard.style.display = '';
     }
 
-    // Set avatar
+    // Set avatar from user profile (fetch to get custom pic/avatar)
     const avatarEl = document.getElementById('postAvatar');
-    const pic = session.picture;
-    if (pic) {
-      avatarEl.innerHTML = `<img src="${escapeHtml(pic)}" alt="">`;
-    }
+    fetch('/api/me').then(r => r.json()).then(me => {
+      if (me.profile_picture) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(me.profile_picture)}" alt="">`;
+      } else if (me.avatar_id && typeof getAvatarSvg === 'function') {
+        avatarEl.innerHTML = getAvatarSvg(me.avatar_id);
+      } else if (me.google_picture) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(me.google_picture)}" alt="">`;
+      }
+    }).catch(() => {
+      if (session.picture) avatarEl.innerHTML = `<img src="${escapeHtml(session.picture)}" alt="">`;
+    });
 
     document.getElementById('navToggle')?.addEventListener('click', () => {
       document.getElementById('navLinks').classList.toggle('active');
@@ -167,7 +180,8 @@
       btn.textContent = 'Posting...';
 
       try {
-        const body = { content };
+        const visibility = document.getElementById('postVisibility').value;
+        const body = { content, visibility };
         if (postImageData) body.image = postImageData;
 
         const res = await fetch('/api/posts', {

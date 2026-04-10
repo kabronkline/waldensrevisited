@@ -789,6 +789,13 @@
         if (governance) governance.style.display = 'none';
         if (members) members.style.display = '';
       }
+      // Fix hash scroll on page load (browser sometimes restores scroll before applying hash)
+      if (window.location.hash) {
+        setTimeout(function() {
+          var el = document.querySelector(window.location.hash);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     })();
   </script>
 </body>

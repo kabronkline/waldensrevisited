@@ -703,7 +703,7 @@
 
     function renderMessages() {
       const area = document.getElementById('messagesArea');
-      const myId = session.user_id;
+      const myId = session.userId;
 
       if (activeMessages.length === 0) {
         area.innerHTML = '<div class="threads-empty" style="margin:auto">No messages yet. Say hello!</div>';
@@ -897,7 +897,7 @@
 
       // Filter out self, existing friends, and pending requests
       const available = allMembers.filter(m => {
-        if (m.id === session.user_id) return false;
+        if (m.id === session.userId) return false;
         if (friendIds.has(m.id)) return false;
         if (requestUserIds.has(m.id)) return false;
         const name = (m.name || '').toLowerCase();
