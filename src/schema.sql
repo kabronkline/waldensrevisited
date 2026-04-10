@@ -106,6 +106,77 @@ CREATE TABLE IF NOT EXISTS properties (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Play date matching
+CREATE TABLE IF NOT EXISTS playdate_dogs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dog_id INTEGER NOT NULL REFERENCES dogs(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  tagline TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(dog_id)
+);
+
+CREATE TABLE IF NOT EXISTS playdate_swipes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_dog_id INTEGER NOT NULL REFERENCES dogs(id) ON DELETE CASCADE,
+  to_dog_id INTEGER NOT NULL REFERENCES dogs(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(from_dog_id, to_dog_id)
+);
+
+CREATE TABLE IF NOT EXISTS playdate_matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dog_a_id INTEGER NOT NULL REFERENCES dogs(id) ON DELETE CASCADE,
+  dog_b_id INTEGER NOT NULL REFERENCES dogs(id) ON DELETE CASCADE,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS playdate_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  match_id INTEGER NOT NULL REFERENCES playdate_matches(id) ON DELETE CASCADE,
+  sender_user_id INTEGER NOT NULL REFERENCES users(id),
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Friend requests and friendships
+CREATE TABLE IF NOT EXISTS friend_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending',
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(from_user_id, to_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_a_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_b_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source TEXT DEFAULT 'friend',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Unified chat system (friend + playdate threads)
+CREATE TABLE IF NOT EXISTS chat_threads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,
+  ref_id INTEGER,
+  user_a_id INTEGER NOT NULL,
+  user_b_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
+  sender_user_id INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Audit log for admin actions
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

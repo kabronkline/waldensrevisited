@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friends & Chat — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+  <style>
+    /* Chat-specific layout */
+    .chat-container {
+      display: flex;
+      height: calc(100vh - 72px);
+      background: var(--parchment);
+      border-radius: 12px;
+      border: 1px solid rgba(139, 115, 85, 0.12);
+      overflow: hidden;
+    }
+
+    .members-main { padding: 0 !important; }
+
+    /* ---- Left Panel: Thread List ---- */
+    .chat-threads-panel {
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(139, 115, 85, 0.1);
+      background: var(--parchment);
+    }
+
+    .threads-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm) var(--space-sm) var(--space-xs);
+    }
+
+    .threads-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--forest-deep);
+    }
+
+    .threads-search {
+      padding: 0 var(--space-sm) var(--space-xs);
+    }
+
+    .threads-search input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid rgba(139, 115, 85, 0.15);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      background: var(--mist);
+      color: var(--charcoal);
+    }
+
+    .threads-search input:focus {
+      outline: none;
+      border-color: var(--pond-surface);
+      box-shadow: 0 0 0 3px rgba(107, 143, 122, 0.15);
+    }
+
+    .threads-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .thread-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px var(--space-sm);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(139, 115, 85, 0.06);
+    }
+
+    .thread-item:hover { background: var(--mist); }
+
+    .thread-item.active {
+      background: rgba(107, 143, 122, 0.1);
+      border-left: 3px solid var(--forest-deep);
+      padding-left: calc(var(--space-sm) - 3px);
+    }
+
+    .thread-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--mist);
+      flex-shrink: 0;
+    }
+
+    .thread-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thread-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .thread-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--forest-deep);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thread-preview {
+      font-size: 0.8rem;
+      color: var(--stone);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .thread-time {
+      font-size: 0.7rem;
+      color: var(--lichen);
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .threads-empty {
+      padding: var(--space-lg) var(--space-sm);
+      text-align: center;
+      color: var(--stone);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Friend Requests Section ---- */
+    .friend-requests-section {
+      border-top: 1px solid rgba(139, 115, 85, 0.1);
+      flex-shrink: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .friend-requests-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lichen);
+      padding: var(--space-xs) var(--space-sm) 4px;
+    }
+
+    .friend-request-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px var(--space-sm);
+    }
+
+    .friend-request-item .thread-avatar {
+      width: 32px;
+      height: 32px;
+    }
+
+    .friend-request-name {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--charcoal);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .friend-request-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .friend-request-actions button {
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 500;
+    }
+
+    .fr-accept {
+      background: var(--forest-deep);
+      color: white;
+    }
+
+    .fr-accept:hover { background: var(--forest-mid); }
+
+    .fr-reject {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca !important;
+    }
+
+    .fr-reject:hover { background: #fee2e2; }
+
+    /* ---- Right Panel: Conversation ---- */
+    .chat-conversation {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--mist);
+    }
+
+    .conversation-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--stone);
+      gap: var(--space-sm);
+    }
+
+    .conversation-placeholder svg {
+      width: 48px;
+      height: 48px;
+      color: var(--lichen);
+      opacity: 0.5;
+    }
+
+    .conversation-placeholder p {
+      font-size: 0.95rem;
+    }
+
+    .conversation-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px var(--space-sm);
+      background: var(--parchment);
+      border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+      flex-shrink: 0;
+    }
+
+    .conversation-header .thread-avatar {
+      width: 36px;
+      height: 36px;
+    }
+
+    .conversation-header-name {
+      flex: 1;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--forest-deep);
+      font-family: var(--font-display);
+    }
+
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message-self {
+      align-self: flex-end;
+      background: var(--forest-deep);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-other {
+      align-self: flex-start;
+      background: var(--parchment);
+      border: 1px solid rgba(139, 115, 85, 0.1);
+      color: var(--charcoal);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-system {
+      align-self: center;
+      max-width: 85%;
+      background: rgba(107, 143, 122, 0.08);
+      color: var(--stone);
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 6px 14px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .message-system svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .message-time {
+      font-size: 0.7rem;
+      margin-top: 2px;
+      opacity: 0.6;
+    }
+
+    .message-self .message-time { text-align: right; }
+    .message-other .message-time { text-align: left; }
+
+    .message-counter {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--lichen);
+      padding: 4px 0;
+      flex-shrink: 0;
+    }
+
+    .message-input-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px var(--space-sm);
+      background: var(--parchment);
+      border-top: 1px solid rgba(139, 115, 85, 0.1);
+      flex-shrink: 0;
+    }
+
+    .message-input-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid rgba(139, 115, 85, 0.2);
+      border-radius: 20px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      background: var(--mist);
+      color: var(--charcoal);
+    }
+
+    .message-input-bar input:focus {
+      outline: none;
+      border-color: var(--pond-surface);
+      box-shadow: 0 0 0 3px rgba(107, 143, 122, 0.15);
+    }
+
+    .message-input-bar button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--forest-deep);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .message-input-bar button:hover { background: var(--forest-mid); }
+    .message-input-bar button:disabled {
+      background: var(--lichen);
+      cursor: not-allowed;
+    }
+
+    /* ---- Add Friend Modal ---- */
+    .add-friend-list {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .add-friend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(139, 115, 85, 0.06);
+    }
+
+    .add-friend-item:last-child { border-bottom: none; }
+
+    .add-friend-item .thread-avatar {
+      width: 36px;
+      height: 36px;
+    }
+
+    .add-friend-item-name {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--charcoal);
+    }
+
+    .add-friend-item .pending-label {
+      font-size: 0.8rem;
+      color: var(--lichen);
+      font-style: italic;
+    }
+
+    .modal-search {
+      margin-bottom: var(--space-sm);
+    }
+
+    .modal-search input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid rgba(139, 115, 85, 0.2);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      background: var(--mist);
+    }
+
+    .modal-search input:focus {
+      outline: none;
+      border-color: var(--pond-surface);
+    }
+
+    .outgoing-section-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lichen);
+      margin-top: var(--space-sm);
+      margin-bottom: var(--space-xs);
+    }
+
+    /* ---- Mobile Responsive ---- */
+    @media (max-width: 768px) {
+      .chat-container {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 72px);
+        border-radius: 0;
+        border: none;
+      }
+
+      .chat-threads-panel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+      }
+
+      .chat-threads-panel.hidden-mobile { display: none; }
+
+      .chat-conversation {
+        min-height: calc(100vh - 72px);
+      }
+
+      .chat-conversation.hidden-mobile { display: none; }
+
+      .mobile-back-btn {
+        display: flex !important;
+      }
+
+      .message { max-width: 85%; }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-back-btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none"><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/members/" class="nav-signin">Members</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle">...</button>
+    <main class="members-main">
+      <div class="chat-container">
+        <!-- Left Panel: Thread List -->
+        <div class="chat-threads-panel" id="threadsPanel">
+          <div class="threads-header">
+            <h2>Messages</h2>
+            <button class="btn btn-sm btn-primary" onclick="openAddFriendModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Add Friend
+            </button>
+          </div>
+          <div class="threads-search">
+            <input type="text" id="threadSearch" placeholder="Search conversations..." oninput="filterThreads()">
+          </div>
+          <ul class="threads-list" id="threadsList"></ul>
+          <div class="friend-requests-section" id="friendRequestsSection" style="display:none">
+            <div class="friend-requests-title">Friend Requests</div>
+            <div id="friendRequestsList"></div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Conversation -->
+        <div class="chat-conversation hidden-mobile" id="conversationPanel">
+          <div class="conversation-placeholder" id="conversationPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <p>Select a conversation</p>
+          </div>
+          <div id="conversationActive" style="display:none;flex-direction:column;height:100%">
+            <div class="conversation-header" id="conversationHeader">
+              <button class="btn btn-sm btn-secondary mobile-back-btn" onclick="goBackToThreads()" style="display:none;padding:6px 8px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div class="thread-avatar" id="convAvatar"></div>
+              <span class="conversation-header-name" id="convName"></span>
+              <button class="btn btn-sm btn-secondary" onclick="shareContact()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                Share Contact
+              </button>
+            </div>
+            <div class="messages-area" id="messagesArea"></div>
+            <div class="message-counter" id="messageCounter"></div>
+            <div class="message-input-bar">
+              <input type="text" id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+              <button onclick="sendMessage()" id="sendBtn" title="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Friend Modal -->
+  <div class="modal-overlay" id="addFriendModal" style="display:none" onclick="if(event.target===this)closeAddFriendModal()">
+    <div class="modal" style="max-width:440px">
+      <h2>Add a Friend</h2>
+      <div class="modal-search">
+        <input type="text" id="friendSearchInput" placeholder="Search members..." oninput="filterFriendList()">
+      </div>
+      <div class="add-friend-list" id="addFriendList"></div>
+      <div id="outgoingRequests"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddFriendModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+    initMembersSidebar('chat');
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // ---- State ----
+    let threads = [];
+    let activeThreadId = null;
+    let activeMessages = [];
+    let friends = [];
+    let friendRequests = [];
+    let allMembers = [];
+    let pollInterval = null;
+
+    // ---- Init ----
+    async function init() {
+      await Promise.all([loadThreads(), loadFriendRequests()]);
+      // Check for ?thread=ID query param
+      const params = new URLSearchParams(window.location.search);
+      const threadParam = params.get('thread');
+      if (threadParam) {
+        openThread(parseInt(threadParam, 10));
+      }
+    }
+
+    // ---- Threads ----
+    async function loadThreads() {
+      try {
+        const res = await fetch('/api/chat/threads');
+        if (!res.ok) throw new Error('Failed to load threads');
+        threads = await res.json();
+        renderThreads();
+      } catch (e) {
+        console.error('Load threads error:', e);
+      }
+    }
+
+    function renderThreads() {
+      const list = document.getElementById('threadsList');
+      const search = document.getElementById('threadSearch').value.toLowerCase();
+      const filtered = threads.filter(t => {
+        const name = (t.other_user_name || '').toLowerCase();
+        const preview = (t.last_message || '').toLowerCase();
+        return name.includes(search) || preview.includes(search);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<li class="threads-empty">No conversations yet. Add a friend to start chatting.</li>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(t => `
+        <li class="thread-item ${t.id === activeThreadId ? 'active' : ''}" onclick="openThread(${t.id})">
+          <div class="thread-avatar">
+            ${t.other_user_picture
+              ? `<img src="${escapeHtml(t.other_user_picture)}" alt="">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;padding:8px;color:var(--lichen)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+            }
+          </div>
+          <div class="thread-info">
+            <div class="thread-name">${escapeHtml(t.other_user_name || 'Unknown')}</div>
+            <div class="thread-preview">${escapeHtml(t.last_message || 'No messages yet')}</div>
+          </div>
+          <span class="thread-time">${t.last_message_at ? formatTimeAgo(t.last_message_at) : ''}</span>
+        </li>
+      `).join('');
+    }
+
+    function filterThreads() {
+      renderThreads();
+    }
+
+    // ---- Open Thread ----
+    async function openThread(threadId) {
+      activeThreadId = threadId;
+      renderThreads();
+
+      // Show conversation panel, hide placeholder
+      document.getElementById('conversationPlaceholder').style.display = 'none';
+      const active = document.getElementById('conversationActive');
+      active.style.display = 'flex';
+
+      // Mobile: switch panels
+      document.getElementById('threadsPanel').classList.add('hidden-mobile');
+      document.getElementById('conversationPanel').classList.remove('hidden-mobile');
+
+      // Set header
+      const thread = threads.find(t => t.id === threadId);
+      if (thread) {
+        document.getElementById('convName').textContent = thread.other_user_name || 'Unknown';
+        const avatarEl = document.getElementById('convAvatar');
+        if (thread.other_user_picture) {
+          avatarEl.innerHTML = `<img src="${escapeHtml(thread.other_user_picture)}" alt="">`;
+        } else {
+          avatarEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;padding:6px;color:var(--lichen)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+        }
+      }
+
+      await loadMessages();
+      startPolling();
+    }
+
+    function goBackToThreads() {
+      document.getElementById('threadsPanel').classList.remove('hidden-mobile');
+      document.getElementById('conversationPanel').classList.add('hidden-mobile');
+    }
+
+    // ---- Messages ----
+    async function loadMessages() {
+      if (!activeThreadId) return;
+      try {
+        const res = await fetch(`/api/chat/threads/${activeThreadId}/messages`);
+        if (!res.ok) throw new Error('Failed to load messages');
+        activeMessages = await res.json();
+        renderMessages();
+      } catch (e) {
+        console.error('Load messages error:', e);
+      }
+    }
+
+    function renderMessages() {
+      const area = document.getElementById('messagesArea');
+      const myId = session.user_id;
+
+      if (activeMessages.length === 0) {
+        area.innerHTML = '<div class="threads-empty" style="margin:auto">No messages yet. Say hello!</div>';
+      } else {
+        area.innerHTML = activeMessages.map(m => {
+          if (m.sender_user_id === 0) {
+            // System message
+            return `<div class="message message-system">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>${escapeHtml(m.body)}</span>
+            </div>`;
+          }
+          const isSelf = m.sender_user_id === myId;
+          return `<div class="message ${isSelf ? 'message-self' : 'message-other'}">
+            <div>${escapeHtml(m.body)}</div>
+            <div class="message-time">${m.created_at ? formatTimeAgo(m.created_at) : ''}</div>
+          </div>`;
+        }).join('');
+      }
+
+      // Message counter
+      document.getElementById('messageCounter').textContent = `${activeMessages.length} / 500 messages`;
+
+      // Auto-scroll to bottom
+      area.scrollTop = area.scrollHeight;
+    }
+
+    // ---- Send Message ----
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const body = input.value.trim();
+      if (!body || !activeThreadId) return;
+
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      input.value = '';
+
+      try {
+        const res = await fetch(`/api/chat/threads/${activeThreadId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to send');
+        }
+        await loadMessages();
+        await loadThreads();
+      } catch (e) {
+        showToast(e.message, 'error');
+        input.value = body;
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    // ---- Share Contact ----
+    async function shareContact() {
+      if (!activeThreadId) return;
+      try {
+        const res = await fetch(`/api/chat/threads/${activeThreadId}/share-contact`, {
+          method: 'POST'
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to share contact');
+        }
+        showToast('Contact info shared', 'success');
+        await loadMessages();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // ---- Polling ----
+    function startPolling() {
+      stopPolling();
+      pollInterval = setInterval(async () => {
+        if (activeThreadId) {
+          await loadMessages();
+          await loadThreads();
+        }
+      }, 10000);
+    }
+
+    function stopPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
+    // ---- Friend Requests ----
+    async function loadFriendRequests() {
+      try {
+        const res = await fetch('/api/friends/requests');
+        if (!res.ok) return;
+        friendRequests = await res.json();
+        renderFriendRequests();
+      } catch (e) {
+        console.error('Load friend requests error:', e);
+      }
+    }
+
+    function renderFriendRequests() {
+      const section = document.getElementById('friendRequestsSection');
+      const list = document.getElementById('friendRequestsList');
+      const incoming = friendRequests.filter(r => r.direction === 'incoming');
+
+      if (incoming.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      list.innerHTML = incoming.map(r => `
+        <div class="friend-request-item">
+          <div class="thread-avatar">
+            ${r.picture
+              ? `<img src="${escapeHtml(r.picture)}" alt="">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;padding:6px;color:var(--lichen)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+            }
+          </div>
+          <span class="friend-request-name">${escapeHtml(r.name || 'Unknown')}</span>
+          <div class="friend-request-actions">
+            <button class="fr-accept" onclick="acceptRequest(${r.id})">Accept</button>
+            <button class="fr-reject" onclick="rejectRequest(${r.id})">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function acceptRequest(requestId) {
+      try {
+        const res = await fetch(`/api/friends/requests/${requestId}/accept`, { method: 'PUT' });
+        if (!res.ok) throw new Error('Failed to accept');
+        showToast('Friend request accepted', 'success');
+        await Promise.all([loadFriendRequests(), loadThreads()]);
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    async function rejectRequest(requestId) {
+      try {
+        const res = await fetch(`/api/friends/requests/${requestId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to reject');
+        showToast('Friend request rejected', 'info');
+        await loadFriendRequests();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // ---- Add Friend Modal ----
+    async function openAddFriendModal() {
+      document.getElementById('addFriendModal').style.display = 'flex';
+      document.getElementById('friendSearchInput').value = '';
+
+      try {
+        const [membersRes, friendsRes, requestsRes] = await Promise.all([
+          fetch('/api/members'),
+          fetch('/api/friends'),
+          fetch('/api/friends/requests')
+        ]);
+        allMembers = membersRes.ok ? await membersRes.json() : [];
+        friends = friendsRes.ok ? await friendsRes.json() : [];
+        friendRequests = requestsRes.ok ? await requestsRes.json() : [];
+        renderFriendList();
+        renderOutgoingRequests();
+      } catch (e) {
+        console.error('Load members error:', e);
+      }
+    }
+
+    function closeAddFriendModal() {
+      document.getElementById('addFriendModal').style.display = 'none';
+    }
+
+    function filterFriendList() {
+      renderFriendList();
+    }
+
+    function renderFriendList() {
+      const container = document.getElementById('addFriendList');
+      const search = document.getElementById('friendSearchInput').value.toLowerCase();
+      const friendIds = new Set(friends.map(f => f.user_id || f.friend_user_id));
+      const requestUserIds = new Set(friendRequests.map(r => r.user_id || r.from_user_id || r.to_user_id));
+
+      // Filter out self, existing friends, and pending requests
+      const available = allMembers.filter(m => {
+        if (m.id === session.user_id) return false;
+        if (friendIds.has(m.id)) return false;
+        if (requestUserIds.has(m.id)) return false;
+        const name = (m.name || '').toLowerCase();
+        return name.includes(search);
+      });
+
+      if (available.length === 0) {
+        container.innerHTML = '<div class="threads-empty" style="padding:var(--space-md) 0">No members to add</div>';
+        return;
+      }
+
+      container.innerHTML = available.map(m => `
+        <div class="add-friend-item">
+          <div class="thread-avatar">
+            ${m.picture
+              ? `<img src="${escapeHtml(m.picture)}" alt="">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;padding:6px;color:var(--lichen)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+            }
+          </div>
+          <span class="add-friend-item-name">${escapeHtml(m.name || 'Unknown')}</span>
+          <button class="btn btn-sm btn-primary" onclick="sendFriendRequest(${m.id})">Add Friend</button>
+        </div>
+      `).join('');
+    }
+
+    function renderOutgoingRequests() {
+      const container = document.getElementById('outgoingRequests');
+      const outgoing = friendRequests.filter(r => r.direction === 'outgoing');
+
+      if (outgoing.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="outgoing-section-title">Pending Sent Requests</div>
+        ${outgoing.map(r => `
+          <div class="add-friend-item">
+            <div class="thread-avatar">
+              ${r.picture
+                ? `<img src="${escapeHtml(r.picture)}" alt="">`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;padding:6px;color:var(--lichen)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+              }
+            </div>
+            <span class="add-friend-item-name">${escapeHtml(r.name || 'Unknown')}</span>
+            <span class="pending-label">Pending</span>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    async function sendFriendRequest(userId) {
+      try {
+        const res = await fetch('/api/friends/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to_user_id: userId })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to send request');
+        }
+        showToast('Friend request sent', 'success');
+        await openAddFriendModal();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // ---- Cleanup on page leave ----
+    window.addEventListener('beforeunload', stopPolling);
+
+    // ---- Start ----
+    init();
+  </script>
+</body>
+</html>

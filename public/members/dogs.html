@@ -9,6 +9,71 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
+  <style>
+    /* Swipe Card */
+    .swipe-card {
+      width: 100%; max-width: 400px; background: var(--parchment);
+      border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      overflow: hidden; transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+    .swipe-card.swiping-left  { transform: translateX(-120%) rotate(-8deg); opacity: 0; }
+    .swipe-card.swiping-right { transform: translateX(120%) rotate(8deg); opacity: 0; }
+    .swipe-card-image {
+      width: 100%; height: 250px; background: var(--sage-light);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; font-size: 4rem;
+    }
+    .swipe-card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .swipe-card-body { padding: var(--space-md); }
+    .swipe-card-body h3 { font-size: 1.4rem; margin: 0 0 4px; }
+
+    /* Swipe buttons */
+    .swipe-btn {
+      width: 64px; height: 64px; border-radius: 50%; border: 3px solid;
+      font-size: 1.6rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      background: var(--parchment); transition: transform 0.15s ease;
+    }
+    .swipe-btn:hover { transform: scale(1.12); }
+    .swipe-pass { border-color: #d9534f; color: #d9534f; }
+    .swipe-like { border-color: #5cb85c; color: #5cb85c; }
+
+    /* Match confetti */
+    .match-confetti {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    }
+    .match-confetti .confetti-piece {
+      position: absolute; width: 10px; height: 10px; border-radius: 2px;
+      animation: confettiFall 1.2s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+    }
+
+    /* Playdate dog card extras */
+    .playdate-dog-card {
+      background: var(--parchment); border-radius: 12px; padding: var(--space-md);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: var(--space-sm);
+    }
+    .playdate-dog-card .dog-card-image { width: 80px; height: 80px; border-radius: 8px; flex-shrink: 0; }
+    .playdate-tagline-input {
+      width: 100%; padding: 6px 10px; border: 1px solid var(--sage);
+      border-radius: 6px; font-size: 0.85rem; font-family: inherit;
+    }
+
+    /* Match list item */
+    .match-item {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-sm) 0; border-bottom: 1px solid var(--sage-light);
+    }
+    .match-item:last-child { border-bottom: none; }
+    .match-item img, .match-item .dog-placeholder {
+      width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+      background: var(--sage-light); display: flex; align-items: center;
+      justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+    }
+  </style>
 </head>
 <body>
 
@@ -51,18 +116,84 @@
         <p>Meet the four-legged residents of Walden's Revisited. You can add up to 5 dog profiles.</p>
       </div>
 
-      <!-- My Dogs -->
-      <div class="profile-section">
-        <h2>My Dogs</h2>
-        <div class="dogs-grid" id="myDogsGrid"></div>
+      <div class="admin-tabs" style="margin-bottom:var(--space-md);">
+        <button class="admin-tab active" data-tab="dogs-tab">Dogs</button>
+        <button class="admin-tab" data-tab="playdate-tab">Play Dates</button>
       </div>
 
-      <!-- Community Dogs -->
-      <div class="profile-section">
-        <h2>Community Dogs</h2>
-        <div class="dogs-grid" id="communityDogsGrid">
-          <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+      <!-- Dogs Tab -->
+      <div class="tab-content" id="tab-dogs-tab">
+        <!-- My Dogs -->
+        <div class="profile-section">
+          <h2>My Dogs</h2>
+          <div class="dogs-grid" id="myDogsGrid"></div>
         </div>
+
+        <!-- Community Dogs -->
+        <div class="profile-section">
+          <h2>Community Dogs</h2>
+          <div class="dogs-grid" id="communityDogsGrid">
+            <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Play Dates Tab -->
+      <div class="tab-content" id="tab-playdate-tab" style="display:none;">
+
+        <!-- Sub-view: Setup (my dogs opt-in/out) -->
+        <div id="playdate-setup">
+          <div class="profile-section">
+            <h2>My Dogs &mdash; Play Date Status</h2>
+            <p style="color:var(--stone);margin-bottom:var(--space-sm);">Choose which dogs to include in Play Dates and add a tagline.</p>
+            <div class="dogs-grid" id="playdateMyDogsGrid">
+              <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+            </div>
+          </div>
+          <div class="profile-section" style="margin-top:var(--space-md);">
+            <h2>Your Matches</h2>
+            <div id="playdateMatchesList">
+              <p style="color:var(--stone);">Loading...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-view: Discover (swipe cards) -->
+        <div id="playdate-discover" style="display:none;">
+          <div style="text-align:center;margin-bottom:var(--space-sm);">
+            <button class="btn btn-secondary btn-sm" onclick="showPlaydateSetup()">&larr; Back to My Dogs</button>
+            <span id="discoverSwipingAs" style="margin-left:var(--space-sm);font-weight:500;"></span>
+          </div>
+          <div id="swipeCardContainer" style="display:flex;justify-content:center;align-items:center;min-height:400px;">
+            <div id="swipeCard" class="swipe-card">
+              <div class="swipe-card-image" id="swipeCardImage"></div>
+              <div class="swipe-card-body">
+                <h3 id="swipeCardName"></h3>
+                <div class="dog-meta" id="swipeCardMeta"></div>
+                <p id="swipeCardOwner" style="color:var(--stone);font-size:0.85rem;margin-top:4px;"></p>
+                <p id="swipeCardTagline" style="font-style:italic;color:var(--lichen);margin-top:4px;"></p>
+              </div>
+            </div>
+          </div>
+          <div id="swipeActions" style="display:flex;justify-content:center;gap:var(--space-lg);margin-top:var(--space-md);">
+            <button class="swipe-btn swipe-pass" id="btnPass" title="Pass">&#10007;</button>
+            <button class="swipe-btn swipe-like" id="btnLike" title="Like">&#9829;</button>
+          </div>
+          <div id="swipeEmpty" style="display:none;text-align:center;padding:var(--space-xl) 0;">
+            <p style="font-size:1.1rem;color:var(--stone);" id="swipeEmptyMsg">No more dogs to discover right now. Check back later!</p>
+          </div>
+          <!-- Match overlay -->
+          <div id="matchOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;justify-content:center;align-items:center;">
+            <div style="background:var(--parchment);border-radius:16px;padding:var(--space-xl);text-align:center;max-width:360px;position:relative;overflow:hidden;">
+              <div class="match-confetti" id="matchConfetti"></div>
+              <h2 style="font-size:1.8rem;color:var(--forest-deep);margin-bottom:var(--space-sm);">It's a Match!</h2>
+              <p id="matchMessage" style="color:var(--lichen);margin-bottom:var(--space-md);"></p>
+              <button class="btn btn-primary" onclick="closeMatchOverlay()">Keep Swiping</button>
+              <button class="btn btn-secondary" onclick="closeMatchOverlay();showPlaydateSetup();" style="margin-left:8px;">See Matches</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -348,6 +479,277 @@
 
     loadMyDogs();
     loadCommunityDogs();
+
+    // ---- Tab switching ----
+    document.querySelectorAll('.admin-tabs .admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tabs .admin-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+        document.getElementById('tab-' + btn.dataset.tab).style.display = '';
+        if (btn.dataset.tab === 'playdate-tab') {
+          loadMyPlaydateDogs();
+          loadMatches();
+        }
+      });
+    });
+
+    // ---- Play Dates ----
+    let playdateSwipingDogId = null;
+    let currentCandidate = null;
+
+    function showPlaydateSetup() {
+      document.getElementById('playdate-setup').style.display = '';
+      document.getElementById('playdate-discover').style.display = 'none';
+      playdateSwipingDogId = null;
+      loadMyPlaydateDogs();
+      loadMatches();
+    }
+
+    async function loadMyPlaydateDogs() {
+      const grid = document.getElementById('playdateMyDogsGrid');
+      grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">Loading...</p>';
+      try {
+        // Get user's dogs
+        const dogsRes = await fetch('/api/dogs');
+        const dogs = await dogsRes.json();
+        // Get playdate opt-in status
+        let playdateDogs = [];
+        try {
+          const pdRes = await fetch('/api/playdate/dogs');
+          playdateDogs = await pdRes.json();
+        } catch (e) { /* endpoint may not exist yet */ }
+        const optedInIds = new Set(playdateDogs.map(d => d.dog_id || d.id));
+
+        grid.innerHTML = '';
+        if (dogs.length === 0) {
+          grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">You have no dogs yet. Add one in the Dogs tab first.</p>';
+          return;
+        }
+
+        dogs.forEach(dog => {
+          const isOptedIn = optedInIds.has(dog.id);
+          const pdDog = playdateDogs.find(d => (d.dog_id || d.id) === dog.id);
+          const tagline = pdDog ? (pdDog.tagline || '') : '';
+
+          const card = document.createElement('div');
+          card.className = 'playdate-dog-card';
+
+          const imgHtml = dog.picture
+            ? `<img src="${escapeHtml(dog.picture)}" alt="${escapeHtml(dog.name)}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;">`
+            : '<div class="dog-card-image" style="width:80px;height:80px;border-radius:8px;"><span class="dog-placeholder">&#128054;</span></div>';
+
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:var(--space-sm);">
+              ${imgHtml}
+              <div>
+                <h3 style="margin:0;">${escapeHtml(dog.name)}</h3>
+                <span class="dog-meta">${escapeHtml([dog.breed, dog.age].filter(Boolean).join(' · '))}</span>
+              </div>
+            </div>
+            <input type="text" class="playdate-tagline-input" placeholder="Tagline (e.g. Loves fetch!)" maxlength="200"
+              value="${escapeHtml(tagline)}" id="tagline-${dog.id}" ${isOptedIn ? '' : 'disabled'}>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${isOptedIn
+                ? `<button class="btn btn-danger btn-sm" onclick="optOutDog(${dog.id})">Leave Play Dates</button>
+                   <button class="btn btn-primary btn-sm" onclick="updateTagline(${dog.id})">Save Tagline</button>
+                   <button class="btn btn-secondary btn-sm" onclick="startSwiping(${dog.id}, '${escapeHtml(dog.name)}')">Start Swiping</button>`
+                : `<button class="btn btn-primary btn-sm" onclick="optInDog(${dog.id})">Join Play Dates</button>`
+              }
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">Failed to load dogs.</p>';
+      }
+    }
+
+    async function optInDog(dogId) {
+      const tagline = (document.getElementById('tagline-' + dogId)?.value || '').trim();
+      try {
+        await fetch('/api/playdate/dogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dogId, tagline }),
+        });
+        showToast('Dog joined Play Dates!', 'success');
+        loadMyPlaydateDogs();
+      } catch (e) {
+        showToast('Error joining Play Dates', 'error');
+      }
+    }
+
+    async function optOutDog(dogId) {
+      if (!confirm('Remove this dog from Play Dates?')) return;
+      try {
+        await fetch('/api/playdate/dogs/' + dogId, { method: 'DELETE' });
+        showToast('Dog left Play Dates', 'success');
+        loadMyPlaydateDogs();
+      } catch (e) {
+        showToast('Error leaving Play Dates', 'error');
+      }
+    }
+
+    async function updateTagline(dogId) {
+      const tagline = (document.getElementById('tagline-' + dogId)?.value || '').trim();
+      try {
+        await fetch('/api/playdate/dogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dogId, tagline }),
+        });
+        showToast('Tagline saved', 'success');
+      } catch (e) {
+        showToast('Error saving tagline', 'error');
+      }
+    }
+
+    function startSwiping(dogId, dogName) {
+      playdateSwipingDogId = dogId;
+      document.getElementById('playdate-setup').style.display = 'none';
+      document.getElementById('playdate-discover').style.display = '';
+      document.getElementById('discoverSwipingAs').textContent = 'Swiping as ' + dogName;
+      document.getElementById('swipeCard').className = 'swipe-card';
+      document.getElementById('swipeCard').style.display = '';
+      document.getElementById('swipeActions').style.display = 'flex';
+      document.getElementById('swipeEmpty').style.display = 'none';
+      loadNextCandidate(dogId);
+    }
+
+    async function loadNextCandidate(fromDogId) {
+      try {
+        const res = await fetch('/api/playdate/discover/' + fromDogId);
+        const data = await res.json();
+        if (!data || data.error || (!data.id && !data.dog_id)) {
+          // No more candidates
+          document.getElementById('swipeCard').style.display = 'none';
+          document.getElementById('swipeActions').style.display = 'none';
+          document.getElementById('swipeEmpty').style.display = '';
+          const msg = data && data.message ? data.message : 'No more dogs to discover right now. Check back later!';
+          document.getElementById('swipeEmptyMsg').textContent = msg;
+          currentCandidate = null;
+          return;
+        }
+        currentCandidate = data;
+        const card = document.getElementById('swipeCard');
+        card.className = 'swipe-card';
+
+        document.getElementById('swipeCardImage').innerHTML = data.picture
+          ? `<img src="${escapeHtml(data.picture)}" alt="${escapeHtml(data.name)}">`
+          : '<span style="font-size:4rem;">&#128054;</span>';
+        document.getElementById('swipeCardName').textContent = data.name || 'Mystery Dog';
+        const metaParts = [data.breed, data.age].filter(Boolean);
+        document.getElementById('swipeCardMeta').textContent = metaParts.join(' · ');
+        document.getElementById('swipeCardOwner').textContent = data.owner_name ? 'Owner: ' + data.owner_name : '';
+        document.getElementById('swipeCardTagline').textContent = data.tagline || '';
+      } catch (e) {
+        document.getElementById('swipeCard').style.display = 'none';
+        document.getElementById('swipeActions').style.display = 'none';
+        document.getElementById('swipeEmpty').style.display = '';
+        document.getElementById('swipeEmptyMsg').textContent = 'Could not load candidates.';
+        currentCandidate = null;
+      }
+    }
+
+    document.getElementById('btnPass').addEventListener('click', () => {
+      if (!currentCandidate || !playdateSwipingDogId) return;
+      swipe(playdateSwipingDogId, currentCandidate.dog_id || currentCandidate.id, 'pass');
+    });
+
+    document.getElementById('btnLike').addEventListener('click', () => {
+      if (!currentCandidate || !playdateSwipingDogId) return;
+      swipe(playdateSwipingDogId, currentCandidate.dog_id || currentCandidate.id, 'like');
+    });
+
+    async function swipe(fromDogId, toDogId, action) {
+      const card = document.getElementById('swipeCard');
+      card.classList.add(action === 'like' ? 'swiping-right' : 'swiping-left');
+
+      try {
+        const res = await fetch('/api/playdate/swipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fromDogId, toDogId, action }),
+        });
+        const data = await res.json();
+
+        if (data.match) {
+          showMatchOverlay(data);
+        }
+      } catch (e) {
+        showToast('Swipe failed', 'error');
+      }
+
+      // Wait for animation then load next
+      setTimeout(() => {
+        card.className = 'swipe-card';
+        loadNextCandidate(fromDogId);
+      }, 420);
+    }
+
+    function showMatchOverlay(data) {
+      const overlay = document.getElementById('matchOverlay');
+      overlay.style.display = 'flex';
+      document.getElementById('matchMessage').textContent =
+        data.matchMessage || 'Your dogs want to play together!';
+      // Spawn confetti
+      const confettiEl = document.getElementById('matchConfetti');
+      confettiEl.innerHTML = '';
+      const colors = ['#f44336','#e91e63','#9c27b0','#3f51b5','#2196f3','#4caf50','#ffeb3b','#ff9800'];
+      for (let i = 0; i < 40; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = '-10px';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.5) + 's';
+        piece.style.animationDuration = (0.8 + Math.random() * 0.6) + 's';
+        piece.style.width = (6 + Math.random() * 8) + 'px';
+        piece.style.height = (6 + Math.random() * 8) + 'px';
+        confettiEl.appendChild(piece);
+      }
+    }
+
+    function closeMatchOverlay() {
+      document.getElementById('matchOverlay').style.display = 'none';
+    }
+
+    async function loadMatches() {
+      const container = document.getElementById('playdateMatchesList');
+      container.innerHTML = '<p style="color:var(--stone);">Loading...</p>';
+      try {
+        const res = await fetch('/api/playdate/matches');
+        const matches = await res.json();
+        if (!matches.length) {
+          container.innerHTML = '<p style="color:var(--stone);">No matches yet. Start swiping to find play dates!</p>';
+          return;
+        }
+        container.innerHTML = '';
+        matches.forEach(m => {
+          const item = document.createElement('div');
+          item.className = 'match-item';
+          const imgHtml = m.picture
+            ? `<img src="${escapeHtml(m.picture)}" alt="${escapeHtml(m.name)}">`
+            : '<div class="dog-placeholder" style="width:56px;height:56px;border-radius:50%;background:var(--sage-light);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128054;</div>';
+          const chatHref = m.thread_id
+            ? `/members/chat.html?thread=${m.thread_id}`
+            : `/members/chat.html`;
+          item.innerHTML = `
+            ${imgHtml}
+            <div style="flex:1;min-width:0;">
+              <strong>${escapeHtml(m.name || 'Dog')}</strong>
+              <div class="dog-meta">${escapeHtml([m.breed, m.age].filter(Boolean).join(' · '))}</div>
+              <div style="font-size:0.85rem;color:var(--stone);">Owner: ${escapeHtml(m.owner_name || 'Unknown')}</div>
+            </div>
+            <a href="${chatHref}" class="btn btn-primary btn-sm">Chat with ${escapeHtml(m.owner_name || 'Owner')}</a>
+          `;
+          container.appendChild(item);
+        });
+      } catch (e) {
+        container.innerHTML = '<p style="color:var(--stone);">Could not load matches.</p>';
+      }
+    }
   </script>
 </body>
 </html>

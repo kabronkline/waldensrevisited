@@ -323,6 +323,368 @@ export async function handleApi(request, env, session) {
     return json(results);
   }
 
+  // --- Playdate endpoints ---
+
+  // POST /api/playdate/dogs — opt dog into play dates
+  if (path === '/api/playdate/dogs' && method === 'POST') {
+    const body = await request.json();
+    if (!body.dog_id) return json({ error: 'dog_id is required' }, 400);
+    const dog = await env.DB.prepare('SELECT id FROM dogs WHERE id = ? AND user_id = ?').bind(body.dog_id, userId).first();
+    if (!dog) return json({ error: 'Dog not found or not yours' }, 404);
+    await env.DB.prepare(
+      "INSERT INTO playdate_dogs (dog_id, user_id, tagline, is_active, created_at) VALUES (?, ?, ?, 1, datetime('now'))"
+    ).bind(body.dog_id, userId, body.tagline || null).run();
+    return json({ success: true }, 201);
+  }
+
+  // DELETE /api/playdate/dogs/:dogId — remove from play dates
+  const playdateDogDeleteMatch = path.match(/^\/api\/playdate\/dogs\/(\d+)$/);
+  if (playdateDogDeleteMatch && method === 'DELETE') {
+    const dogId = parseInt(playdateDogDeleteMatch[1]);
+    const dog = await env.DB.prepare('SELECT id FROM dogs WHERE id = ? AND user_id = ?').bind(dogId, userId).first();
+    if (!dog) return json({ error: 'Dog not found or not yours' }, 404);
+    await env.DB.prepare('DELETE FROM playdate_dogs WHERE dog_id = ? AND user_id = ?').bind(dogId, userId).run();
+    return json({ success: true });
+  }
+
+  // GET /api/playdate/dogs — list current user's playdate-active dogs
+  if (path === '/api/playdate/dogs' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT pd.*, d.name, d.breed, d.age, d.bio, d.picture
+       FROM playdate_dogs pd
+       JOIN dogs d ON pd.dog_id = d.id
+       WHERE pd.user_id = ? AND pd.is_active = 1
+       ORDER BY pd.created_at`
+    ).bind(userId).all();
+    return json(results);
+  }
+
+  // GET /api/playdate/discover/:dogId — get next unswiped dog to show
+  const playdateDiscoverMatch = path.match(/^\/api\/playdate\/discover\/(\d+)$/);
+  if (playdateDiscoverMatch && method === 'GET') {
+    const fromDogId = parseInt(playdateDiscoverMatch[1]);
+    const fromDog = await env.DB.prepare('SELECT id FROM dogs WHERE id = ? AND user_id = ?').bind(fromDogId, userId).first();
+    if (!fromDog) return json({ error: 'Dog not found or not yours' }, 404);
+
+    // Only discover dogs belonging to friends
+    // First get friend user IDs
+    const { results: friendRows } = await env.DB.prepare(
+      `SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as friend_id
+       FROM friendships WHERE user_a_id = ? OR user_b_id = ?`
+    ).bind(userId, userId, userId).all();
+    const friendIds = friendRows.map(r => r.friend_id);
+
+    let candidate = null;
+    if (friendIds.length > 0) {
+      const placeholders = friendIds.map(() => '?').join(',');
+      candidate = await env.DB.prepare(
+        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, pd.tagline
+         FROM playdate_dogs pd
+         JOIN dogs d ON pd.dog_id = d.id
+         JOIN users u ON d.user_id = u.id
+         WHERE pd.is_active = 1
+           AND d.user_id IN (${placeholders})
+           AND d.id NOT IN (SELECT to_dog_id FROM playdate_swipes WHERE from_dog_id = ?)
+         ORDER BY RANDOM()
+         LIMIT 1`
+      ).bind(...friendIds, fromDogId).first();
+    }
+    if (!candidate) return json(null);
+    return json(candidate);
+  }
+
+  // POST /api/playdate/swipe — swipe on a dog
+  if (path === '/api/playdate/swipe' && method === 'POST') {
+    const body = await request.json();
+    if (!body.from_dog_id || !body.to_dog_id || !body.action) return json({ error: 'from_dog_id, to_dog_id, and action are required' }, 400);
+    if (body.action !== 'like' && body.action !== 'pass') return json({ error: 'action must be like or pass' }, 400);
+
+    const fromDog = await env.DB.prepare('SELECT id FROM dogs WHERE id = ? AND user_id = ?').bind(body.from_dog_id, userId).first();
+    if (!fromDog) return json({ error: 'from_dog not found or not yours' }, 404);
+
+    await env.DB.prepare(
+      "INSERT OR REPLACE INTO playdate_swipes (from_dog_id, to_dog_id, action, created_at) VALUES (?, ?, ?, datetime('now'))"
+    ).bind(body.from_dog_id, body.to_dog_id, body.action).run();
+
+    let matched = false;
+    let match_id = null;
+
+    if (body.action === 'like') {
+      const reverse = await env.DB.prepare(
+        "SELECT id FROM playdate_swipes WHERE from_dog_id = ? AND to_dog_id = ? AND action = 'like'"
+      ).bind(body.to_dog_id, body.from_dog_id).first();
+
+      if (reverse) {
+        // Get dog names for the match notification
+        const fromDogInfo = await env.DB.prepare('SELECT name FROM dogs WHERE id = ?').bind(body.from_dog_id).first();
+        const toDogInfo = await env.DB.prepare('SELECT name, user_id FROM dogs WHERE id = ?').bind(body.to_dog_id).first();
+
+        const matchResult = await env.DB.prepare(
+          "INSERT INTO playdate_matches (dog_a_id, dog_b_id, created_at) VALUES (?, ?, datetime('now'))"
+        ).bind(body.from_dog_id, body.to_dog_id).run();
+        match_id = matchResult.meta.last_row_id;
+
+        // Find existing friend chat thread and send match notification
+        const toUser = toDogInfo.user_id;
+        const thread = await env.DB.prepare(
+          `SELECT id FROM chat_threads WHERE type = 'friend'
+           AND ((user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?))`
+        ).bind(userId, toUser, toUser, userId).first();
+
+        if (thread) {
+          await env.DB.prepare(
+            "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, 0, ?, datetime('now'))"
+          ).bind(thread.id, `🐾 Play Date Match! ${fromDogInfo.name} and ${toDogInfo.name} both want to play! Arrange a meetup in this chat.`).run();
+        }
+
+        matched = true;
+      }
+    }
+
+    return json({ matched, match_id });
+  }
+
+  // GET /api/playdate/matches — list all matches for current user's dogs
+  if (path === '/api/playdate/matches' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT pm.id as match_id, pm.created_at as matched_at,
+              da.id as dog_a_id, da.name as dog_a_name, da.picture as dog_a_picture, ua.name as owner_a_name,
+              db.id as dog_b_id, db.name as dog_b_name, db.picture as dog_b_picture, ub.name as owner_b_name,
+              ct.id as thread_id,
+              (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message
+       FROM playdate_matches pm
+       JOIN dogs da ON pm.dog_a_id = da.id
+       JOIN dogs db ON pm.dog_b_id = db.id
+       JOIN users ua ON da.user_id = ua.id
+       JOIN users ub ON db.user_id = ub.id
+       LEFT JOIN chat_threads ct ON ct.type = 'playdate' AND ct.ref_id = pm.id
+       WHERE da.user_id = ? OR db.user_id = ?
+       ORDER BY pm.created_at DESC`
+    ).bind(userId, userId).all();
+    return json(results);
+  }
+
+  // --- Friends endpoints ---
+
+  // POST /api/friends/request — send friend request
+  if (path === '/api/friends/request' && method === 'POST') {
+    const body = await request.json();
+    if (!body.to_user_id) return json({ error: 'to_user_id is required' }, 400);
+    if (body.to_user_id === userId) return json({ error: 'Cannot friend yourself' }, 400);
+
+    const existing = await env.DB.prepare(
+      'SELECT id FROM friend_requests WHERE from_user_id = ? AND to_user_id = ?'
+    ).bind(userId, body.to_user_id).first();
+    if (existing) return json({ error: 'Friend request already sent' }, 409);
+
+    const alreadyFriends = await env.DB.prepare(
+      'SELECT id FROM friendships WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)'
+    ).bind(userId, body.to_user_id, body.to_user_id, userId).first();
+    if (alreadyFriends) return json({ error: 'Already friends' }, 409);
+
+    await env.DB.prepare(
+      "INSERT INTO friend_requests (from_user_id, to_user_id, status, created_at) VALUES (?, ?, 'pending', datetime('now'))"
+    ).bind(userId, body.to_user_id).run();
+    return json({ success: true }, 201);
+  }
+
+  // GET /api/friends/requests — list pending incoming requests
+  if (path === '/api/friends/requests' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT fr.id, fr.from_user_id, fr.created_at,
+              u.name, u.profile_picture, u.google_picture
+       FROM friend_requests fr
+       JOIN users u ON fr.from_user_id = u.id
+       WHERE fr.to_user_id = ? AND fr.status = 'pending'
+       ORDER BY fr.created_at DESC`
+    ).bind(userId).all();
+    return json(results);
+  }
+
+  // PUT /api/friends/requests/:id/accept — accept friend request
+  const friendAcceptMatch = path.match(/^\/api\/friends\/requests\/(\d+)\/accept$/);
+  if (friendAcceptMatch && method === 'PUT') {
+    const reqId = parseInt(friendAcceptMatch[1]);
+    const req = await env.DB.prepare(
+      "SELECT * FROM friend_requests WHERE id = ? AND to_user_id = ? AND status = 'pending'"
+    ).bind(reqId, userId).first();
+    if (!req) return json({ error: 'Request not found' }, 404);
+
+    await env.DB.prepare(
+      "INSERT INTO friendships (user_a_id, user_b_id, source, created_at) VALUES (?, ?, 'request', datetime('now'))"
+    ).bind(req.from_user_id, userId).run();
+
+    await env.DB.prepare(
+      "INSERT INTO chat_threads (type, ref_id, user_a_id, user_b_id, created_at) VALUES ('friend', NULL, ?, ?, datetime('now'))"
+    ).bind(req.from_user_id, userId).run();
+
+    await env.DB.prepare('DELETE FROM friend_requests WHERE id = ?').bind(reqId).run();
+    return json({ success: true });
+  }
+
+  // DELETE /api/friends/requests/:id — reject/cancel request
+  const friendReqDeleteMatch = path.match(/^\/api\/friends\/requests\/(\d+)$/);
+  if (friendReqDeleteMatch && method === 'DELETE') {
+    const reqId = parseInt(friendReqDeleteMatch[1]);
+    const req = await env.DB.prepare(
+      'SELECT * FROM friend_requests WHERE id = ? AND (from_user_id = ? OR to_user_id = ?)'
+    ).bind(reqId, userId, userId).first();
+    if (!req) return json({ error: 'Request not found' }, 404);
+    await env.DB.prepare('DELETE FROM friend_requests WHERE id = ?').bind(reqId).run();
+    return json({ success: true });
+  }
+
+  // GET /api/friends — list current user's friends
+  if (path === '/api/friends' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT f.id as friendship_id, f.created_at as friends_since,
+              u.id as user_id, u.name, u.profile_picture, u.google_picture, u.email,
+              a.full_label as address_label
+       FROM friendships f
+       JOIN users u ON (CASE WHEN f.user_a_id = ? THEN f.user_b_id ELSE f.user_a_id END) = u.id
+       LEFT JOIN addresses a ON u.address_id = a.id
+       WHERE f.user_a_id = ? OR f.user_b_id = ?
+       ORDER BY u.name`
+    ).bind(userId, userId, userId).all();
+    return json(results);
+  }
+
+  // DELETE /api/friends/:friendshipId — unfriend
+  const unfriendMatch = path.match(/^\/api\/friends\/(\d+)$/);
+  if (unfriendMatch && method === 'DELETE') {
+    const friendshipId = parseInt(unfriendMatch[1]);
+    const friendship = await env.DB.prepare(
+      'SELECT * FROM friendships WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
+    ).bind(friendshipId, userId, userId).first();
+    if (!friendship) return json({ error: 'Friendship not found' }, 404);
+
+    const otherUserId = friendship.user_a_id === userId ? friendship.user_b_id : friendship.user_a_id;
+    await env.DB.prepare(
+      "DELETE FROM chat_threads WHERE type = 'friend' AND ((user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?))"
+    ).bind(userId, otherUserId, otherUserId, userId).run();
+
+    await env.DB.prepare('DELETE FROM friendships WHERE id = ?').bind(friendshipId).run();
+    return json({ success: true });
+  }
+
+  // --- Chat endpoints (unified — friend and playdate threads) ---
+
+  // GET /api/chat/threads — list all chat threads for current user
+  if (path === '/api/chat/threads' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT ct.id, ct.type, ct.ref_id, ct.created_at,
+              CASE WHEN ct.user_a_id = ? THEN ub.name ELSE ua.name END as other_user_name,
+              CASE WHEN ct.user_a_id = ? THEN ub.id ELSE ua.id END as other_user_id,
+              CASE WHEN ct.user_a_id = ? THEN ub.profile_picture ELSE ua.profile_picture END as other_user_picture,
+              CASE WHEN ct.user_a_id = ? THEN ub.google_picture ELSE ua.google_picture END as other_user_google_picture,
+              (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
+              (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
+       FROM chat_threads ct
+       JOIN users ua ON ct.user_a_id = ua.id
+       JOIN users ub ON ct.user_b_id = ub.id
+       WHERE ct.user_a_id = ? OR ct.user_b_id = ?
+       ORDER BY latest_message_at DESC NULLS LAST`
+    ).bind(userId, userId, userId, userId, userId, userId).all();
+    return json(results);
+  }
+
+  // GET /api/chat/threads/:threadId/messages — get messages for a thread
+  const chatMessagesMatch = path.match(/^\/api\/chat\/threads\/(\d+)\/messages$/);
+  if (chatMessagesMatch && method === 'GET') {
+    const threadId = parseInt(chatMessagesMatch[1]);
+    const thread = await env.DB.prepare(
+      'SELECT * FROM chat_threads WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
+    ).bind(threadId, userId, userId).first();
+    if (!thread) return json({ error: 'Thread not found' }, 404);
+
+    // Prune messages older than 1 year
+    await env.DB.prepare(
+      "DELETE FROM chat_messages WHERE thread_id = ? AND created_at < datetime('now', '-1 year')"
+    ).bind(threadId).run();
+
+    const before = url.searchParams.get('before');
+    let results;
+    if (before) {
+      const resp = await env.DB.prepare(
+        `SELECT cm.*, u.name as sender_name
+         FROM chat_messages cm
+         JOIN users u ON cm.sender_user_id = u.id
+         WHERE cm.thread_id = ? AND cm.id < ?
+         ORDER BY cm.created_at DESC
+         LIMIT 50`
+      ).bind(threadId, parseInt(before)).all();
+      results = resp.results;
+    } else {
+      const resp = await env.DB.prepare(
+        `SELECT cm.*, u.name as sender_name
+         FROM chat_messages cm
+         JOIN users u ON cm.sender_user_id = u.id
+         WHERE cm.thread_id = ?
+         ORDER BY cm.created_at DESC
+         LIMIT 50`
+      ).bind(threadId).all();
+      results = resp.results;
+    }
+    return json(results);
+  }
+
+  // POST /api/chat/threads/:threadId/messages — send a message
+  if (chatMessagesMatch && method === 'POST') {
+    const threadId = parseInt(chatMessagesMatch[1]);
+    const thread = await env.DB.prepare(
+      'SELECT * FROM chat_threads WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
+    ).bind(threadId, userId, userId).first();
+    if (!thread) return json({ error: 'Thread not found' }, 404);
+
+    const body = await request.json();
+    if (!body.content?.trim()) return json({ error: 'Message content is required' }, 400);
+    if (body.content.length > 1000) return json({ error: 'Message too long (max 1000 characters)' }, 400);
+
+    const result = await env.DB.prepare(
+      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
+    ).bind(threadId, userId, body.content.trim()).run();
+
+    // Enforce 500 message cap
+    const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM chat_messages WHERE thread_id = ?').bind(threadId).first();
+    if (count.cnt > 500) {
+      await env.DB.prepare(
+        'DELETE FROM chat_messages WHERE thread_id = ? AND id NOT IN (SELECT id FROM chat_messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT 500)'
+      ).bind(threadId, threadId).run();
+    }
+
+    return json({ id: result.meta.last_row_id, success: true }, 201);
+  }
+
+  // POST /api/chat/threads/:threadId/share-contact — share contact info as system message
+  const chatShareContactMatch = path.match(/^\/api\/chat\/threads\/(\d+)\/share-contact$/);
+  if (chatShareContactMatch && method === 'POST') {
+    const threadId = parseInt(chatShareContactMatch[1]);
+    const thread = await env.DB.prepare(
+      'SELECT * FROM chat_threads WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
+    ).bind(threadId, userId, userId).first();
+    if (!thread) return json({ error: 'Thread not found' }, 404);
+
+    const user = await env.DB.prepare(
+      'SELECT u.name, u.email, a.full_label as address_label FROM users u LEFT JOIN addresses a ON u.address_id = a.id WHERE u.id = ?'
+    ).bind(userId).first();
+
+    const contactMessage = `[Contact Shared] ${user.name} | ${user.email || 'No email'}${user.address_label ? ' | ' + user.address_label : ''}`;
+
+    const result = await env.DB.prepare(
+      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
+    ).bind(threadId, userId, contactMessage).run();
+
+    // Enforce 500 message cap
+    const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM chat_messages WHERE thread_id = ?').bind(threadId).first();
+    if (count.cnt > 500) {
+      await env.DB.prepare(
+        'DELETE FROM chat_messages WHERE thread_id = ? AND id NOT IN (SELECT id FROM chat_messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT 500)'
+      ).bind(threadId, threadId).run();
+    }
+
+    return json({ id: result.meta.last_row_id, success: true }, 201);
+  }
+
   // --- Admin/Officer endpoints ---
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
