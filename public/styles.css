@@ -172,6 +172,23 @@ h1, h2, h3, h4 {
 }
 .nav-logo:hover { color: var(--pond-surface); }
 
+.nav-signin {
+  background: var(--forest-deep);
+  color: white !important;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.nav-signin:hover { background: var(--forest-mid); }
+
+.nav-user-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--forest-deep);
+}
+
 .nav-icon {
   width: 28px;
   height: 28px;

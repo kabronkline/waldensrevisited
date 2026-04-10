@@ -171,7 +171,17 @@ export default {
         .transform(response);
     }
 
-    // --- Public static assets ---
-    return env.ASSETS.fetch(request);
+    // --- Public static assets (inject session if logged in for nav) ---
+    const response = await env.ASSETS.fetch(request);
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      const session = await getSession(env, request);
+      if (session) {
+        return new HTMLRewriter()
+          .on('body', new SessionInjector(session))
+          .transform(response);
+      }
+    }
+    return response;
   },
 };
