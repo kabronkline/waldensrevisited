@@ -39,6 +39,8 @@ const PROTECTED_PREFIXES = [
 ];
 
 function isProtectedPath(pathname) {
+  // Static assets are never protected (CSS, JS, images, fonts)
+  if (/\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot)$/i.test(pathname)) return false;
   if (pathname === '/governance.html') return true;
   if (pathname === '/voting-register.html') return true;
   return PROTECTED_PREFIXES.some(prefix => pathname.startsWith(prefix));
