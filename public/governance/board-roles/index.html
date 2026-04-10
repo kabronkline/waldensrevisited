@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
   <style>
     .vr-hero {
       padding: calc(var(--space-xl) + 20px) 0 var(--space-md);
@@ -183,17 +184,20 @@
       </button>
       <ul class="nav-links" id="navLinks">
         <li><a href="/">Home</a></li>
-        <li><a href="/members/">Wall</a></li>
-        <li><a href="/members/dogs.html">Neighbor Dogs</a></li>
-        <li><a href="/members/documents.html">Documents</a></li>
-
-
-        <li><a href="/governance.html">Governance</a></li>
-        <li><a href="/members/profile.html">My Profile</a></li>
-        <li><a href="/auth/logout">Sign Out</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li><a href="/members/" class="nav-signin">Members</a></li>
       </ul>
     </div>
   </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <main class="members-main">
 
   <!-- Hero -->
   <section class="vr-hero">
@@ -309,6 +313,11 @@
     </div>
   </footer>
 
+    </main>
+  </div>
+
   <script src="/script.js"></script>
+  <script src="/members/members.js"></script>
+  <script>initMembersSidebar('governance');</script>
 </body>
 </html>

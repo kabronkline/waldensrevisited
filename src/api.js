@@ -46,9 +46,11 @@ export async function handleApi(request, env, session) {
   // --- Agreement (pre-access) ---
   if (path === '/api/me/agreement' && method === 'POST') {
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    let isAnonymous = 0;
+    try { const body = await request.json(); if (body.is_anonymous) isAnonymous = 1; } catch (e) {}
     await env.DB.prepare(
-      "UPDATE users SET agreement_signed_at = datetime('now'), agreement_ip = ?, updated_at = datetime('now') WHERE id = ?"
-    ).bind(ip, userId).run();
+      "UPDATE users SET agreement_signed_at = datetime('now'), agreement_ip = ?, is_anonymous = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(ip, isAnonymous, userId).run();
 
     const sessionData = { ...session.user, agreementSigned: true };
     await env.SESSIONS.put(`session:${session.id}`, JSON.stringify(sessionData), { expirationTtl: 60 * 60 * 24 * 7 });

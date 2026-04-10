@@ -59,6 +59,18 @@
         <span>I have read, understand, and agree to the above terms. I confirm that I am a property owner or authorized resident of Walden's Revisited.</span>
       </label>
 
+      <!-- Privacy preference -->
+      <div style="background:var(--mist);border:1px solid rgba(139,115,85,0.1);border-radius:8px;padding:var(--space-sm);margin-bottom:var(--space-md);">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">Privacy Preference</h3>
+        <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-xs);">Choose whether other members can see your name and profile in the community directory. You can change this anytime in your profile settings.</p>
+        <label style="display:flex;align-items:center;gap:10px;font-size:0.95rem;cursor:pointer;margin-bottom:6px;">
+          <input type="radio" name="privacy" value="visible" checked style="accent-color:var(--forest-deep);"> <strong>Visible</strong> — My name and profile are visible to other members
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:0.95rem;cursor:pointer;">
+          <input type="radio" name="privacy" value="anonymous" style="accent-color:var(--forest-deep);"> <strong>Anonymous</strong> — Hide my name and profile from other members
+        </label>
+      </div>
+
       <div class="agreement-meta" id="agreeMeta">
         <strong>Date:</strong> <span id="agreeDate"></span><br>
         <strong>Signed by:</strong> <span id="agreeName"></span> (<span id="agreeEmail"></span>)
@@ -89,7 +101,12 @@
       btn.textContent = 'Submitting...';
 
       try {
-        const res = await fetch('/api/me/agreement', { method: 'POST' });
+        const isAnonymous = document.querySelector('input[name="privacy"]:checked').value === 'anonymous';
+        const res = await fetch('/api/me/agreement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_anonymous: isAnonymous }),
+        });
         const data = await res.json();
         if (data.success) {
           window.location.href = session.role === 'pending' ? '/members/pending.html' : '/members/';
