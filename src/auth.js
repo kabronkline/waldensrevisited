@@ -43,6 +43,8 @@ export async function handleLogin(request, env) {
 
 export async function handleCallback(request, env) {
   const url = new URL(request.url);
+
+  try {
   const code = url.searchParams.get('code');
   const stateId = url.searchParams.get('state');
   const error = url.searchParams.get('error');
@@ -76,6 +78,8 @@ export async function handleCallback(request, env) {
   });
 
   if (!tokenResponse.ok) {
+    const errorBody = await tokenResponse.text();
+    console.log('Token exchange failed:', tokenResponse.status, errorBody);
     return Response.redirect(`${url.origin}/login.html?error=token_exchange_failed`, 302);
   }
 
@@ -147,6 +151,8 @@ export async function handleCallback(request, env) {
     redirectTo = '/members/agreement.html';
   }
 
+  console.log('OAuth callback success: redirecting to', redirectTo, 'for user', user.email, 'role', user.role);
+
   return new Response(null, {
     status: 302,
     headers: {
@@ -154,6 +160,11 @@ export async function handleCallback(request, env) {
       'Set-Cookie': cookie,
     },
   });
+
+  } catch (err) {
+    console.log('OAuth callback error:', err.message, err.stack);
+    return Response.redirect(`${url.origin}/login.html?error=callback_error`, 302);
+  }
 }
 
 export async function handleLogout(request, env) {

@@ -66,8 +66,9 @@
         missing_params: 'Authentication failed. Please try again.',
         invalid_state: 'Session expired. Please try again.',
         token_exchange_failed: 'Could not verify your Google account. Please try again.',
+        callback_error: 'An unexpected error occurred during sign-in. Please try again.',
       };
-      el.textContent = messages[error] || 'An error occurred. Please try again.';
+      el.textContent = messages[error] || `Error: ${error}. Please try again.`;
     }
     // Pass redirect to auth/login
     const redirect = params.get('redirect');
