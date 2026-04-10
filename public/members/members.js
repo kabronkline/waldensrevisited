@@ -87,14 +87,18 @@ function initMembersSidebar(activePage) {
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Resources</div>
+      <div class="sidebar-section-title">Governance</div>
       <a href="/members/documents.html" class="sidebar-link ${activePage === 'documents' ? 'active' : ''}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Documents
       </a>
-      <a href="/governance.html" class="sidebar-link ${activePage === 'governance' ? 'active' : ''}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Governance
+      <a href="/governance.html" class="sidebar-link ${activePage === 'events' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Events
+      </a>
+      <a href="/members/legal.html" class="sidebar-link ${activePage === 'legal' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18"/><path d="M5 7l7-4 7 4"/><path d="M5 7v2l3 6H2l3-6V7"/><path d="M19 7v2l3 6h-6l3-6V7"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+        Legal
       </a>
     </div>
     <div class="sidebar-divider"></div>
