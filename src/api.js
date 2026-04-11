@@ -1198,8 +1198,13 @@ export async function handleApi(request, env, session) {
         if (roles.some(r => officerTitles.includes(r))) {
           if (!roles.includes('officer')) roles.push('officer');
         }
-        if (roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) {
+        // Officers and contributors are members; admin is a system role (not a member)
+        if (roles.includes('officer') || roles.includes('contributor')) {
           if (!roles.includes('member')) roles.push('member');
+        }
+        // Admin cannot be combined with member
+        if (roles.includes('admin') && roles.includes('member')) {
+          return json({ error: 'Admin is a system role and cannot be combined with Member. Use Officer roles for board members who are also property owners.' }, 400);
         }
       }
 
@@ -1411,7 +1416,7 @@ export async function handleApi(request, env, session) {
       if (typeof roles === 'string') roles = roles.split(',');
       const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
       if (roles.some(r => officerTitles.includes(r)) && !roles.includes('officer')) roles.push('officer');
-      if ((roles.includes('officer') || roles.includes('contributor') || roles.includes('admin')) && !roles.includes('member')) roles.push('member');
+      if ((roles.includes('officer') || roles.includes('contributor')) && !roles.includes('member')) roles.push('member');
       const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'contributor', 'member'];
       const primaryRole = rolePriority.find(r => roles.includes(r)) || 'member';
 

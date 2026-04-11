@@ -119,13 +119,13 @@ export async function handleCallback(request, env) {
     user = { ...existing, name, google_picture: picture };
     // Promote to admin if in admin list and not already admin
     if (isAdmin && existing.role !== 'admin') {
-      await env.DB.prepare("UPDATE users SET role = 'admin', roles = 'admin,member' WHERE id = ?").bind(existing.id).run();
+      await env.DB.prepare("UPDATE users SET role = 'admin', roles = 'admin' WHERE id = ?").bind(existing.id).run();
       user.role = 'admin';
-      user.roles = 'admin,member';
+      user.roles = 'admin';
     }
   } else {
     const role = isAdmin ? 'admin' : 'pending';
-    const roles = isAdmin ? 'admin,member' : 'pending';
+    const roles = isAdmin ? 'admin' : 'pending';
     const avatarId = Math.floor(Math.random() * 50) + 1;
     const result = await env.DB.prepare(
       'INSERT INTO users (google_id, email, name, google_picture, role, roles, avatar_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
