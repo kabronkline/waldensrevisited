@@ -286,6 +286,8 @@
       const timeAgo = formatTimeAgo(post.created_at);
       const isPending = !post.approved;
       const isOwn = post.user_id === session.userId;
+      const isOfficerPost = (post.visibility === 'officers');
+      const canDelete = isOwn || (isOfficerPost && elevatedRoles.includes(session.role));
       const wasEdited = post.updated_at && post.updated_at !== post.created_at;
       const vis = post.visibility || 'everybody';
 
@@ -309,10 +311,10 @@
               <span class="vis-indicator">${visIcons[vis] || visIcons.everybody} ${vis === 'everybody' ? 'All' : vis === 'friends' ? 'Friends' : 'Officers'}</span>
             </div>
           </div>
-          ${isOwn ? `<div style="margin-left:auto;display:flex;gap:2px;">
-            <button class="engage-btn" onclick="editPost(${post.id})" title="Edit" style="color:var(--lichen);">
+          ${(isOwn || canDelete) ? `<div style="margin-left:auto;display:flex;gap:2px;">
+            ${isOwn ? `<button class="engage-btn" onclick="editPost(${post.id})" title="Edit" style="color:var(--lichen);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
+            </button>` : ''}
             <button class="engage-btn" onclick="deletePost(${post.id})" title="Delete" style="color:var(--lichen);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
@@ -389,14 +391,23 @@
 
         let html = '';
         comments.forEach(c => {
-          const cPic = c.author_profile_picture || c.author_google_picture || '';
           const cName = c.author_anonymous ? 'Anonymous' : escapeHtml(c.author_name);
           const canEdit = c.user_id === session.userId;
           const canDelete = c.user_id === session.userId || session.role === 'admin';
+          let cAvatarHtml;
+          if (c.author_profile_picture) {
+            cAvatarHtml = `<img src="${escapeHtml(c.author_profile_picture)}" alt="">`;
+          } else if (c.author_avatar_id && typeof getAvatarSvg === 'function') {
+            cAvatarHtml = getAvatarSvg(c.author_avatar_id);
+          } else if (c.author_google_picture) {
+            cAvatarHtml = `<img src="${escapeHtml(c.author_google_picture)}" alt="">`;
+          } else {
+            cAvatarHtml = '<span class="placeholder" style="font-size:0.8rem;">?</span>';
+          }
           html += `
             <div class="comment">
               <div class="avatar-preview" style="width:28px;height:28px;">
-                ${cPic ? `<img src="${escapeHtml(cPic)}" alt="">` : '<span class="placeholder" style="font-size:0.8rem;">?</span>'}
+                ${cAvatarHtml}
               </div>
               <div class="comment-body">
                 <strong>${cName}</strong>

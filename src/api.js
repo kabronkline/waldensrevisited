@@ -372,12 +372,15 @@ export async function handleApi(request, env, session) {
     return json({ success: true });
   }
 
-  // DELETE /api/posts/:id — delete own post
+  // DELETE /api/posts/:id — delete own post, or officers/admins can delete officer-visibility posts
   const postDeleteMatch = path.match(/^\/api\/posts\/(\d+)$/);
   if (postDeleteMatch && method === 'DELETE') {
     const postId = parseInt(postDeleteMatch[1]);
-    const post = await env.DB.prepare('SELECT * FROM posts WHERE id = ? AND user_id = ?').bind(postId, userId).first();
+    let post = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(postId).first();
     if (!post) return json({ error: 'Post not found' }, 404);
+    // Allow delete if: own post, OR officer/admin deleting an officer-visibility post
+    const canDelete = post.user_id === userId || (OFFICER_ROLES.includes(session.user.role) && post.visibility === 'officers');
+    if (!canDelete) return json({ error: 'Not authorized' }, 403);
     await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId).run();
     return json({ success: true });
   }
@@ -430,7 +433,7 @@ export async function handleApi(request, env, session) {
     const postId = parseInt(commentsGetMatch[1]);
     const { results } = await env.DB.prepare(
       `SELECT c.*, u.name as author_name, u.profile_picture as author_profile_picture,
-              u.google_picture as author_google_picture, u.is_anonymous as author_anonymous, u.show_name, u.show_contact
+              u.google_picture as author_google_picture, u.avatar_id as author_avatar_id, u.is_anonymous as author_anonymous, u.show_name, u.show_contact
        FROM comments c JOIN users u ON c.user_id = u.id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`
