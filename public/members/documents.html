@@ -44,10 +44,22 @@
       color: var(--stone);
       line-height: 1.4;
     }
+    .doc-date {
+      font-size: 0.8rem;
+      color: var(--lichen);
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: 90px;
+      text-align: right;
+    }
     .doc-actions {
       display: flex;
       gap: 6px;
       flex-shrink: 0;
+    }
+    @media (max-width: 600px) {
+      .doc-item { flex-wrap: wrap; }
+      .doc-date { min-width: auto; text-align: left; width: 100%; order: -1; margin-bottom: 4px; }
     }
   </style>
 </head>
@@ -104,8 +116,9 @@
             </div>
             <div class="doc-info">
               <h4>Restated Declaration of Protective Covenants &amp; Restrictions</h4>
-              <p>Filed March 9, 2019 &middot; Instrument #2019-00009690 &middot; Delaware County Recorder's Office. Includes attached Bylaws.</p>
+              <p>Instrument #2019-00009690 &middot; Delaware County Recorder's Office. Includes attached Bylaws.</p>
             </div>
+            <span class="doc-date">Mar 9, 2019</span>
             <div class="doc-actions">
               <a href="/restated-declaration-2019.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/restated-declaration-2019.pdf', 'Restated Declaration (2019)')">View</button>
@@ -119,8 +132,9 @@
             </div>
             <div class="doc-info">
               <h4>Metes and Bounds — Common Area</h4>
-              <p>Legal description and survey of the common use easement areas within Walden's Revisited. Recorded 2018.</p>
+              <p>Legal description and survey of the common use easement areas within Walden's Revisited.</p>
             </div>
+            <span class="doc-date">2018</span>
             <div class="doc-actions">
               <a href="/metes-and-bounds-2018.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/metes-and-bounds-2018.pdf', 'Metes and Bounds (2018)')">View</button>
@@ -141,8 +155,9 @@
             </div>
             <div class="doc-info">
               <h4>Certificate of Good Standing</h4>
-              <p>Ohio Secretary of State certifies Walden's Revisited Inc. (Charter #1049975, incorporated December 3, 1998) is in Good Standing. Issued April 6, 2026. Validation #202609603286.</p>
+              <p>Ohio Secretary of State certifies Walden's Revisited Inc. (Charter #1049975, incorporated Dec 3, 1998) is in Good Standing. Validation #202609603286.</p>
             </div>
+            <span class="doc-date">Apr 6, 2026</span>
             <div class="doc-actions">
               <a href="/governance/certificate-good-standing-2026.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/governance/certificate-good-standing-2026.pdf', 'Certificate of Good Standing (2026)')">View</button>
@@ -156,8 +171,9 @@
             </div>
             <div class="doc-info">
               <h4>Reinstatement Certificate</h4>
-              <p>Walden's Revisited Inc. reinstated with the Ohio Secretary of State. Document #202609203216, effective April 2, 2026. Filing fee $25.00.</p>
+              <p>Walden's Revisited Inc. reinstated with the Ohio Secretary of State. Document #202609203216. Filing fee $25.00.</p>
             </div>
+            <span class="doc-date">Apr 2, 2026</span>
             <div class="doc-actions">
               <a href="/governance/reinstatement-2026.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/governance/reinstatement-2026.pdf', 'Reinstatement Certificate (2026)')">View</button>
@@ -178,8 +194,9 @@
             </div>
             <div class="doc-info">
               <h4>Original Declaration of Protective Covenants</h4>
-              <p>The original 2015 declaration, superseded by the 2019 Restated Declaration.</p>
+              <p>The original declaration, superseded by the 2019 Restated Declaration.</p>
             </div>
+            <span class="doc-date">Aug 24, 2015</span>
             <div class="doc-actions">
               <a href="/original-declaration-2015.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/original-declaration-2015.pdf', 'Original Declaration (2015)')">View</button>
@@ -193,8 +210,9 @@
             </div>
             <div class="doc-info">
               <h4>Plat Map</h4>
-              <p>Recorded plat map showing lot and tract boundaries for Walden's Revisited subdivision (2016).</p>
+              <p>Recorded plat map showing lot and tract boundaries for Walden's Revisited subdivision.</p>
             </div>
+            <span class="doc-date">2016</span>
             <div class="doc-actions">
               <a href="/plat-map-2016.pdf" class="btn btn-secondary btn-sm" download>Download</a>
               <button class="btn btn-primary btn-sm" onclick="openPdfViewer('/plat-map-2016.pdf', 'Plat Map (2016)')">View</button>
