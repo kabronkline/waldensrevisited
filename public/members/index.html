@@ -165,7 +165,7 @@
     initMembersSidebar('wall');
 
     // Show admin card for officers and admins
-    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'contributor'];
+    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'];
     if (elevatedRoles.includes(session.role)) {
       const adminCard = document.getElementById('adminCard');
       if (adminCard) adminCard.style.display = '';

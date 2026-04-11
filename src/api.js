@@ -1,8 +1,8 @@
 // API route handlers for members section
 
-const VALID_ROLES = ['pending', 'member', 'contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
+const VALID_ROLES = ['pending', 'member', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
 const OFFICER_ROLES = ['president', 'secretary', 'treasurer', 'other_officer', 'admin'];
-const AUTO_APPROVE_ROLES = ['contributor', 'president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+const AUTO_APPROVE_ROLES = ['president', 'secretary', 'treasurer', 'other_officer', 'admin'];
 const MAX_DOGS = 5;
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -1143,7 +1143,7 @@ export async function handleApi(request, env, session) {
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
 
-    if (!isOfficerOrAdmin(userRole) && userRole !== 'contributor') {
+    if (!isOfficerOrAdmin(userRole) && userRole !== ) {
       return json({ error: 'Elevated access required' }, 403);
     }
 
@@ -1182,7 +1182,7 @@ export async function handleApi(request, env, session) {
       if (typeof roles === 'string') roles = roles.split(',').map(r => r.trim());
 
       // Validate all roles
-      const validSet = ['member', 'contributor', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
+      const validSet = ['member', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
       for (const r of roles) {
         if (!validSet.includes(r)) return json({ error: `Invalid role: ${r}` }, 400);
       }
@@ -1198,13 +1198,14 @@ export async function handleApi(request, env, session) {
         if (roles.some(r => officerTitles.includes(r))) {
           if (!roles.includes('officer')) roles.push('officer');
         }
-        // Officers and contributors are members; admin is a system role (not a member)
-        if (roles.includes('officer') || roles.includes('contributor')) {
-          if (!roles.includes('member')) roles.push('member');
-        }
-        // Admin cannot be combined with member
+        // Officers are always members
+        if (roles.includes('officer') && !roles.includes('member')) roles.push('member');
+        // Admin and Auditor are system roles — cannot combine with Member
         if (roles.includes('admin') && roles.includes('member')) {
           return json({ error: 'Admin is a system role and cannot be combined with Member. Use Officer roles for board members who are also property owners.' }, 400);
+        }
+        if (roles.includes('auditor') && roles.includes('member')) {
+          return json({ error: 'Auditor is a system role and cannot be combined with Member.' }, 400);
         }
       }
 
@@ -1221,7 +1222,7 @@ export async function handleApi(request, env, session) {
       if (!target) return json({ error: 'User not found' }, 404);
 
       // Determine primary role for backward compat (highest privilege)
-      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'contributor', 'member'];
+      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'member'];
       const primaryRole = rolePriority.find(r => roles.includes(r)) || 'member';
       const rolesStr = roles.join(',');
 
@@ -1416,8 +1417,8 @@ export async function handleApi(request, env, session) {
       if (typeof roles === 'string') roles = roles.split(',');
       const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
       if (roles.some(r => officerTitles.includes(r)) && !roles.includes('officer')) roles.push('officer');
-      if ((roles.includes('officer') || roles.includes('contributor')) && !roles.includes('member')) roles.push('member');
-      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'contributor', 'member'];
+      if ((roles.includes('officer')) && !roles.includes('member')) roles.push('member');
+      const rolePriority = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'officer', 'member'];
       const primaryRole = rolePriority.find(r => roles.includes(r)) || 'member';
 
       const avatarId = Math.floor(Math.random() * 50) + 1;

@@ -209,7 +209,6 @@
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
               <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Roles</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="member" checked disabled> Member</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="contributor"> Contributor</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="president"> President</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="secretary"> Secretary</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="treasurer"> Treasurer</label>
@@ -344,7 +343,7 @@
       }
     })();
 
-    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer', 'contributor'];
+    const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'];
     if (!elevatedRoles.includes(session.role)) {
       document.body.innerHTML = '<div class="pending-page"><div class="pending-card"><h1>Access Denied</h1><p>You do not have permission to access this page.</p><a href="/members/" class="btn btn-secondary">Back to Members</a></div></div>';
     }
@@ -406,7 +405,6 @@
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="member" checked disabled> Member</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="contributor" onchange="handleRoleCb(${user.id})"> Contributor</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="president" onchange="handleOfficerCb(${user.id}, this)"> President</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="secretary" onchange="handleOfficerCb(${user.id}, this)"> Secretary</label>
               <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="treasurer" onchange="handleOfficerCb(${user.id}, this)"> Treasurer</label>
@@ -444,7 +442,7 @@
     function handleRoleCb(uid) {
       const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
       const memberCb = [...cbs].find(c => c.value === 'member');
-      const hasElevated = [...cbs].some(c => ['contributor','admin','president','secretary','treasurer','other_officer'].includes(c.value) && c.checked);
+      const hasElevated = [...cbs].some(c => ['admin','president','secretary','treasurer','other_officer'].includes(c.value) && c.checked);
       if (memberCb) { memberCb.checked = true; memberCb.disabled = hasElevated || true; }
     }
 
@@ -640,7 +638,7 @@
 
       const roleCheckboxes = [
         { value: 'member', label: 'Member' },
-        { value: 'contributor', label: 'Contributor' },
+        { value:  label: 'Contributor' },
         { value: 'president', label: 'President' },
         { value: 'secretary', label: 'Secretary' },
         { value: 'treasurer', label: 'Treasurer' },
@@ -727,7 +725,7 @@
       });
 
       // Officer titles auto-check member
-      if (anyOfficer || isChecked('contributor') || isChecked('admin')) {
+      if (anyOfficer || isChecked('admin')) {
         if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
       } else {
         if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }

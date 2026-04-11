@@ -15,7 +15,6 @@ function formatRole(role) {
   const labels = {
     pending: 'Pending',
     member: 'Member',
-    contributor: 'Contributor',
     president: 'President',
     secretary: 'Secretary',
     treasurer: 'Treasurer',
@@ -29,7 +28,7 @@ function formatRole(role) {
 function getRoleBadgeClass(role) {
   if (role === 'admin') return 'admin';
   if (['president', 'secretary', 'treasurer', 'other_officer'].includes(role)) return 'officer';
-  if (role === 'contributor') return 'contributor';
+  
   if (role === 'member') return 'member';
   return 'pending';
 }
@@ -72,7 +71,7 @@ function initMembersSidebar(activePage) {
   const session = window.__session;
   if (!session) return;
 
-  const isElevated = ['admin','president','secretary','treasurer','other_officer','contributor','auditor'].includes(session.role);
+  const isElevated = ['admin','president','secretary','treasurer','other_officer','auditor'].includes(session.role);
 
   const sidebarHtml = `
     <div class="sidebar-section">
