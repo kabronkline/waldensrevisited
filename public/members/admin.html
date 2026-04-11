@@ -53,7 +53,6 @@
 
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="posts">Approval Queue</button>
-        <button class="admin-tab" data-tab="prereg" id="preregTab">Pre-Register</button>
         <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
         <button class="admin-tab" data-tab="consent">Consent Records</button>
         <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
@@ -75,80 +74,17 @@
 
       <!-- Users Tab (Admin only) -->
       <!-- Consent Records Tab -->
-      <!-- Pre-Register Tab (admin only) -->
-      <div class="tab-content" id="tab-prereg" style="display:none;">
-        <div class="profile-section">
-          <h2>Pre-Register a Member</h2>
-          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in for the first time. When they sign in with Google using this email, they'll be automatically linked and won't see the "contact admin" screen.</p>
-
-          <div class="form-group">
-            <label>Google Email Address *</label>
-            <input type="email" id="preRegEmail" placeholder="user@gmail.com">
-          </div>
-          <div class="form-group">
-            <label>Display Name *</label>
-            <input type="text" id="preRegName" placeholder="Full name">
-          </div>
-          <div class="form-group">
-            <label>Property Address *</label>
-            <select id="preRegAddress"><option value="">Select address...</option></select>
-          </div>
-
-          <div class="form-group">
-            <label>Owner Type</label>
-            <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
-              <strong>Natural person:</strong> A human being who owns property in their own right.<br>
-              <strong>Legal person:</strong> An entity (LLC, corporation, trust, estate, etc.) that holds title through a legal framework.
-            </div>
-            <select id="preRegOwnerType">
-              <option value="natural">Natural Person (individual)</option>
-              <option value="legal">Legal Person (trust, LLC, corporation, etc.)</option>
-            </select>
-          </div>
-
-          <div id="agentSection" style="display:none;">
-            <div class="form-group">
-              <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
-                When the owner is a legal person, an <strong>authorized agent</strong> is the natural person (human) who acts on behalf of that entity — e.g., a trustee acting for a trust.
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="preRegIsAgent" style="accent-color:var(--forest-deep);">
-                This user is an authorized agent acting on behalf of the legal entity
-              </label>
-            </div>
-            <div class="form-group">
-              <label>Entity Name (the legal person)</label>
-              <input type="text" id="preRegEntityName" placeholder="e.g., Smith Family Trust, Walden Holdings LLC">
-            </div>
-          </div>
-
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
-            <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Roles</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="member" checked disabled> Member</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="contributor"> Contributor</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="president"> President</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="secretary"> Secretary</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="treasurer"> Treasurer</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="other_officer"> Other Officer</label>
-            <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="admin"> Admin</label>
-          </div>
-
-          <div class="form-group">
-            <label style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="preRegAnonymous" style="accent-color:var(--forest-deep);">
-              Set as anonymous (hide name/PII from non-admin/non-officer users)
-            </label>
-          </div>
-
-          <button class="btn btn-primary" id="preRegBtn">Pre-Register User</button>
-        </div>
-      </div>
 
       <!-- Properties Tab (admin only) -->
       <div class="tab-content" id="tab-properties" style="display:none;">
         <div class="profile-section" style="overflow-x:auto;">
-          <h2>Neighborhood Properties</h2>
-          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">All parcels within Walden's Revisited with current ownership records.</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-sm);">
+            <div>
+              <h2 style="margin-bottom:4px;">Neighborhood Properties</h2>
+              <p style="font-size:0.9rem;color:var(--stone);">All parcels within Walden's Revisited with current ownership records.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openPropertyModal()">Add Property</button>
+          </div>
           <table class="users-table">
             <thead>
               <tr>
@@ -158,12 +94,58 @@
                 <th>Type</th>
                 <th>Acres</th>
                 <th>Transfer</th>
+                <th>Chain</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="propertiesTableBody">
-              <tr><td colspan="6" style="color:var(--stone);">Loading...</td></tr>
+              <tr><td colspan="8" style="color:var(--stone);">Loading...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Property Add/Edit Modal -->
+      <div class="modal-overlay" id="propertyModal" style="display:none;" onclick="if(event.target===this)closePropertyModal()">
+        <div class="modal" style="max-width:520px;">
+          <h2 id="propertyModalTitle">Add Property</h2>
+          <div class="form-group">
+            <label>Address *</label>
+            <select id="propAddress"><option value="">Select address...</option></select>
+          </div>
+          <div class="form-group">
+            <label>WR Designation</label>
+            <input type="text" id="propDesignation" placeholder="e.g., Lot 1, Common Area A">
+          </div>
+          <div class="form-group">
+            <label>Owner Name *</label>
+            <input type="text" id="propOwnerName" placeholder="Full name or entity">
+          </div>
+          <div class="form-group">
+            <label>Owner Type</label>
+            <select id="propOwnerType">
+              <option value="natural">Natural Person (individual)</option>
+              <option value="legal">Legal Person (trust, LLC, corporation, etc.)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Parcel Number</label>
+            <input type="text" id="propParcelNumber" placeholder="County parcel ID">
+          </div>
+          <div class="form-group">
+            <label>Acres</label>
+            <input type="number" id="propAcres" step="0.01" placeholder="e.g., 1.25">
+          </div>
+          <div class="form-group">
+            <label>Transfer Type</label>
+            <input type="text" id="propTransferType" placeholder="e.g., Warranty Deed, Quit Claim">
+          </div>
+          <div class="form-group">
+            <label>Provenance (chain of custody)</label>
+            <textarea id="propProvenance" rows="3" placeholder="Full ownership history / chain of title..." style="width:100%;font-family:inherit;padding:8px 10px;border:1px solid var(--sage);border-radius:6px;resize:vertical;"></textarea>
+          </div>
+          <input type="hidden" id="propEditId" value="">
+          <button class="btn btn-primary" id="propSaveBtn" onclick="saveProperty()" style="width:100%;">Save Property</button>
         </div>
       </div>
 
@@ -178,6 +160,76 @@
       </div>
 
       <div class="tab-content" id="tab-users" style="display:none;">
+        <!-- Collapsible Add User / Pre-Registration Form -->
+        <div class="profile-section" id="preRegSection">
+          <button class="btn btn-primary btn-sm" id="togglePreRegBtn" onclick="document.getElementById('preRegForm').style.display = document.getElementById('preRegForm').style.display === 'none' ? '' : 'none';" style="margin-bottom:var(--space-sm);">Add User</button>
+          <div id="preRegForm" style="display:none;">
+            <h3 style="margin-bottom:4px;">Pre-Register a Member</h3>
+            <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in for the first time. When they sign in with Google using this email, they'll be automatically linked and won't see the "contact admin" screen.</p>
+
+            <div class="form-group">
+              <label>Google Email Address *</label>
+              <input type="email" id="preRegEmail" placeholder="user@gmail.com">
+            </div>
+            <div class="form-group">
+              <label>Display Name *</label>
+              <input type="text" id="preRegName" placeholder="Full name">
+            </div>
+            <div class="form-group">
+              <label>Property Address *</label>
+              <select id="preRegAddress"><option value="">Select address...</option></select>
+            </div>
+
+            <div class="form-group">
+              <label>Owner Type</label>
+              <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
+                <strong>Natural person:</strong> A human being who owns property in their own right.<br>
+                <strong>Legal person:</strong> An entity (LLC, corporation, trust, estate, etc.) that holds title through a legal framework.
+              </div>
+              <select id="preRegOwnerType">
+                <option value="natural">Natural Person (individual)</option>
+                <option value="legal">Legal Person (trust, LLC, corporation, etc.)</option>
+              </select>
+            </div>
+
+            <div id="agentSection" style="display:none;">
+              <div class="form-group">
+                <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
+                  When the owner is a legal person, an <strong>authorized agent</strong> is the natural person (human) who acts on behalf of that entity — e.g., a trustee acting for a trust.
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;">
+                  <input type="checkbox" id="preRegIsAgent" style="accent-color:var(--forest-deep);">
+                  This user is an authorized agent acting on behalf of the legal entity
+                </label>
+              </div>
+              <div class="form-group">
+                <label>Entity Name (the legal person)</label>
+                <input type="text" id="preRegEntityName" placeholder="e.g., Smith Family Trust, Walden Holdings LLC">
+              </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
+              <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Roles</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="member" checked disabled> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="contributor"> Contributor</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="president"> President</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="secretary"> Secretary</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="treasurer"> Treasurer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="other_officer"> Other Officer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="admin"> Admin</label>
+            </div>
+
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="preRegAnonymous" style="accent-color:var(--forest-deep);">
+                Set as anonymous (hide name/PII from non-admin/non-officer users)
+              </label>
+            </div>
+
+            <button class="btn btn-primary" id="preRegBtn">Pre-Register User</button>
+          </div>
+        </div>
+
         <div class="profile-section" style="overflow-x:auto;">
           <h2>All Users</h2>
           <table class="users-table">
@@ -253,7 +305,9 @@
 
     // Auto-select tab from URL parameter (e.g. ?tab=users)
     (function() {
-      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      let urlTab = new URLSearchParams(window.location.search).get('tab');
+      // Pre-register was merged into users tab
+      if (urlTab === 'prereg') urlTab = 'users';
       if (urlTab) {
         const tabBtn = document.querySelector(`.admin-tab[data-tab="${urlTab}"]`);
         if (tabBtn) {
@@ -857,34 +911,134 @@
     });
 
     // Properties
+    let allProperties = [];
+
     async function loadProperties() {
       try {
         const res = await fetch('/api/admin/properties');
-        const props = await res.json();
+        allProperties = await res.json();
         const tbody = document.getElementById('propertiesTableBody');
         tbody.innerHTML = '';
-        props.forEach(p => {
+        allProperties.forEach(p => {
           const tr = document.createElement('tr');
           const typeBadge = p.owner_type === 'legal'
             ? '<span class="role-badge officer" style="font-size:0.7rem;">Legal Entity</span>'
             : '<span class="role-badge member" style="font-size:0.7rem;">Natural Person</span>';
+          const provSnippet = p.provenance ? escapeHtml(p.provenance.substring(0, 60)) + (p.provenance.length > 60 ? '...' : '') : '';
           tr.innerHTML = `
-            <td style="font-weight:500;">${escapeHtml(p.wr_designation)}</td>
+            <td style="font-weight:500;">${escapeHtml(p.wr_designation || '')}</td>
             <td>${escapeHtml(p.address_label)}</td>
             <td>${escapeHtml(p.owner_name)}</td>
             <td>${typeBadge}</td>
             <td>${p.acres || ''}</td>
             <td style="font-size:0.8rem;color:var(--stone);">${escapeHtml(p.transfer_type || '')}</td>
+            <td>${p.provenance ? `<a href="#" class="provenance-toggle" onclick="event.preventDefault();toggleProvenance(this, ${p.id})" title="${escapeHtml(p.provenance)}" style="font-size:0.8rem;color:var(--forest-deep);">Chain</a>` : '<span style="color:var(--lichen);font-size:0.8rem;">--</span>'}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-secondary btn-sm" onclick="openPropertyModal(${p.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProperty(${p.id})">Delete</button>
+            </td>
           `;
+          tr.id = 'prop-row-' + p.id;
           tbody.appendChild(tr);
         });
       } catch (e) { showToast('Failed to load properties', 'error'); }
     }
 
+    function toggleProvenance(link, propId) {
+      const existingRow = document.getElementById('prov-detail-' + propId);
+      if (existingRow) { existingRow.remove(); return; }
+      const prop = allProperties.find(p => p.id === propId);
+      if (!prop || !prop.provenance) return;
+      const parentRow = document.getElementById('prop-row-' + propId);
+      if (!parentRow) return;
+      const detailRow = document.createElement('tr');
+      detailRow.id = 'prov-detail-' + propId;
+      detailRow.innerHTML = `<td colspan="8" style="background:var(--cream);padding:12px 16px;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;border-left:3px solid var(--forest-deep);">${escapeHtml(prop.provenance)}</td>`;
+      parentRow.after(detailRow);
+    }
+
+    function openPropertyModal(propId) {
+      const modal = document.getElementById('propertyModal');
+      // Populate address dropdown
+      const sel = document.getElementById('propAddress');
+      if (sel.options.length <= 1) {
+        allAddresses.forEach(a => { const o = document.createElement('option'); o.value = a.id; o.textContent = a.full_label; sel.appendChild(o); });
+      }
+
+      if (propId) {
+        const p = allProperties.find(x => x.id === propId);
+        if (!p) return;
+        document.getElementById('propertyModalTitle').textContent = 'Edit Property';
+        document.getElementById('propAddress').value = p.address_id;
+        document.getElementById('propDesignation').value = p.wr_designation || '';
+        document.getElementById('propOwnerName').value = p.owner_name || '';
+        document.getElementById('propOwnerType').value = p.owner_type || 'natural';
+        document.getElementById('propParcelNumber').value = p.parcel_number || '';
+        document.getElementById('propAcres').value = p.acres || '';
+        document.getElementById('propTransferType').value = p.transfer_type || '';
+        document.getElementById('propProvenance').value = p.provenance || '';
+        document.getElementById('propEditId').value = propId;
+      } else {
+        document.getElementById('propertyModalTitle').textContent = 'Add Property';
+        document.getElementById('propAddress').value = '';
+        document.getElementById('propDesignation').value = '';
+        document.getElementById('propOwnerName').value = '';
+        document.getElementById('propOwnerType').value = 'natural';
+        document.getElementById('propParcelNumber').value = '';
+        document.getElementById('propAcres').value = '';
+        document.getElementById('propTransferType').value = '';
+        document.getElementById('propProvenance').value = '';
+        document.getElementById('propEditId').value = '';
+      }
+      modal.style.display = '';
+    }
+
+    function closePropertyModal() {
+      document.getElementById('propertyModal').style.display = 'none';
+    }
+
+    async function saveProperty() {
+      const editId = document.getElementById('propEditId').value;
+      const body = {
+        address_id: parseInt(document.getElementById('propAddress').value),
+        wr_designation: document.getElementById('propDesignation').value.trim() || null,
+        owner_name: document.getElementById('propOwnerName').value.trim(),
+        owner_type: document.getElementById('propOwnerType').value,
+        parcel_number: document.getElementById('propParcelNumber').value.trim() || null,
+        acres: parseFloat(document.getElementById('propAcres').value) || null,
+        transfer_type: document.getElementById('propTransferType').value.trim() || null,
+        provenance: document.getElementById('propProvenance').value.trim() || null,
+      };
+
+      if (!body.address_id || !body.owner_name) { showToast('Address and owner name are required', 'error'); return; }
+
+      try {
+        const url = editId ? `/api/admin/properties/${editId}` : '/api/admin/properties';
+        const method = editId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) {
+          showToast(editId ? 'Property updated' : 'Property added', 'success');
+          closePropertyModal();
+          loadProperties();
+        } else { showToast(data.error || 'Error', 'error'); }
+      } catch (e) { showToast('Error saving property', 'error'); }
+    }
+
+    async function deleteProperty(propId) {
+      if (!confirm('Delete this property record? This cannot be undone.')) return;
+      try {
+        const res = await fetch(`/api/admin/properties/${propId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) { showToast('Property deleted', 'success'); loadProperties(); }
+        else { showToast(data.error || 'Error', 'error'); }
+      } catch (e) { showToast('Error deleting property', 'error'); }
+    }
+
     // Hide admin-only tabs for non-admins
     if (session.role !== 'admin') {
-      document.getElementById('preregTab').style.display = 'none';
       document.getElementById('propsTab').style.display = 'none';
+      document.getElementById('preRegSection').style.display = 'none';
     }
 
     loadPendingUsers();

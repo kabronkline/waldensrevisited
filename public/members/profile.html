@@ -135,6 +135,45 @@
         </div>
       </div>
 
+      <!-- My Dogs -->
+      <div class="profile-section">
+        <h2>My Dogs</h2>
+        <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage your dogs here or from the <a href="/members/dogs.html">Dogs page</a>.</p>
+        <div id="profileDogsGrid" style="display:flex;flex-direction:column;gap:var(--space-sm);"></div>
+        <div id="profileAddDogForm" style="display:none;margin-top:var(--space-sm);background:var(--mist);border-radius:8px;padding:var(--space-md);">
+          <h3 style="font-size:1rem;margin-bottom:var(--space-sm);">Add a Dog</h3>
+          <div class="form-group">
+            <label for="profileDogName">Name *</label>
+            <input type="text" id="profileDogName" placeholder="Dog's name" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="profileDogBreed">Breed</label>
+            <input type="text" id="profileDogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="profileDogAge">Age</label>
+            <input type="text" id="profileDogAge" placeholder="e.g., 3 years" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="profileDogBio">About</label>
+            <textarea id="profileDogBio" placeholder="Tell us about your dog..." maxlength="500"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Photo</label>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              <input type="file" id="profileDogPhoto" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+              Choose Photo
+            </label>
+            <span id="profileDogPhotoName" style="font-size:0.8rem;color:var(--lichen);margin-left:8px;"></span>
+          </div>
+          <div style="display:flex;gap:var(--space-sm);">
+            <button class="btn btn-primary btn-sm" onclick="addProfileDog()">Save Dog</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('profileAddDogForm').style.display='none'">Cancel</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="profileAddDogBtn" style="margin-top:var(--space-sm);" onclick="document.getElementById('profileAddDogForm').style.display='';this.style.display='none';">+ Add Dog</button>
+      </div>
+
       <button class="btn btn-primary btn-block" id="saveBtn">Save Changes</button>
 
     </div>
@@ -325,7 +364,115 @@
       }
     }
 
+    // --- Profile Dogs ---
+    document.getElementById('profileDogPhoto').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      document.getElementById('profileDogPhotoName').textContent = file ? file.name : '';
+    });
+
+    async function loadProfileDogs() {
+      try {
+        const res = await fetch('/api/dogs');
+        const dogs = await res.json();
+        const grid = document.getElementById('profileDogsGrid');
+        grid.innerHTML = '';
+
+        if (!dogs.length) {
+          grid.innerHTML = '<p style="color:var(--stone);font-size:0.9rem;">No dogs added yet.</p>';
+          document.getElementById('profileAddDogBtn').style.display = '';
+          return;
+        }
+
+        dogs.forEach(dog => {
+          const card = document.createElement('div');
+          card.style.cssText = 'display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm);background:var(--mist);border-radius:8px;';
+          const photoHtml = dog.picture
+            ? `<img src="${escapeHtml(dog.picture)}" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">`
+            : `<div style="width:48px;height:48px;border-radius:8px;background:var(--sage-light);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">&#128054;</div>`;
+          const meta = [dog.breed, dog.age].filter(Boolean).join(' &middot; ');
+          card.innerHTML = `
+            ${photoHtml}
+            <div style="flex:1;min-width:0;">
+              <strong style="font-size:0.95rem;">${escapeHtml(dog.name)}</strong>
+              ${meta ? `<div style="font-size:0.8rem;color:var(--stone);">${meta}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button class="btn btn-secondary btn-sm" onclick="window.location.href='/members/dogs.html'">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProfileDog(${dog.id})">Delete</button>
+            </div>`;
+          grid.appendChild(card);
+        });
+
+        // Show/hide add button based on limit
+        document.getElementById('profileAddDogBtn').style.display = dogs.length >= 5 ? 'none' : '';
+      } catch (e) {
+        console.error('Failed to load dogs', e);
+      }
+    }
+
+    async function addProfileDog() {
+      const name = document.getElementById('profileDogName').value.trim();
+      if (!name) { showToast('Dog name is required', 'error'); return; }
+
+      try {
+        const res = await fetch('/api/dogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            breed: document.getElementById('profileDogBreed').value.trim(),
+            age: document.getElementById('profileDogAge').value.trim(),
+            bio: document.getElementById('profileDogBio').value.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error || 'Error adding dog', 'error'); return; }
+
+        // Upload photo if selected
+        const photoFile = document.getElementById('profileDogPhoto').files[0];
+        if (photoFile && data.id) {
+          const base64 = await fileToBase64(photoFile);
+          await fetch(`/api/dogs/${data.id}/picture`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 }),
+          });
+        }
+
+        // Reset form
+        document.getElementById('profileDogName').value = '';
+        document.getElementById('profileDogBreed').value = '';
+        document.getElementById('profileDogAge').value = '';
+        document.getElementById('profileDogBio').value = '';
+        document.getElementById('profileDogPhoto').value = '';
+        document.getElementById('profileDogPhotoName').textContent = '';
+        document.getElementById('profileAddDogForm').style.display = 'none';
+        document.getElementById('profileAddDogBtn').style.display = '';
+        showToast('Dog added!', 'success');
+        loadProfileDogs();
+      } catch (e) {
+        showToast('Failed to add dog', 'error');
+      }
+    }
+
+    async function deleteProfileDog(id) {
+      if (!confirm('Remove this dog?')) return;
+      try {
+        const res = await fetch(`/api/dogs/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Dog removed', 'success');
+          loadProfileDogs();
+        } else {
+          const data = await res.json();
+          showToast(data.error || 'Error removing dog', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to remove dog', 'error');
+      }
+    }
+
     loadProfile();
+    loadProfileDogs();
   </script>
 </body>
 </html>

@@ -1153,6 +1153,25 @@ export async function handleApi(request, env, session) {
       return json(results);
     }
 
+    // POST /api/admin/properties — create a new property
+    if (path === '/api/admin/properties' && method === 'POST') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const body = await request.json();
+      if (!body.address_id || !body.owner_name) return json({ error: 'address_id and owner_name required' }, 400);
+      const result = await env.DB.prepare(
+        'INSERT INTO properties (address_id, parcel_number, acres, wr_designation, owner_name, owner_type, transfer_type, provenance) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(body.address_id, body.parcel_number || null, body.acres || null, body.wr_designation || null, body.owner_name, body.owner_type || 'natural', body.transfer_type || null, body.provenance || null).run();
+      return json({ id: result.meta.last_row_id, success: true }, 201);
+    }
+
+    // DELETE /api/admin/properties/:id
+    const propDeleteMatch = path.match(/^\/api\/admin\/properties\/(\d+)$/);
+    if (propDeleteMatch && method === 'DELETE') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      await env.DB.prepare('DELETE FROM properties WHERE id = ?').bind(parseInt(propDeleteMatch[1])).run();
+      return json({ success: true });
+    }
+
     // PUT /api/admin/properties/:id
     const propMatch = path.match(/^\/api\/admin\/properties\/(\d+)$/);
     if (propMatch && method === 'PUT') {
