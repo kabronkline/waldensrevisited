@@ -1160,7 +1160,7 @@ export async function handleApi(request, env, session) {
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
 
-    if (!isOfficerOrAdmin(userRole) && userRole !== ) {
+    if (!isOfficerOrAdmin(userRole)) {
       return json({ error: 'Elevated access required' }, 403);
     }
 
