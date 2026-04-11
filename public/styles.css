@@ -200,9 +200,6 @@ h1, h2, h3, h4 {
   font-weight: 500;
   color: var(--forest-deep);
   transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  line-height: 1;
 }
 
 .nav-members-link:hover { color: var(--pond-surface); }
@@ -228,7 +225,7 @@ h1, h2, h3, h4 {
   overflow: hidden;
 }
 
-.nav-avatar:hover { transform: scale(1.1); }
+.nav-avatar:hover { transform: scale(1.1); cursor: pointer; }
 
 .nav-icon {
   width: 28px;
@@ -238,6 +235,7 @@ h1, h2, h3, h4 {
 
 .nav-links {
   display: flex;
+  align-items: center;
   list-style: none;
   gap: var(--space-md);
 }
