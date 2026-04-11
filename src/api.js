@@ -291,16 +291,16 @@ export async function handleApi(request, env, session) {
       if (err) return json({ error: err }, 400);
     }
 
-    // Auto-approve for contributors, officers, and admins
-    const autoApprove = canAutoApprovePost(session.user.role) ? 1 : 0;
-
     const visibility = ['everybody', 'friends', 'officers'].includes(body.visibility) ? body.visibility : 'everybody';
+
+    // Auto-approve: friends/officers posts always approved; "everybody" posts need approval unless from elevated roles
+    const autoApprove = (visibility !== 'everybody' || canAutoApprovePost(session.user.role)) ? 1 : 0;
 
     const result = await env.DB.prepare(
       'INSERT INTO posts (user_id, content, image, approved, visibility) VALUES (?, ?, ?, ?, ?)'
     ).bind(userId, body.content.trim(), body.image || null, autoApprove, visibility).run();
 
-    const message = autoApprove ? 'Post published.' : 'Post submitted for approval.';
+    const message = autoApprove ? 'Post published.' : 'Post visible after approval.';
     return json({ id: result.meta.last_row_id, approved: autoApprove, success: true, message }, 201);
   }
 
