@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
   <style>
+    /* Neighbors Tab */
     .neighbor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); }
     .neighbor-card {
       background: var(--parchment);
@@ -73,6 +74,65 @@
     .connect-btn:hover { background: var(--forest-deep); color: white; border-color: var(--forest-deep); }
     .connect-btn:disabled { opacity: 0.5; cursor: default; }
 
+    /* Swipe Card (Dogs) */
+    .swipe-card {
+      width: 100%; max-width: 400px; background: var(--parchment);
+      border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      overflow: hidden; transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+    .swipe-card.swiping-left  { transform: translateX(-120%) rotate(-8deg); opacity: 0; }
+    .swipe-card.swiping-right { transform: translateX(120%) rotate(8deg); opacity: 0; }
+    .swipe-card-image {
+      width: 100%; height: 250px; background: var(--sage-light);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; font-size: 4rem;
+    }
+    .swipe-card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .swipe-card-body { padding: var(--space-md); }
+    .swipe-card-body h3 { font-size: 1.4rem; margin: 0 0 4px; }
+
+    .swipe-btn {
+      width: 64px; height: 64px; border-radius: 50%; border: 3px solid;
+      font-size: 1.6rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      background: var(--parchment); transition: transform 0.15s ease;
+    }
+    .swipe-btn:hover { transform: scale(1.12); }
+    .swipe-pass { border-color: #d9534f; color: #d9534f; }
+    .swipe-like { border-color: #5cb85c; color: #5cb85c; }
+
+    .match-confetti {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    }
+    .match-confetti .confetti-piece {
+      position: absolute; width: 10px; height: 10px; border-radius: 2px;
+      animation: confettiFall 1.2s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+    }
+
+    .playdate-dog-card {
+      background: var(--parchment); border-radius: 12px; padding: var(--space-md);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: var(--space-sm);
+    }
+    .playdate-tagline-input {
+      width: 100%; padding: 6px 10px; border: 1px solid var(--sage);
+      border-radius: 6px; font-size: 0.85rem; font-family: inherit;
+    }
+
+    .match-item {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-sm) 0; border-bottom: 1px solid var(--sage-light);
+    }
+    .match-item:last-child { border-bottom: none; }
+    .match-item img, .match-item .dog-placeholder {
+      width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+      background: var(--sage-light); display: flex; align-items: center;
+      justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+    }
+
     @media (max-width: 768px) { .neighbor-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -109,34 +169,163 @@
 
         <div class="members-header">
           <h1>Neighbors</h1>
-          <p>All properties in Walden's Revisited. Connect with your neighbors to chat, arrange dog play dates, and participate in the community. Owner identities are private — connecting sends a request that your neighbor can accept or decline.</p>
+          <p>The residents and four-legged friends of Walden's Revisited. Connect with your neighbors to chat, arrange play dates, and build our community.</p>
         </div>
 
-        <!-- Incoming connection requests -->
-        <div id="incomingRequests" style="display:none;margin-bottom:var(--space-md);">
-          <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">Connection Requests</h3>
-          <div id="incomingList"></div>
+        <div class="admin-tabs" style="margin-bottom:var(--space-md);">
+          <button class="admin-tab active" data-tab="properties-tab">Properties</button>
+          <button class="admin-tab" data-tab="dogs-tab">Neighbor Dogs</button>
+          <button class="admin-tab" data-tab="playdate-tab">Dog Play Dates</button>
         </div>
 
-        <div class="neighbor-legend">
-          <span><div class="legend-dot" style="background:var(--forest-deep);"></div> Your property</span>
-          <span><div class="legend-dot" style="background:var(--pond-surface);"></div> Connected</span>
-          <span><div class="legend-dot" style="background:#fef3c7;border:1px solid #fde68a;"></div> Pending</span>
+        <!-- Properties Tab -->
+        <div class="tab-content" id="tab-properties-tab">
+          <!-- Incoming connection requests -->
+          <div id="incomingRequests" style="display:none;margin-bottom:var(--space-md);">
+            <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">Connection Requests</h3>
+            <div id="incomingList"></div>
+          </div>
+
+          <div class="neighbor-legend" style="margin-bottom:var(--space-sm);">
+            <span><div class="legend-dot" style="background:var(--forest-deep);"></div> Your property</span>
+            <span><div class="legend-dot" style="background:var(--pond-surface);"></div> Connected</span>
+            <span><div class="legend-dot" style="background:#fef3c7;border:1px solid #fde68a;"></div> Pending</span>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-xs);">
+            <label style="font-size:0.8rem;color:var(--stone);display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="showAllToggle" onchange="loadNeighbors()" style="accent-color:var(--forest-deep);">
+              Show all properties
+            </label>
+          </div>
+
+          <div class="neighbor-grid" id="neighborGrid">
+            <p style="color:var(--stone);grid-column:1/-1;">Loading properties...</p>
+          </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-xs);">
-          <label style="font-size:0.8rem;color:var(--stone);display:flex;align-items:center;gap:6px;cursor:pointer;">
-            <input type="checkbox" id="showAllToggle" onchange="loadNeighbors()" style="accent-color:var(--forest-deep);">
-            Show all properties
-          </label>
+        <!-- Dogs Tab -->
+        <div class="tab-content" id="tab-dogs-tab" style="display:none;">
+          <!-- Upcoming Birthdays (small section at top) -->
+          <div id="birthdaysSection" style="display:none;margin-bottom:var(--space-lg);">
+            <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">&#127874; Upcoming Birthdays</h3>
+            <div id="birthdaysList"></div>
+          </div>
+
+          <div class="profile-section">
+            <h2>Community Dogs</h2>
+            <div class="dogs-grid" id="communityDogsGrid">
+              <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h2>My Dogs</h2>
+            <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Add up to 5 dogs. Manage your dogs here or from your Profile.</p>
+            <div class="dogs-grid" id="myDogsGrid"></div>
+          </div>
         </div>
 
-        <div class="neighbor-grid" id="neighborGrid">
-          <p style="color:var(--stone);grid-column:1/-1;">Loading properties...</p>
+        <!-- Play Dates Tab -->
+        <div class="tab-content" id="tab-playdate-tab" style="display:none;">
+          <div id="playdate-setup">
+            <div class="profile-section">
+              <h2>My Dogs &mdash; Play Date Status</h2>
+              <p style="color:var(--stone);margin-bottom:var(--space-sm);">Choose which dogs to include in Play Dates and add a tagline.</p>
+              <div class="dogs-grid" id="playdateMyDogsGrid">
+                <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+              </div>
+            </div>
+            <div class="profile-section" style="margin-top:var(--space-md);">
+              <h2>Your Matches</h2>
+              <div id="playdateMatchesList">
+                <p style="color:var(--stone);">Loading...</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="playdate-discover" style="display:none;">
+            <div style="text-align:center;margin-bottom:var(--space-sm);">
+              <button class="btn btn-secondary btn-sm" onclick="showPlaydateSetup()">&larr; Back to My Dogs</button>
+              <span id="discoverSwipingAs" style="margin-left:var(--space-sm);font-weight:500;"></span>
+            </div>
+            <div id="swipeCardContainer" style="display:flex;justify-content:center;align-items:center;min-height:400px;">
+              <div id="swipeCard" class="swipe-card">
+                <div class="swipe-card-image" id="swipeCardImage"></div>
+                <div class="swipe-card-body">
+                  <h3 id="swipeCardName"></h3>
+                  <div class="dog-meta" id="swipeCardMeta"></div>
+                  <p id="swipeCardOwner" style="color:var(--stone);font-size:0.85rem;margin-top:4px;"></p>
+                  <p id="swipeCardTagline" style="font-style:italic;color:var(--lichen);margin-top:4px;"></p>
+                </div>
+              </div>
+            </div>
+            <div id="swipeActions" style="display:flex;justify-content:center;gap:var(--space-lg);margin-top:var(--space-md);">
+              <button class="swipe-btn swipe-pass" id="btnPass" title="Pass">&#10007;</button>
+              <button class="swipe-btn swipe-like" id="btnLike" title="Like">&#9829;</button>
+            </div>
+            <div id="swipeEmpty" style="display:none;text-align:center;padding:var(--space-xl) 0;">
+              <p style="font-size:1.1rem;color:var(--stone);" id="swipeEmptyMsg">No more dogs to discover right now. Check back later!</p>
+            </div>
+          </div>
         </div>
 
       </div>
     </main>
+  </div>
+
+  <!-- Match overlay -->
+  <div id="matchOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
+    <div style="background:var(--parchment);border-radius:16px;padding:var(--space-xl);text-align:center;max-width:360px;position:relative;overflow:hidden;">
+      <div class="match-confetti" id="matchConfetti"></div>
+      <h2 style="font-size:1.8rem;color:var(--forest-deep);margin-bottom:var(--space-sm);">It's a Match!</h2>
+      <p id="matchMessage" style="color:var(--lichen);margin-bottom:var(--space-md);"></p>
+      <button class="btn btn-primary" onclick="closeMatchOverlay()">Keep Swiping</button>
+      <button class="btn btn-secondary" onclick="closeMatchOverlay();showPlaydateSetup();" style="margin-left:8px;">See Matches</button>
+    </div>
+  </div>
+
+  <!-- Add/Edit Dog Modal -->
+  <div class="modal-overlay" id="dogModal" style="display:none;">
+    <div class="modal">
+      <h2 id="dogModalTitle">Add Dog</h2>
+      <input type="hidden" id="dogEditId">
+      <div class="form-group">
+        <label for="dogName">Name *</label>
+        <input type="text" id="dogName" placeholder="Dog's name" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="dogBreed">Breed</label>
+        <input type="text" id="dogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="dogBirthday">Birthday</label>
+        <input type="date" id="dogBirthday">
+      </div>
+      <div class="form-group">
+        <label for="dogBio">About</label>
+        <textarea id="dogBio" placeholder="Tell us about your dog..." maxlength="500"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Photo</label>
+        <div class="avatar-upload">
+          <div class="dog-card-image" id="dogPhotoPreview" style="width:120px;height:120px;border-radius:8px;">
+            <span class="dog-placeholder">&#128054;</span>
+          </div>
+          <div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              <input type="file" id="dogPhotoFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+              Choose Photo
+            </label>
+            <p style="font-size:0.8rem;color:var(--lichen);margin-top:6px;">Max 2MB</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="dogCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="dogSaveBtn">Save</button>
+      </div>
+    </div>
   </div>
 
   <script src="/members/members.js"></script>
@@ -144,35 +333,47 @@
     const session = window.__session;
     if (!session) window.location.href = '/login.html';
     initMembersSidebar('neighbors');
-    document.getElementById('navToggle')?.addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('active');
+
+    // Tab switching
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+        const tabId = btn.dataset.tab;
+        document.getElementById('tab-' + tabId).style.display = '';
+        
+        // Load data for the tab
+        if (tabId === 'properties-tab') loadNeighbors();
+        if (tabId === 'dogs-tab') { loadMyDogs(); loadCommunityDogs(); loadBirthdays(); }
+        if (tabId === 'playdate-tab') { loadMyPlaydateDogs(); loadMatches(); }
+      });
     });
 
-    // Load incoming friend/connection requests
+    // --- Neighbors Logic ---
     async function loadIncomingRequests() {
       try {
         const res = await fetch('/api/friends/requests');
         const requests = await res.json();
         const section = document.getElementById('incomingRequests');
         const list = document.getElementById('incomingList');
-
         if (requests.length === 0) { section.style.display = 'none'; return; }
-
         section.style.display = '';
         list.innerHTML = '';
         requests.forEach(req => {
           const item = document.createElement('div');
           item.className = 'neighbor-card';
           item.style.borderLeft = '3px solid #3b82f6';
-          const name = req.name || 'A neighbor';
           item.innerHTML = `
-            <div class="neighbor-info">
-              <h4>${escapeHtml(name)}</h4>
-              <span>wants to connect &middot; ${formatTimeAgo(req.created_at)}</span>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button class="connect-btn" style="background:var(--forest-deep);color:white;" onclick="acceptRequest(${req.id}, this)">Accept</button>
-              <button class="connect-btn" style="color:#991b1b;border-color:#fecaca;" onclick="rejectRequest(${req.id}, this)">Decline</button>
+            <div class="neighbor-body" style="padding:var(--space-sm) var(--space-md);flex-direction:row;justify-content:space-between;align-items:center;">
+              <div>
+                <h4 style="margin:0;">${escapeHtml(req.name || 'A neighbor')}</h4>
+                <span style="font-size:0.8rem;color:var(--stone);">wants to connect &middot; ${formatTimeAgo(req.created_at)}</span>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="connect-btn" style="background:var(--forest-deep);color:white;" onclick="acceptRequest(${req.id}, this)">Accept</button>
+                <button class="connect-btn" style="color:#991b1b;border-color:#fecaca;" onclick="rejectRequest(${req.id}, this)">Decline</button>
+              </div>
             </div>
           `;
           list.appendChild(item);
@@ -204,90 +405,293 @@
         const properties = await res.json();
         const grid = document.getElementById('neighborGrid');
         grid.innerHTML = '';
-
-        // Filter: by default hide properties with no visible users
         const showAll = document.getElementById('showAllToggle')?.checked;
         const filtered = showAll ? properties : properties.filter(p => p.users.length > 0 || p.registered_user_count > 0);
-
         if (filtered.length === 0) {
           grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;text-align:center;">No neighbors to display yet.</p>';
           return;
         }
-
         filtered.forEach(p => {
           const card = document.createElement('div');
           card.className = 'neighbor-card';
-
           let bodyHtml = '';
           if (p.users.length > 0) {
             bodyHtml = p.users.map(u => {
               let actionHtml = '';
-              if (u.status === 'you') {
-                actionHtml = '<span class="resident-status you">You</span>';
-              } else if (u.status === 'friend') {
-                actionHtml = '<span class="resident-status friend">Connected</span>';
-              } else if (u.status === 'pending') {
-                actionHtml = '<span class="resident-status pending">Pending</span>';
-              } else if (u.status === 'incoming') {
-                actionHtml = '<span class="resident-status incoming">Incoming</span>';
-              } else {
-                actionHtml = `<button class="connect-btn" onclick="connectUser(${u.id}, this)">Connect</button>`;
-              }
-              return `
-                <div class="resident-row">
-                  <span class="resident-name">${escapeHtml(u.name)}</span>
-                  ${actionHtml}
-                </div>
-              `;
+              if (u.status === 'you') actionHtml = '<span class="resident-status you">You</span>';
+              else if (u.status === 'friend') actionHtml = '<span class="resident-status friend">Connected</span>';
+              else if (u.status === 'pending') actionHtml = '<span class="resident-status pending">Pending</span>';
+              else if (u.status === 'incoming') actionHtml = '<span class="resident-status incoming">Incoming</span>';
+              else actionHtml = `<button class="connect-btn" onclick="connectUser(${u.id}, this)">Connect</button>`;
+              return `<div class="resident-row"><span class="resident-name">${escapeHtml(u.name)}</span>${actionHtml}</div>`;
             }).join('');
-          } else if (p.registered_user_count > 0) {
-            bodyHtml = '<div class="private-residence">Private residence</div>';
-          } else {
-            bodyHtml = '<div class="not-registered">Not registered</div>';
-          }
-
-          card.innerHTML = `
-            <div class="neighbor-header">
-              <h4>${escapeHtml(p.tract_lot)}</h4>
-              <span>${escapeHtml(p.street_address)}</span>
-              ${p.acres ? `<div class="acres">${p.acres} acres</div>` : ''}
-            </div>
-            <div class="neighbor-body">
-              ${bodyHtml}
-            </div>
-          `;
+          } else if (p.registered_user_count > 0) bodyHtml = '<div class="private-residence">Private residence</div>';
+          else bodyHtml = '<div class="not-registered">Not registered</div>';
+          card.innerHTML = `<div class="neighbor-header"><h4>${escapeHtml(p.tract_lot)}</h4><span>${escapeHtml(p.street_address)}</span>${p.acres ? `<div class="acres">${p.acres} acres</div>` : ''}</div><div class="neighbor-body">${bodyHtml}</div>`;
           grid.appendChild(card);
         });
-      } catch (e) {
-        showToast('Failed to load neighbors', 'error');
-      }
+      } catch (e) { showToast('Failed to load neighbors', 'error'); }
     }
 
     async function connectUser(userId, btn) {
-      btn.disabled = true;
-      btn.textContent = '...';
+      btn.disabled = true; btn.textContent = '...';
       try {
         const res = await fetch('/api/friends/request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to_user_id: userId }),
         });
-        const data = await res.json();
-        if (res.ok) {
-          showToast('Connection request sent', 'success');
-          loadNeighbors();
-        } else {
-          showToast(data.error || 'Error sending request', 'error');
-          btn.disabled = false;
-          btn.textContent = 'Connect';
+        if (res.ok) { showToast('Connection request sent', 'success'); loadNeighbors(); }
+        else { const d = await res.json(); showToast(d.error || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Connect'; }
+      } catch (e) { showToast('Error', 'error'); btn.disabled = false; btn.textContent = 'Connect'; }
+    }
+
+    // --- Dogs Logic ---
+    let dogPhotoData = null;
+    async function loadMyDogs() {
+      try {
+        const res = await fetch('/api/dogs');
+        const dogs = await res.json();
+        const grid = document.getElementById('myDogsGrid');
+        grid.innerHTML = '';
+        dogs.forEach(dog => grid.appendChild(createDogCard(dog, true)));
+        if (dogs.length < 5) {
+          const addCard = document.createElement('div');
+          addCard.className = 'add-dog-card';
+          addCard.onclick = () => openDogModal();
+          addCard.innerHTML = '<span class="plus-icon">+</span><span>Add Dog</span>';
+          grid.appendChild(addCard);
         }
-      } catch (e) {
-        showToast('Error sending request', 'error');
-        btn.disabled = false;
-        btn.textContent = 'Connect';
+      } catch (e) { showToast('Failed to load dogs', 'error'); }
+    }
+
+    async function loadCommunityDogs() {
+      try {
+        const res = await fetch('/api/members');
+        const members = await res.json();
+        const grid = document.getElementById('communityDogsGrid');
+        grid.innerHTML = '';
+        let total = 0;
+        for (const m of members) {
+          if (m.id === session.userId) continue;
+          const dr = await fetch(`/api/members/${m.id}/dogs`);
+          const dogs = await dr.json();
+          dogs.forEach(d => { grid.appendChild(createDogCard({...d, ownerName: m.name}, false)); total++; });
+        }
+        if (total === 0) grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">No community dogs yet.</p>';
+      } catch (e) { }
+    }
+
+    function createDogCard(dog, isOwn) {
+      const card = document.createElement('div');
+      card.className = 'dog-card';
+      const img = dog.picture ? `<img src="${escapeHtml(dog.picture)}" alt="">` : '<span class="dog-placeholder">&#128054;</span>';
+      const meta = [dog.breed, dog.age, dog.ownerName ? `Owner: ${dog.ownerName}` : null].filter(Boolean).join(' · ');
+      card.innerHTML = `
+        <div class="dog-card-image">${img}</div>
+        <div class="dog-card-body">
+          <h3>${escapeHtml(dog.name)}</h3>
+          ${meta ? `<div class="dog-meta">${escapeHtml(meta)}</div>` : ''}
+          ${dog.bio ? `<p class="dog-bio">${escapeHtml(dog.bio)}</p>` : ''}
+          ${isOwn ? `<div class="dog-card-actions"><button class="btn btn-secondary btn-sm" onclick="openDogModal(${dog.id})">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteDog(${dog.id})">Delete</button></div>` : ''}
+        </div>
+      `;
+      return card;
+    }
+
+    async function loadBirthdays() {
+      try {
+        const res = await fetch('/api/dogs/birthdays');
+        const dogs = await res.json();
+        const sec = document.getElementById('birthdaysSection');
+        const list = document.getElementById('birthdaysList');
+        if (dogs.length === 0) { sec.style.display = 'none'; return; }
+        sec.style.display = '';
+        list.innerHTML = '<div class="dogs-grid">' + dogs.map(d => {
+          const bday = new Date(d.birthday);
+          const monthDay = bday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+          const isToday = bday.getMonth() === new Date().getMonth() && bday.getDate() === new Date().getDate();
+          return `<div class="dog-card" style="border-bottom:3px solid var(--pond-surface);">
+            <div class="dog-card-image" style="height:120px;">${d.picture ? `<img src="${escapeHtml(d.picture)}" alt="">` : '<span class="dog-placeholder">&#128054;</span>'}</div>
+            <div class="dog-card-body">
+              <h3 style="font-size:1rem;">${isToday ? '&#127874; ' : ''}${escapeHtml(d.name)}</h3>
+              <div class="dog-meta">${monthDay} &middot; ${escapeHtml(d.owner_name)}</div>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+      } catch (e) {}
+    }
+
+    function openDogModal(id) {
+      const modal = document.getElementById('dogModal');
+      modal.style.display = 'flex';
+      dogPhotoData = null;
+      if (id) {
+        document.getElementById('dogModalTitle').textContent = 'Edit Dog';
+        document.getElementById('dogEditId').value = id;
+        fetch('/api/dogs').then(r => r.json()).then(dogs => {
+          const d = dogs.find(x => x.id === id);
+          if (d) {
+            document.getElementById('dogName').value = d.name || '';
+            document.getElementById('dogBreed').value = d.breed || '';
+            document.getElementById('dogBirthday').value = d.birthday || '';
+            document.getElementById('dogBio').value = d.bio || '';
+            if (d.picture) { document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(d.picture)}" alt="">`; dogPhotoData = d.picture; }
+          }
+        });
+      } else {
+        document.getElementById('dogModalTitle').textContent = 'Add Dog';
+        document.getElementById('dogEditId').value = '';
+        ['dogName','dogBreed','dogBirthday','dogBio'].forEach(k => document.getElementById(k).value = '');
+        document.getElementById('dogPhotoPreview').innerHTML = '<span class="dog-placeholder">&#128054;</span>';
       }
     }
 
+    document.getElementById('dogCancelBtn').onclick = () => document.getElementById('dogModal').style.display = 'none';
+    document.getElementById('dogPhotoFile').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      if (f.size > 2*1024*1024) { showToast('Too large', 'error'); return; }
+      dogPhotoData = await fileToBase64(f);
+      document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(dogPhotoData)}" alt="">`;
+    };
+
+    document.getElementById('dogSaveBtn').onclick = async () => {
+      const name = document.getElementById('dogName').value.trim();
+      if (!name) return showToast('Name required', 'error');
+      const id = document.getElementById('dogEditId').value;
+      const body = { name, breed: document.getElementById('dogBreed').value, birthday: document.getElementById('dogBirthday').value, bio: document.getElementById('dogBio').value };
+      try {
+        let dogId = id;
+        if (id) await fetch(`/api/dogs/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        else {
+          const r = await fetch('/api/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+          const d = await r.json(); dogId = d.id;
+        }
+        if (dogPhotoData && dogPhotoData.startsWith('data:')) {
+          await fetch(`/api/dogs/${dogId}/picture`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ image: dogPhotoData }) });
+        }
+        showToast('Saved', 'success');
+        document.getElementById('dogModal').style.display = 'none';
+        loadMyDogs(); loadCommunityDogs();
+      } catch (e) { showToast('Error', 'error'); }
+    };
+
+    async function deleteDog(id) {
+      if (!confirm('Remove?')) return;
+      try { await fetch(`/api/dogs/${id}`, { method: 'DELETE' }); loadMyDogs(); } catch (e) {}
+    }
+
+    // --- Play Dates Logic ---
+    let playdateSwipingDogId = null;
+    let currentCandidate = null;
+
+    async function loadMyPlaydateDogs() {
+      const grid = document.getElementById('playdateMyDogsGrid');
+      grid.innerHTML = '<p>Loading...</p>';
+      try {
+        const dr = await fetch('/api/dogs'); const dogs = await dr.json();
+        let pdDogs = []; try { const pdr = await fetch('/api/playdate/dogs'); pdDogs = await pdr.json(); } catch(e){}
+        const optedIds = new Set(pdDogs.map(d => d.dog_id || d.id));
+        grid.innerHTML = dogs.length ? '' : '<p>No dogs yet.</p>';
+        dogs.forEach(dog => {
+          const isOpt = optedIds.has(dog.id);
+          const pd = pdDogs.find(d => (d.dog_id || d.id) === dog.id);
+          const card = document.createElement('div');
+          card.className = 'playdate-dog-card';
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:var(--space-sm);">
+              <div class="dog-card-image" style="width:60px;height:60px;border-radius:8px;">${dog.picture ? `<img src="${escapeHtml(dog.picture)}" alt="">` : '<span class="dog-placeholder">&#128054;</span>'}</div>
+              <div><h3 style="margin:0;">${escapeHtml(dog.name)}</h3></div>
+            </div>
+            <input type="text" class="playdate-tagline-input" placeholder="Tagline" value="${escapeHtml(pd?.tagline||'')}" id="tagline-${dog.id}" ${isOpt ? '' : 'disabled'}>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              ${isOpt ? `<button class="btn btn-danger btn-sm" onclick="optOutDog(${dog.id})">Leave</button><button class="btn btn-primary btn-sm" onclick="updateTagline(${dog.id})">Save</button><button class="btn btn-secondary btn-sm" onclick="startSwiping(${dog.id}, '${escapeHtml(dog.name)}')">Swipe</button>`
+                      : `<button class="btn btn-primary btn-sm" onclick="optInDog(${dog.id})">Join</button>`}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch(e){}
+    }
+
+    async function optInDog(id) {
+      const tagline = document.getElementById('tagline-'+id)?.value || '';
+      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dogId: id, tagline}) }); loadMyPlaydateDogs(); } catch(e){}
+    }
+    async function optOutDog(id) {
+      if (!confirm('Leave?')) return;
+      try { await fetch('/api/playdate/dogs/'+id, { method: 'DELETE' }); loadMyPlaydateDogs(); } catch(e){}
+    }
+    async function updateTagline(id) {
+      const tagline = document.getElementById('tagline-'+id)?.value || '';
+      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dogId: id, tagline}) }); showToast('Saved', 'success'); } catch(e){}
+    }
+    function startSwiping(id, name) {
+      playdateSwipingDogId = id;
+      document.getElementById('playdate-setup').style.display = 'none';
+      document.getElementById('playdate-discover').style.display = '';
+      document.getElementById('discoverSwipingAs').textContent = 'Swiping as ' + name;
+      loadNextCandidate(id);
+    }
+    function showPlaydateSetup() {
+      document.getElementById('playdate-setup').style.display = '';
+      document.getElementById('playdate-discover').style.display = 'none';
+      loadMyPlaydateDogs(); loadMatches();
+    }
+    async function loadNextCandidate(id) {
+      try {
+        const r = await fetch('/api/playdate/discover/'+id); const d = await r.json();
+        if (!d || d.error || (!d.id && !d.dog_id)) {
+          document.getElementById('swipeCard').style.display = 'none';
+          document.getElementById('swipeActions').style.display = 'none';
+          document.getElementById('swipeEmpty').style.display = '';
+          document.getElementById('swipeEmptyMsg').textContent = d?.message || 'No more dogs.';
+          return;
+        }
+        currentCandidate = d;
+        document.getElementById('swipeCard').style.display = '';
+        document.getElementById('swipeActions').style.display = 'flex';
+        document.getElementById('swipeEmpty').style.display = 'none';
+        document.getElementById('swipeCardImage').innerHTML = d.picture ? `<img src="${escapeHtml(d.picture)}">` : '&#128054;';
+        document.getElementById('swipeCardName').textContent = d.name;
+        document.getElementById('swipeCardMeta').textContent = [d.breed, d.age].filter(Boolean).join(' · ');
+        document.getElementById('swipeCardOwner').textContent = d.owner_name ? 'Owner: ' + d.owner_name : '';
+        document.getElementById('swipeCardTagline').textContent = d.tagline || '';
+      } catch(e){}
+    }
+    document.getElementById('btnPass').onclick = () => swipe('pass');
+    document.getElementById('btnLike').onclick = () => swipe('like');
+    async function swipe(action) {
+      const toId = currentCandidate.dog_id || currentCandidate.id;
+      const card = document.getElementById('swipeCard');
+      card.classList.add(action === 'like' ? 'swiping-right' : 'swiping-left');
+      try {
+        const r = await fetch('/api/playdate/swipe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({fromDogId: playdateSwipingDogId, toDogId: toId, action}) });
+        const d = await r.json(); if (d.match) showMatchOverlay(d);
+      } catch(e){}
+      setTimeout(() => { card.className = 'swipe-card'; loadNextCandidate(playdateSwipingDogId); }, 420);
+    }
+    function showMatchOverlay(d) {
+      const o = document.getElementById('matchOverlay'); o.style.display = 'flex';
+      document.getElementById('matchMessage').textContent = d.matchMessage || "It's a match!";
+    }
+    function closeMatchOverlay() { document.getElementById('matchOverlay').style.display = 'none'; }
+    async function loadMatches() {
+      const c = document.getElementById('playdateMatchesList'); c.innerHTML = '<p>Loading...</p>';
+      try {
+        const r = await fetch('/api/playdate/matches'); const matches = await r.json();
+        if (!matches.length) { c.innerHTML = '<p>No matches yet.</p>'; return; }
+        c.innerHTML = matches.map(m => `
+          <div class="match-item">
+            <div class="dog-placeholder" style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--mist);">${m.picture ? `<img src="${escapeHtml(m.picture)}" style="width:100%;height:100%;object-fit:cover;">` : '&#128054;'}</div>
+            <div style="flex:1;"><strong>${escapeHtml(m.name)}</strong><br><span style="font-size:0.8rem;color:var(--stone);">Owner: ${escapeHtml(m.owner_name)}</span></div>
+            <a href="/members/chat.html?thread=${m.thread_id||''}" class="btn btn-primary btn-sm">Chat</a>
+          </div>
+        `).join('');
+      } catch(e){}
+    }
+
+    // Initial load
     loadIncomingRequests();
     loadNeighbors();
   </script>

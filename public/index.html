@@ -794,7 +794,13 @@
 
         var avatar = document.getElementById('navUserAvatar');
         if (avatar) {
-          if (session.picture) {
+          if (session.profilePicture) {
+            avatar.style.backgroundImage = 'url(' + session.profilePicture + ')';
+          } else if (session.avatarId) {
+            // Can't use getAvatarSvg on home page (no avatars.js), use initials fallback
+            var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
+            avatar.textContent = initials || 'U';
+          } else if (session.picture) {
             avatar.style.backgroundImage = 'url(' + session.picture + ')';
           } else {
             var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();

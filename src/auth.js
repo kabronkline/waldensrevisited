@@ -164,6 +164,8 @@ export async function handleCallback(request, env) {
     name: user.name,
     role: user.role,
     picture: user.google_picture,
+    avatarId: user.avatar_id || null,
+    profilePicture: user.profile_picture || null,
     agreementSigned: !!user.agreement_signed_at,
   });
 

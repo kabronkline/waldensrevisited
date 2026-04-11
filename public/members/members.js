@@ -82,16 +82,12 @@ function initMembersSidebar(activePage) {
         Wall
       </a>
       <a href="/members/neighbors.html" class="sidebar-link ${activePage === 'neighbors' ? 'active' : ''}" id="neighborsSidebarLink">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Neighbors <span id="neighborsBadge" class="sidebar-badge" style="display:none;"></span>
       </a>
       <a href="/members/chat.html" class="sidebar-link ${activePage === 'chat' ? 'active' : ''}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Chat
-      </a>
-      <a href="/members/dogs.html" class="sidebar-link ${activePage === 'dogs' ? 'active' : ''}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.855-1.076 2.344-2.5"/><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.076-2.344-2.5"/><path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444a13.152 13.152 0 0 0-.42-3.309"/></svg>
-        Neighbor Dogs
       </a>
     </div>
     <div class="sidebar-section">
@@ -194,7 +190,12 @@ function initMembersSidebar(activePage) {
     navSignIn.style.display = 'none';
     navMembers.style.display = 'flex';
     if (navAvatar) {
-      if (session.picture) {
+      if (session.profilePicture) {
+        navAvatar.style.backgroundImage = 'url(' + session.profilePicture + ')';
+      } else if (session.avatarId && typeof getAvatarSvg === 'function') {
+        navAvatar.innerHTML = getAvatarSvg(session.avatarId);
+        navAvatar.style.padding = '2px';
+      } else if (session.picture) {
         navAvatar.style.backgroundImage = 'url(' + session.picture + ')';
       } else {
         const initials = (session.name || '').split(' ').map(n => n[0]).join('').toUpperCase();

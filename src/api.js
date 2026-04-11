@@ -1084,10 +1084,16 @@ export async function handleApi(request, env, session) {
   // POST /api/chat/officer — create or return existing officer group thread
   if (path === '/api/chat/officer' && method === 'POST') {
     try {
-    // Check if user already has an active officer thread
-    const existing = await env.DB.prepare(
+    // Check if user already has an active officer thread (as creator or participant)
+    let existing = await env.DB.prepare(
       "SELECT id FROM chat_threads WHERE type = 'officer' AND user_a_id = ?"
     ).bind(userId).first();
+    if (!existing) {
+      const asParticipant = await env.DB.prepare(
+        "SELECT ct.id FROM chat_threads ct JOIN chat_participants cp ON ct.id = cp.thread_id WHERE ct.type = 'officer' AND cp.user_id = ? LIMIT 1"
+      ).bind(userId).first();
+      if (asParticipant) existing = asParticipant;
+    }
 
     if (existing) {
       return json({ thread_id: existing.id, existing: true });

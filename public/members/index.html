@@ -124,7 +124,7 @@
               <div class="suggested-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:10px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="suggested-name">Neighbors</span>
             </a>
-            <a href="/members/dogs.html" class="suggested-neighbor">
+            <a href="/members/neighbors.html" class="suggested-neighbor">
               <div class="suggested-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:10px;color:var(--lichen);"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.855-1.076 2.344-2.5"/></svg></div>
               <span class="suggested-name">Neighbor Dogs</span>
             </a>
@@ -174,8 +174,17 @@
       }).catch(() => {});
     }
 
-    // Set avatar from user profile (fetch to get custom pic/avatar)
+    // Set avatar from session immediately, then refine from API
     const avatarEl = document.getElementById('postAvatar');
+    // Immediate: use session data
+    if (session.profilePicture) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(session.profilePicture)}" alt="">`;
+    } else if (session.avatarId && typeof getAvatarSvg === 'function') {
+      avatarEl.innerHTML = getAvatarSvg(session.avatarId);
+    } else if (session.picture) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(session.picture)}" alt="">`;
+    }
+    // Refine: fetch latest from API (in case avatar was changed)
     fetch('/api/me').then(r => r.json()).then(me => {
       if (me.profile_picture) {
         avatarEl.innerHTML = `<img src="${escapeHtml(me.profile_picture)}" alt="">`;
@@ -184,9 +193,7 @@
       } else if (me.google_picture) {
         avatarEl.innerHTML = `<img src="${escapeHtml(me.google_picture)}" alt="">`;
       }
-    }).catch(() => {
-      if (session.picture) avatarEl.innerHTML = `<img src="${escapeHtml(session.picture)}" alt="">`;
-    });
+    }).catch(() => {});
 
     document.getElementById('navToggle')?.addEventListener('click', () => {
       document.getElementById('navLinks').classList.toggle('active');

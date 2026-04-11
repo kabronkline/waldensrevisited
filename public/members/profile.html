@@ -165,7 +165,7 @@
       <!-- My Dogs -->
       <div class="profile-section">
         <h2>My Dogs</h2>
-        <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage your dogs here or from the <a href="/members/dogs.html">Dogs page</a>.</p>
+        <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage your dogs here or from the <a href="/members/neighbors.html">Dogs page</a>.</p>
         <div id="profileDogsGrid" style="display:flex;flex-direction:column;gap:var(--space-sm);"></div>
         <div id="profileAddDogForm" style="display:none;margin-top:var(--space-sm);background:var(--mist);border-radius:8px;padding:var(--space-md);">
           <h3 style="font-size:1rem;margin-bottom:var(--space-sm);">Add a Dog</h3>
@@ -495,7 +495,7 @@
               ${meta ? `<div style="font-size:0.8rem;color:var(--stone);">${meta}</div>` : ''}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0;">
-              <button class="btn btn-secondary btn-sm" onclick="window.location.href='/members/dogs.html'">Edit</button>
+              <button class="btn btn-secondary btn-sm" onclick="window.location.href='/members/neighbors.html'">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deleteProfileDog(${dog.id})">Delete</button>
             </div>`;
           grid.appendChild(card);
