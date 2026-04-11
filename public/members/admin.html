@@ -905,6 +905,8 @@
           document.getElementById('preRegEmail').value = '';
           document.getElementById('preRegName').value = '';
           document.getElementById('preRegAddress').value = '';
+          document.getElementById('preRegSection').style.display = 'none';
+          loadUsers();
         } else { showToast(data.error, 'error'); }
       } catch (e) { showToast('Error', 'error'); }
       btn.disabled = false; btn.textContent = 'Add User';
