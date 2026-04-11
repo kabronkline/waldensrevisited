@@ -136,6 +136,32 @@
       margin-top: 2px;
     }
 
+    .thread-delete-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(153, 27, 27, 0.08);
+      border: none;
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      color: #991b1b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .thread-item { position: relative; }
+    .thread-item:hover .thread-delete-btn { opacity: 0.7; }
+    .thread-delete-btn:hover { opacity: 1 !important; background: rgba(153, 27, 27, 0.15); }
+
+    @media (max-width: 768px) {
+      .thread-delete-btn { opacity: 0.5; }
+    }
+
     .threads-empty {
       padding: var(--space-lg) var(--space-sm);
       text-align: center;
@@ -670,6 +696,9 @@
             <div class="thread-preview">${escapeHtml(t.last_message || 'No messages yet')}</div>
           </div>
           <span class="thread-time">${t.last_message_at ? formatTimeAgo(t.last_message_at) : ''}</span>
+          <button class="thread-delete-btn" onclick="event.stopPropagation();deleteThreadFromList(${t.id})" title="Delete conversation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
         </li>
       `).join('');
     }
@@ -736,11 +765,11 @@
         area.innerHTML = '<div class="threads-empty" style="margin:auto">No messages yet. Say hello!</div>';
       } else {
         area.innerHTML = activeMessages.map(m => {
-          if (m.sender_user_id === 0) {
-            // System message
+          if (m.sender_user_id === 0 || (m.content && m.content.startsWith('[System]'))) {
+            const sysText = (m.content || '').replace(/^\[System\]\s*/, '');
             return `<div class="message message-system">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>${escapeHtml(m.content)}</span>
+              <span>${escapeHtml(sysText)}</span>
             </div>`;
           }
           const isSelf = m.sender_user_id === myId;
@@ -894,6 +923,26 @@
       } catch (e) {
         showToast(e.message, 'error');
       }
+    }
+
+    // ---- Delete Thread from list ----
+    async function deleteThreadFromList(threadId) {
+      if (!confirm('Delete this conversation and all messages?')) return;
+      try {
+        const res = await fetch(`/api/chat/threads/${threadId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Conversation deleted', 'success');
+          if (activeThreadId === threadId) {
+            activeThreadId = null;
+            activeThreadType = null;
+            activeMessages = [];
+            document.getElementById('conversationActive').style.display = 'none';
+            document.getElementById('conversationPlaceholder').style.display = '';
+          }
+          await loadThreads();
+        } else { showToast(data.error || 'Error', 'error'); }
+      } catch (e) { showToast('Error deleting', 'error'); }
     }
 
     // ---- Delete Thread ----

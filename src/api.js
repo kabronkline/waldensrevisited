@@ -693,8 +693,8 @@ export async function handleApi(request, env, session) {
 
         if (thread) {
           await env.DB.prepare(
-            "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, 0, ?, datetime('now'))"
-          ).bind(thread.id, `🐾 Play Date Match! ${fromDogInfo.name} and ${toDogInfo.name} both want to play! Arrange a meetup in this chat.`).run();
+            "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
+          ).bind(thread.id, userId, `[System] 🐾 Play Date Match! ${fromDogInfo.name} and ${toDogInfo.name} both want to play! Arrange a meetup in this chat.`).run();
         }
 
         matched = true;
@@ -1042,6 +1042,7 @@ export async function handleApi(request, env, session) {
 
   // POST /api/chat/officer — create or return existing officer group thread
   if (path === '/api/chat/officer' && method === 'POST') {
+    try {
     // Check if user already has an active officer thread
     const existing = await env.DB.prepare(
       "SELECT id FROM chat_threads WHERE type = 'officer' AND user_a_id = ?"
@@ -1076,12 +1077,16 @@ export async function handleApi(request, env, session) {
       }
     }
 
-    // Add system message
+    // Add system message (use current user as sender since FK requires valid user_id)
     await env.DB.prepare(
-      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, 0, 'Thread opened with HOA officers', datetime('now'))"
-    ).bind(newThreadId).run();
+      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, '[System] Thread opened with HOA officers', datetime('now'))"
+    ).bind(newThreadId, userId).run();
 
     return json({ thread_id: newThreadId, success: true });
+    } catch (err) {
+      console.log('Officer chat error:', err.message, err.stack);
+      return json({ error: 'Failed to create officer thread: ' + err.message }, 500);
+    }
   }
 
   // --- Admin/Officer endpoints ---
