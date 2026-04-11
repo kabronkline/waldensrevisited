@@ -513,17 +513,23 @@
         <div class="chat-threads-panel" id="threadsPanel">
           <div class="threads-header">
             <h2>Messages</h2>
-            <div style="display:flex;gap:4px;">
-              <button class="btn btn-sm btn-secondary" onclick="contactOfficers()" title="Contact HOA Officers">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Officers
-              </button>
-              <button class="btn btn-sm btn-primary" onclick="openAddFriendModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                Add Friend
-              </button>
+            <button class="btn btn-sm btn-primary" onclick="openAddFriendModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Add Friend
+            </button>
+          </div>
+          <!-- Officer Contact Card -->
+          <div class="officer-contact-card" id="officerCard">
+            <div class="occ-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <h3>HOA Officers</h3>
+              <p>Questions or concerns? Message the Board directly.</p>
+              <button class="btn-contact-officers" onclick="contactOfficers()">Message Officers</button>
             </div>
           </div>
+
           <div class="threads-search">
             <input type="text" id="threadSearch" placeholder="Search conversations..." oninput="filterThreads()">
           </div>
@@ -595,6 +601,7 @@
     // ---- State ----
     let threads = [];
     let activeThreadId = null;
+    let activeThreadType = null;
     let activeMessages = [];
     let friends = [];
     let friendRequests = [];
@@ -627,6 +634,11 @@
     function renderThreads() {
       const list = document.getElementById('threadsList');
       const search = document.getElementById('threadSearch').value.toLowerCase();
+
+      // Hide officer card if user already has an officer thread
+      const hasOfficerThread = threads.some(t => t.type === 'officer');
+      const officerCard = document.getElementById('officerCard');
+      if (officerCard) officerCard.style.display = hasOfficerThread ? 'none' : '';
       const filtered = threads.filter(t => {
         const name = (t.other_user_name || '').toLowerCase();
         const preview = (t.last_message || '').toLowerCase();
@@ -662,6 +674,8 @@
     // ---- Open Thread ----
     async function openThread(threadId) {
       activeThreadId = threadId;
+      const threadData = threads.find(t => t.id === threadId);
+      activeThreadType = threadData?.type || 'friend';
       renderThreads();
 
       // Show conversation panel, hide placeholder
@@ -723,7 +737,10 @@
             </div>`;
           }
           const isSelf = m.sender_user_id === myId;
+          const isGroup = activeThreadType === 'officer';
+          const senderLabel = (!isSelf && isGroup && m.sender_name) ? `<div class="msg-sender-name">${escapeHtml(m.sender_name)}</div>` : '';
           return `<div class="message ${isSelf ? 'message-self' : 'message-other'}">
+            ${senderLabel}
             <div>${escapeHtml(m.body)}</div>
             <div class="message-time">${m.created_at ? formatTimeAgo(m.created_at) : ''}</div>
           </div>`;

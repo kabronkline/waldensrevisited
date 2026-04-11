@@ -201,6 +201,28 @@
   .members-main { padding: var(--space-md) var(--space-sm); }
 }
 
+/* ---- Officer Contact Card ---- */
+.officer-contact-card {
+  background: var(--forest-deep);
+  color: var(--parchment);
+  margin: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: 12px;
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  box-shadow: 0 4px 12px rgba(45, 74, 62, 0.15);
+}
+.officer-contact-card .occ-icon { background: rgba(250,248,244,0.1); padding: 8px; border-radius: 8px; flex-shrink: 0; }
+.officer-contact-card .occ-icon svg { width: 22px; height: 22px; stroke: var(--parchment); }
+.officer-contact-card h3 { margin: 0 0 3px; font-size: 0.95rem; font-weight: 600; }
+.officer-contact-card p { margin: 0 0 10px; font-size: 0.8rem; line-height: 1.4; opacity: 0.85; }
+.btn-contact-officers { background: var(--parchment); color: var(--forest-deep); border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: filter 0.15s; }
+.btn-contact-officers:hover { filter: brightness(0.95); }
+
+/* ---- Group Chat Sender Names ---- */
+.msg-sender-name { font-size: 0.7rem; font-weight: 600; color: var(--forest-deep); margin-bottom: 2px; margin-left: 2px; opacity: 0.65; }
+
 /* ---- Login Page ---- */
 .login-page {
   min-height: 100vh;

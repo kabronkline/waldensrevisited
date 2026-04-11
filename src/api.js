@@ -1015,16 +1015,18 @@ export async function handleApi(request, env, session) {
       "INSERT INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
     ).bind(newThreadId, userId).run();
 
-    // Find all users with officer roles who have signed the agreement
+    // Find all users with officer roles (include pre-registered who haven't logged in yet)
     const { results: officers } = await env.DB.prepare(
-      "SELECT id FROM users WHERE role IN ('president','secretary','treasurer','other_officer','admin') AND agreement_signed_at IS NOT NULL"
+      "SELECT id FROM users WHERE role IN ('president','secretary','treasurer','other_officer','admin')"
     ).all();
 
-    // Add each officer as participant
+    // Add each officer as participant (they'll see it when they log in)
     for (const officer of officers) {
-      await env.DB.prepare(
-        "INSERT OR IGNORE INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
-      ).bind(newThreadId, officer.id).run();
+      if (officer.id !== userId) {
+        await env.DB.prepare(
+          "INSERT OR IGNORE INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
+        ).bind(newThreadId, officer.id).run();
+      }
     }
 
     // Add system message

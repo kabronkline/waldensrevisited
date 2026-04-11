@@ -144,6 +144,19 @@ export async function handleCallback(request, env) {
     };
   }
 
+  // Auto-enroll officers into existing officer chat threads they're not in
+  const officerRoles = ['president', 'secretary', 'treasurer', 'other_officer', 'admin'];
+  if (officerRoles.includes(user.role)) {
+    const { results: officerThreads } = await env.DB.prepare(
+      "SELECT id FROM chat_threads WHERE type = 'officer'"
+    ).all();
+    for (const t of officerThreads) {
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
+      ).bind(t.id, user.id).run();
+    }
+  }
+
   // Create session
   const sessionId = await createSession(env, {
     userId: user.id,
