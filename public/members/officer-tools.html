@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Officer Tools — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li id="navSignIn"><a href="/members/" class="nav-signin">Sign In</a></li>
+        <li id="navMembers" style="display:none;" class="nav-user-profile">
+          <a href="/members/" class="nav-members-link">Members</a>
+          <a href="/members/profile.html" class="nav-avatar" id="navUserAvatar" title="Your Profile"></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <main class="members-main">
+
+  <div class="members-page">
+    <div class="container">
+
+      <div class="members-header">
+        <h1>Officer Tools</h1>
+        <p>Content moderation and officer group chat management.</p>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="moderation">Moderation</button>
+        <button class="admin-tab" data-tab="officer-chats">Officer Group Chat</button>
+      </div>
+
+      <!-- Moderation Tab -->
+      <div class="tab-content" id="tab-moderation">
+        <div class="profile-section">
+          <h2>Reported Content</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Posts and messages reported by members for review.</p>
+          <div id="reportsList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Officer Group Chat Tab -->
+      <div class="tab-content" id="tab-officer-chats" style="display:none;">
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>Officer Group Chats</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Conversations initiated by members with HOA officers.</p>
+          <table class="users-table">
+            <thead><tr><th>Member</th><th>Email</th><th>Started</th><th>Messages</th><th></th></tr></thead>
+            <tbody id="officerChatsBody"><tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+    </main>
+  </div>
+
+  <script src="/members/avatars.js"></script>
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+
+    initMembersSidebar('officer-tools');
+
+    // Auto-select tab from URL parameter
+    (function() {
+      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      if (urlTab) {
+        const tabBtn = document.querySelector(`.admin-tab[data-tab="${urlTab}"]`);
+        if (tabBtn) {
+          document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+          tabBtn.classList.add('active');
+          document.getElementById(`tab-${urlTab}`).style.display = '';
+        }
+      }
+    })();
+
+    const officerRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'];
+    if (!officerRoles.includes(session.role)) {
+      document.body.innerHTML = '<div class="pending-page"><div class="pending-card"><h1>Access Denied</h1><p>You do not have permission to access this page.</p><a href="/members/" class="btn btn-secondary">Back to Members</a></div></div>';
+    }
+
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // Tab switching
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).style.display = '';
+      });
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatTimeAgo(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z'));
+      const diff = Date.now() - d.getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return days + 'd ago';
+      return d.toLocaleDateString();
+    }
+
+    function showToast(msg, type) {
+      const t = document.createElement('div');
+      t.className = 'toast ' + (type || '');
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.classList.add('show'), 10);
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // Refresh moderation badge after actions
+    async function refreshModerationBadge() {
+      try {
+        const res = await fetch('/api/admin/moderation-count');
+        const data = await res.json();
+        const badge = document.getElementById('officerModerationBadge');
+        if (data.count > 0) {
+          if (badge) { badge.textContent = data.count; badge.style.display = ''; }
+        } else {
+          if (badge) badge.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+
+    // Content reports
+    async function loadReports() {
+      try {
+        const res = await fetch('/api/admin/reports');
+        if (!res.ok) { document.getElementById('reportsList').innerHTML = '<p style="color:var(--stone);">No reports.</p>'; return; }
+        const reports = await res.json();
+        const container = document.getElementById('reportsList');
+        if (!reports.length) { container.innerHTML = '<p style="color:var(--stone);">No pending reports.</p>'; return; }
+        container.innerHTML = reports.map(r => {
+          const contentText = r.content?.content || '[Content deleted]';
+          const typeLabel = r.content_type === 'post' ? 'Post' : r.content_type === 'comment' ? 'Comment' : 'Chat Message';
+          return `<div class="pending-item" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div>
+                <span class="role-badge officer" style="font-size:0.7rem;">${typeLabel}</span>
+                <strong style="margin-left:6px;">${escapeHtml(r.author_name || 'Unknown')}</strong>
+              </div>
+              <span style="font-size:0.8rem;color:var(--stone);">Reported by ${escapeHtml(r.reporter_name)} &middot; ${formatTimeAgo(r.created_at)}</span>
+            </div>
+            <div style="padding:8px 12px;background:var(--mist);border-radius:8px;font-size:0.9rem;border-left:3px solid #dc2626;margin-bottom:6px;">${escapeHtml(contentText.substring(0, 300))}</div>
+            ${r.reason ? `<p style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;"><em>Reason: ${escapeHtml(r.reason)}</em></p>` : ''}
+            <div class="pending-item-actions">
+              <button class="btn btn-danger btn-sm" onclick="actionReport(${r.id})">Remove Content</button>
+              <button class="btn btn-secondary btn-sm" onclick="dismissReport(${r.id})">Dismiss</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (e) { document.getElementById('reportsList').innerHTML = '<p style="color:var(--stone);">No reports.</p>'; }
+    }
+
+    async function actionReport(id) {
+      if (!confirm('Remove this content? This cannot be undone.')) return;
+      await fetch(`/api/admin/reports/${id}/action`, { method: 'PUT' });
+      showToast('Content removed', 'success');
+      loadReports();
+      refreshModerationBadge();
+    }
+
+    async function dismissReport(id) {
+      await fetch(`/api/admin/reports/${id}/dismiss`, { method: 'PUT' });
+      showToast('Report dismissed', 'info');
+      loadReports();
+      refreshModerationBadge();
+    }
+
+    // Officer group chats
+    async function loadOfficerChats() {
+      try {
+        const res = await fetch('/api/admin/officer-chats');
+        const data = await res.json();
+        const chats = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+        const tbody = document.getElementById('officerChatsBody');
+        if (chats.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
+        tbody.innerHTML = chats.map(c => `
+          <tr>
+            <td>${escapeHtml(c.initiator_name)}</td>
+            <td>${escapeHtml(c.initiator_email)}</td>
+            <td>${new Date(c.created_at + 'Z').toLocaleDateString()}</td>
+            <td>${c.message_count}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="exportChat(${c.id})">Export</button>
+              <a href="/members/chat.html?thread=${c.id}" class="btn btn-primary btn-sm">Open</a>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) { showToast('Failed to load officer chats', 'error'); }
+    }
+
+    async function exportChat(threadId) {
+      try {
+        const res = await fetch(`/api/admin/export/chat/${threadId}`);
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `chat-thread-${threadId}-export.json`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Chat exported', 'success');
+      } catch (e) { showToast('Export failed', 'error'); }
+    }
+
+    loadReports();
+    loadOfficerChats();
+  </script>
+</body>
+</html>

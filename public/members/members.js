@@ -72,6 +72,7 @@ function initMembersSidebar(activePage) {
   if (!session) return;
 
   const isElevated = ['admin','president','secretary','treasurer','other_officer','auditor'].includes(session.role);
+  const isOfficer = ['admin','president','secretary','treasurer','other_officer'].includes(session.role);
 
   const sidebarHtml = `
     <div class="sidebar-section" style="padding-bottom:0;">
@@ -114,6 +115,19 @@ function initMembersSidebar(activePage) {
         FAQ
       </a>
     </div>
+    ${isOfficer ? `
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Officer Tools</div>
+      <a href="/members/officer-tools.html?tab=moderation" class="sidebar-link ${activePage === 'officer-tools' && !location.search.includes('officer-chats') ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Moderation <span id="officerModerationBadge" class="sidebar-badge" style="display:none;"></span>
+      </a>
+      <a href="/members/officer-tools.html?tab=officer-chats" class="sidebar-link ${activePage === 'officer-tools' && location.search.includes('officer-chats') ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Officer Group Chat
+      </a>
+    </div>` : ''}
     ${isElevated ? `
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
@@ -182,7 +196,9 @@ function initMembersSidebar(activePage) {
     fetch('/api/admin/moderation-count').then(r => r.json()).then(data => {
       if (data.count > 0) {
         const badge = document.getElementById('moderationBadge');
+        const officerBadge = document.getElementById('officerModerationBadge');
         if (badge) { badge.textContent = data.count; badge.style.display = ''; }
+        if (officerBadge) { officerBadge.textContent = data.count; officerBadge.style.display = ''; }
       }
     }).catch(() => {});
   }

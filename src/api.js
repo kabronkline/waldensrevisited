@@ -949,23 +949,26 @@ export async function handleApi(request, env, session) {
        ORDER BY latest_message_at DESC NULLS LAST`
     ).bind(userId, userId, userId, userId, userId, userId, userId, userId, userId, userId).all();
     // Also fetch officer group threads where user is a participant
-    const { results: groupThreads } = await env.DB.prepare(
-      `SELECT ct.id, ct.type, ct.ref_id, ct.created_at,
-              'HOA Officers' as other_user_name, 0 as other_user_id,
-              NULL as other_user_picture, NULL as other_user_google_picture,
-              0 as is_anonymous, 1 as show_name, 1 as show_contact,
-              NULL as address_label,
-              (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
-              (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
-       FROM chat_threads ct
-       JOIN chat_participants cp ON ct.id = cp.thread_id
-       WHERE ct.type = 'officer' AND cp.user_id = ?
-       ORDER BY latest_message_at DESC NULLS LAST`
-    ).bind(userId).all();
+    // Officers see these via Officer Tools, not in personal Community Chat
+    if (!isOfficerOrAdmin(session.user.role)) {
+      const { results: groupThreads } = await env.DB.prepare(
+        `SELECT ct.id, ct.type, ct.ref_id, ct.created_at,
+                'HOA Officers' as other_user_name, 0 as other_user_id,
+                NULL as other_user_picture, NULL as other_user_google_picture,
+                0 as is_anonymous, 1 as show_name, 1 as show_contact,
+                NULL as address_label,
+                (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
+                (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
+         FROM chat_threads ct
+         JOIN chat_participants cp ON ct.id = cp.thread_id
+         WHERE ct.type = 'officer' AND cp.user_id = ?
+         ORDER BY latest_message_at DESC NULLS LAST`
+      ).bind(userId).all();
 
-    // Merge and re-sort
-    results.push(...groupThreads);
-    results.sort((a, b) => (b.latest_message_at || '') > (a.latest_message_at || '') ? 1 : -1);
+      // Merge and re-sort
+      results.push(...groupThreads);
+      results.sort((a, b) => (b.latest_message_at || '') > (a.latest_message_at || '') ? 1 : -1);
+    }
 
     const viewerRole = session.user.role;
     results.forEach(r => maskIfAnonymous(r, 'other_user_name', ['other_user_picture', 'other_user_google_picture'], viewerRole));
