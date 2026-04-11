@@ -113,7 +113,8 @@
     async function loadConsent() {
       try {
         const res = await fetch('/api/admin/consent-records');
-        const records = await res.json();
+        const data = await res.json();
+        const records = data.results || data;
         const tbody = document.getElementById('consentBody');
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--stone);">No records yet.</td></tr>'; return; }
         tbody.innerHTML = records.map(r => {
@@ -154,7 +155,8 @@
     async function loadAudit() {
       try {
         const res = await fetch('/api/admin/audit-log');
-        const logs = await res.json();
+        const data = await res.json();
+        const logs = data.results || data;
         const tbody = document.getElementById('auditBody');
         if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No activity yet.</td></tr>'; return; }
         tbody.innerHTML = logs.map(l => `<tr>

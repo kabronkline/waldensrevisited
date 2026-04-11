@@ -289,7 +289,7 @@
       const roleLabel = formatRole(post.author_role);
       const timeAgo = formatTimeAgo(post.created_at);
       const isPending = !post.approved;
-      const isOwn = post.user_id === session.userId;
+      const isOwn = post.user_id == session.userId;
       const isOfficerPost = (post.visibility === 'officers');
       const canDelete = isOwn || (isOfficerPost && elevatedRoles.includes(session.role));
       const wasEdited = post.updated_at && post.updated_at !== post.created_at;

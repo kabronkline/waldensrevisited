@@ -1167,16 +1167,22 @@ export async function handleApi(request, env, session) {
     // GET /api/admin/users — admin only
     if (path === '/api/admin/users' && method === 'GET') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM users u`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT u.id, u.email, u.name, u.role, u.roles, u.address_id, u.google_picture, u.profile_picture,
                 u.agreement_signed_at, u.agreement_ip, u.created_at, a.full_label as address_label
          FROM users u LEFT JOIN addresses a ON u.address_id = a.id
-         ORDER BY u.created_at DESC`
-      ).all();
+         ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
       // Mark global admins (configured via ADMIN_EMAILS env var)
       const globalAdmins = (env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
       results.forEach(u => { u.is_global_admin = globalAdmins.includes((u.email || '').toLowerCase()); });
-      return json(results);
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // PUT /api/admin/users/:id/role — admin only
@@ -1274,6 +1280,12 @@ export async function handleApi(request, env, session) {
 
     // GET /api/admin/address-requests — pending address change requests
     if (path === '/api/admin/address-requests' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM address_requests WHERE status = 'pending'`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT ar.id, ar.user_id, ar.requested_address_id, ar.current_address_id, ar.created_at,
                 u.name, u.email, u.role,
@@ -1283,9 +1295,9 @@ export async function handleApi(request, env, session) {
          JOIN addresses ra ON ar.requested_address_id = ra.id
          LEFT JOIN addresses ca ON ar.current_address_id = ca.id
          WHERE ar.status = 'pending'
-         ORDER BY ar.created_at DESC`
-      ).all();
-      return json(results);
+         ORDER BY ar.created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // PUT /api/admin/address-requests/:id/approve
@@ -1317,23 +1329,35 @@ export async function handleApi(request, env, session) {
 
     // GET /api/admin/pending-users — users awaiting role assignment
     if (path === '/api/admin/pending-users' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM users WHERE role = 'pending'`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT id, email, name, google_picture, created_at
          FROM users WHERE role = 'pending'
-         ORDER BY created_at DESC`
-      ).all();
-      return json(results);
+         ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // GET /api/admin/pending-posts — posts awaiting approval
     if (path === '/api/admin/pending-posts' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM posts WHERE approved = 0`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT p.*, u.name as author_name, u.email as author_email
          FROM posts p JOIN users u ON p.user_id = u.id
          WHERE p.approved = 0
-         ORDER BY p.created_at DESC`
-      ).all();
-      return json(results);
+         ORDER BY p.created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // PUT /api/admin/approve/post/:id
@@ -1364,11 +1388,17 @@ export async function handleApi(request, env, session) {
 
     // GET /api/admin/properties
     if (path === '/api/admin/properties' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM properties`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT p.*, a.full_label as address_label FROM properties p
-         JOIN addresses a ON p.address_id = a.id ORDER BY a.id`
-      ).all();
-      return json(results);
+         JOIN addresses a ON p.address_id = a.id ORDER BY a.id LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // POST /api/admin/properties — create a new property
@@ -1468,14 +1498,20 @@ export async function handleApi(request, env, session) {
 
     // GET /api/admin/consent-records — users who signed the agreement
     if (path === '/api/admin/consent-records' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM users WHERE agreement_signed_at IS NOT NULL`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT u.id, u.email, u.name, u.role, u.agreement_signed_at, u.agreement_ip,
                 u.google_picture, u.profile_picture, a.full_label as address_label
          FROM users u LEFT JOIN addresses a ON u.address_id = a.id
          WHERE u.agreement_signed_at IS NOT NULL
-         ORDER BY u.agreement_signed_at DESC`
-      ).all();
-      return json(results);
+         ORDER BY u.agreement_signed_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // GET /api/admin/content-history/:type/:id — view edit history for a post or comment
@@ -1493,19 +1529,31 @@ export async function handleApi(request, env, session) {
 
     // GET /api/admin/audit-log
     if (path === '/api/admin/audit-log' && method === 'GET') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM audit_log`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT al.*, u.name as admin_name, t.name as target_name, t.email as target_email
          FROM audit_log al
          JOIN users u ON al.admin_user_id = u.id
          LEFT JOIN users t ON al.target_user_id = t.id
-         ORDER BY al.created_at DESC LIMIT 100`
-      ).all();
-      return json(results);
+         ORDER BY al.created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // GET /api/admin/officer-chats — list all officer group threads
     if (path === '/api/admin/officer-chats' && method === 'GET') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
+      const offset = (page - 1) * limit;
+      const countResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM chat_threads WHERE type = 'officer'`
+      ).first();
       const { results } = await env.DB.prepare(
         `SELECT ct.id, ct.created_at, u.name as initiator_name, u.email as initiator_email,
                 (SELECT COUNT(*) FROM chat_messages WHERE thread_id = ct.id) as message_count,
@@ -1513,9 +1561,9 @@ export async function handleApi(request, env, session) {
          FROM chat_threads ct
          JOIN users u ON ct.user_a_id = u.id
          WHERE ct.type = 'officer'
-         ORDER BY ct.created_at DESC`
-      ).all();
-      return json(results);
+         ORDER BY ct.created_at DESC LIMIT ? OFFSET ?`
+      ).bind(limit, offset).all();
+      return json({ results, page, limit, total: countResult.cnt });
     }
 
     // GET /api/admin/export/chat/:threadId — export all messages in a thread as JSON

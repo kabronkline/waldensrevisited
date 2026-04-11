@@ -344,7 +344,8 @@
     async function loadPendingUsers() {
       try {
         const res = await fetch('/api/admin/pending-users');
-        const users = await res.json();
+        const data = await res.json();
+        const users = data.results || data;
         const container = document.getElementById('pendingUsers');
 
         if (users.length === 0) {
@@ -461,7 +462,8 @@
     async function loadPendingPosts() {
       try {
         const res = await fetch('/api/admin/pending-posts');
-        const posts = await res.json();
+        const data = await res.json();
+        const posts = data.results || data;
         const container = document.getElementById('pendingPosts');
 
         if (posts.length === 0) {
@@ -536,8 +538,10 @@
           fetch('/api/admin/users'),
           fetch('/api/addresses')
         ]);
-        allUsers = await usersRes.json();
-        allAddresses = await addrRes.json();
+        const usersData = await usersRes.json();
+        allUsers = usersData.results || usersData;
+        const addrData = await addrRes.json();
+        allAddresses = addrData.results || addrData;
 
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
@@ -928,7 +932,8 @@
     async function loadProperties() {
       try {
         const res = await fetch('/api/admin/properties');
-        allProperties = await res.json();
+        const propsData = await res.json();
+        allProperties = propsData.results || propsData;
         const tbody = document.getElementById('propertiesTableBody');
         tbody.innerHTML = '';
         allProperties.forEach(p => {
@@ -1130,7 +1135,8 @@
     async function loadAddressRequests() {
       try {
         const res = await fetch('/api/admin/address-requests');
-        const reqs = await res.json();
+        const data = await res.json();
+        const reqs = data.results || data;
         const container = document.getElementById('addressRequests');
         if (reqs.length === 0) { container.innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
         container.innerHTML = reqs.map(r => `
@@ -1176,7 +1182,8 @@
       if (session.role !== 'admin') return;
       try {
         const res = await fetch('/api/admin/officer-chats');
-        const chats = await res.json();
+        const data = await res.json();
+        const chats = data.results || data;
         const tbody = document.getElementById('officerChatsBody');
         if (chats.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
         tbody.innerHTML = chats.map(c => `

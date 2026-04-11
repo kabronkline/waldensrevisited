@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     /* Neighbors Tab */
     .neighbor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); }
@@ -60,6 +62,20 @@
       text-align: center;
       opacity: 0.7;
     }
+
+    /* Map Tab */
+    #neighborMap {
+      height: 600px;
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(139,115,85,0.15);
+      z-index: 1;
+      background: var(--sage-light);
+    }
+    .map-popup h4 { font-family: var(--font-display); color: var(--forest-deep); margin: 0 0 4px; }
+    .map-popup p { margin: 0; font-size: 0.85rem; color: var(--stone); }
+    .map-popup .residents { margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
+    .map-popup .resident-item { font-size: 0.85rem; color: var(--forest-deep); display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
 
     .connect-btn {
       padding: 4px 10px;
@@ -174,7 +190,13 @@
 
         <div class="admin-tabs" style="margin-bottom:var(--space-md);">
           <button class="admin-tab active" data-tab="properties-tab">Properties</button>
+          <button class="admin-tab" data-tab="map-tab">Map</button>
           <button class="admin-tab" data-tab="dogs-tab">Dogs</button>
+        </div>
+
+        <!-- Map Tab -->
+        <div class="tab-content" id="tab-map-tab" style="display:none;">
+          <div id="neighborMap"></div>
         </div>
 
         <!-- Properties Tab -->
@@ -332,9 +354,103 @@
         
         // Load data for the tab
         if (tabId === 'properties-tab') loadNeighbors();
+        if (tabId === 'map-tab') initNeighborMap();
         if (tabId === 'dogs-tab') { loadMyDogs(); loadBirthdays(); loadMyPlaydateDogs(); loadMatches(); }
       });
     });
+
+    // --- Map Logic ---
+    const PROPERTY_COORDS = {
+      1:  [40.3204, -83.2044], // Lot 1
+      2:  [40.3206, -83.2045], // Lot 2/3
+      3:  [40.3208, -83.2046], // Lot 4
+      4:  [40.3223, -83.2049], // Tract 1
+      5:  [40.3234, -83.2052], // Tract 3
+      6:  [40.3248, -83.2055], // Tract 4
+      7:  [40.3255, -83.2058], // Tract 5
+      8:  [40.3262, -83.2061], // Tract 6
+      9:  [40.3270, -83.2064], // Tract 7
+      10: [40.3278, -83.2067], // Tract 8
+      11: [40.3293, -83.2071], // Tract 9
+      12: [40.3299, -83.2073], // Tract 10/11
+      13: [40.3245, -83.2030], // Tract 12
+      14: [40.3247, -83.2015], // Tract 13
+      15: [40.3248, -83.2005], // Tract 14
+      16: [40.3250, -83.1990], // Tract 15
+      17: [40.3185, -83.2005], // Tract 20
+      18: [40.3184, -83.1995], // Tract 21
+      19: [40.3255, -83.2065], // Tract 22
+      20: [40.3240, -83.2060], // Tract 23
+      21: [40.3235, -83.2058], // Tract 24
+      22: [40.3230, -83.2055], // Tract 25
+      23: [40.3215, -83.2052], // Tract 26
+      24: [40.3205, -83.2050], // Tract 27
+      25: [40.3252, -83.1980]  // Tract 16
+    };
+
+    let neighborMap = null;
+
+    async function initNeighborMap() {
+      if (neighborMap) {
+        setTimeout(() => neighborMap.invalidateSize(), 100);
+        return;
+      }
+
+      neighborMap = L.map('neighborMap').setView([40.3240, -83.2040], 16);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(neighborMap);
+
+      try {
+        const res = await fetch('/api/neighbors');
+        const properties = await res.json();
+        
+        properties.forEach(p => {
+          const coords = PROPERTY_COORDS[p.address_id];
+          if (!coords) return;
+
+          const hasUsers = p.users && p.users.length > 0;
+          const isCurrentUser = p.users && p.users.some(u => u.status === 'you');
+          
+          // Only show markers for properties with users, or always show if we want a full plat map
+          // Requirements say: "Show a marker for each property that has a registered non-anonymous user"
+          // and "The current user's property should have a distinct marker"
+          if (!hasUsers) return;
+
+          const markerColor = isCurrentUser ? '#2d4a3e' : '#8b7355';
+          const markerRadius = isCurrentUser ? 10 : 7;
+
+          const marker = L.circleMarker(coords, {
+            radius: markerRadius,
+            fillColor: markerColor,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+          }).addTo(neighborMap);
+
+          let userHtml = p.users.map(u => {
+            const statusLabel = u.status === 'you' ? ' (You)' : (u.status === 'friend' ? ' (Connected)' : '');
+            return `<div class="resident-item"><span>${escapeHtml(u.name)}${statusLabel}</span></div>`;
+          }).join('');
+
+          marker.bindPopup(`
+            <div class="map-popup">
+              <h4>${escapeHtml(p.tract_lot)}</h4>
+              <p>${escapeHtml(p.street_address)}</p>
+              <div class="residents">
+                ${userHtml}
+              </div>
+            </div>
+          `);
+        });
+
+      } catch (e) {
+        console.error('Error loading map data:', e);
+      }
+    }
 
     // --- Neighbors Logic ---
     async function loadIncomingRequests() {
