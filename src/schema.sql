@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS addresses (
   id INTEGER PRIMARY KEY,
   tract_lot TEXT NOT NULL,
   street_address TEXT NOT NULL,
+  full_address TEXT,
   full_label TEXT NOT NULL
 );
 
@@ -190,6 +191,7 @@ CREATE TABLE IF NOT EXISTS chat_participants (
   thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   joined_at TEXT DEFAULT (datetime('now')),
+  last_read_at TEXT,
   UNIQUE(thread_id, user_id)
 );
 
@@ -247,29 +249,30 @@ CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_audit_admin ON audit_log(admin_user_id);
 
 -- Seed 25 neighborhood addresses
-INSERT OR IGNORE INTO addresses (id, tract_lot, street_address, full_label) VALUES
-  (1,  'Lot 1',       '423 Brindle Road',   'Lot 1 — 423 Brindle Road'),
-  (2,  'Lot 2/3',     '427 Brindle Road',   'Lot 2/3 — 427 Brindle Road'),
-  (3,  'Lot 4',       '431 Brindle Road',   'Lot 4 — 431 Brindle Road'),
-  (4,  'Tract 1',     '475 Brindle Road',   'Tract 1 — 475 Brindle Road'),
-  (5,  'Tract 3',     '505 Brindle Road',   'Tract 3 — 505 Brindle Road'),
-  (6,  'Tract 4',     '541 Brindle Road',   'Tract 4 — 541 Brindle Road'),
-  (7,  'Tract 5',     'Brindle Road',       'Tract 5 — Brindle Road'),
-  (8,  'Tract 6',     'Brindle Road',       'Tract 6 — Brindle Road'),
-  (9,  'Tract 7',     'Brindle Road',       'Tract 7 — Brindle Road'),
-  (10, 'Tract 8',     '623 Brindle Road',   'Tract 8 — 623 Brindle Road'),
-  (11, 'Tract 9',     '661 Brindle Road',   'Tract 9 — 661 Brindle Road'),
-  (12, 'Tract 10/11', '675 Brindle Road',   'Tract 10/11 — 675 Brindle Road'),
-  (13, 'Tract 12',    '6810 Houseman Road', 'Tract 12 — 6810 Houseman Road'),
-  (14, 'Tract 13',    '6724 Houseman Road', 'Tract 13 — 6724 Houseman Road'),
-  (15, 'Tract 14',    '6720 Houseman Road', 'Tract 14 — 6720 Houseman Road'),
-  (16, 'Tract 15',    'Houseman Road',      'Tract 15 — Houseman Road'),
-  (17, 'Tract 20',    '7070 Slocum Road',   'Tract 20 — 7070 Slocum Road'),
-  (18, 'Tract 21',    '7058 Slocum Road',   'Tract 21 — 7058 Slocum Road'),
-  (19, 'Tract 22',    '554 Brindle Road',   'Tract 22 — 554 Brindle Road'),
-  (20, 'Tract 23',    '510 Brindle Road',   'Tract 23 — 510 Brindle Road'),
-  (21, 'Tract 24',    '494 Brindle Road',   'Tract 24 — 494 Brindle Road'),
-  (22, 'Tract 25',    '480 Brindle Road',   'Tract 25 — 480 Brindle Road'),
-  (23, 'Tract 26',    '440 Brindle Road',   'Tract 26 — 440 Brindle Road'),
-  (24, 'Tract 27',    '420 Brindle Road',   'Tract 27 — 420 Brindle Road'),
-  (25, 'Tract 16',    'Houseman Road',      'Tract 16 — Houseman Road');
+INSERT OR IGNORE INTO addresses (id, tract_lot, street_address, full_address, full_label) VALUES
+  (1,  'Lot 1',       '423 Brindle Road',   '423 Brindle Road, Ostrander, OH 43061',   'Lot 1 — 423 Brindle Road'),
+  (2,  'Lot 2/3',     '427 Brindle Road',   '427 Brindle Road, Ostrander, OH 43061',   'Lot 2/3 — 427 Brindle Road'),
+  (3,  'Lot 4',       '431 Brindle Road',   '431 Brindle Road, Ostrander, OH 43061',   'Lot 4 — 431 Brindle Road'),
+  (4,  'Tract 1',     '475 Brindle Road',   '475 Brindle Road, Ostrander, OH 43061',   'Tract 1 — 475 Brindle Road'),
+  (5,  'Tract 3',     '505 Brindle Road',   '505 Brindle Road, Ostrander, OH 43061',   'Tract 3 — 505 Brindle Road'),
+  (6,  'Tract 4',     '541 Brindle Road',   '541 Brindle Road, Ostrander, OH 43061',   'Tract 4 — 541 Brindle Road'),
+  (7,  'Tract 5',     '563 Brindle Rd',     '563 Brindle Road, Ostrander, OH 43061',   'Tract 5 — 563 Brindle Rd'),
+  (8,  'Tract 6',     '561 Brindle Rd',     '561 Brindle Road, Ostrander, OH 43061',   'Tract 6 — 561 Brindle Rd'),
+  (9,  'Tract 7',     '585 Brindle Rd',     '585 Brindle Road, Ostrander, OH 43061',   'Tract 7 — 585 Brindle Rd'),
+  (10, 'Tract 8',     '623 Brindle Road',   '623 Brindle Road, Ostrander, OH 43061',   'Tract 8 — 623 Brindle Road'),
+  (11, 'Tract 9',     '661 Brindle Road',   '661 Brindle Road, Ostrander, OH 43061',   'Tract 9 — 661 Brindle Road'),
+  (12, 'Tract 10/11', '675 Brindle Road',   '675 Brindle Road, Ostrander, OH 43061',   'Tract 10/11 — 675 Brindle Road'),
+  (13, 'Tract 12',    '6810 Houseman Road', '6810 Houseman Road, Ostrander, OH 43061', 'Tract 12 — 6810 Houseman Road'),
+  (14, 'Tract 13',    '6724 Houseman Road', '6724 Houseman Road, Ostrander, OH 43061', 'Tract 13 — 6724 Houseman Road'),
+  (15, 'Tract 14',    '6720 Houseman Road', '6720 Houseman Road, Ostrander, OH 43061', 'Tract 14 — 6720 Houseman Road'),
+  (16, 'Tract 15',    '6670 Houseman Rd',   '6670 Houseman Road, Ostrander, OH 43061', 'Tract 15 — 6670 Houseman Rd'),
+  (17, 'Tract 20',    '7070 Slocum Road',   '7070 Slocum Road, Ostrander, OH 43061',   'Tract 20 — 7070 Slocum Road'),
+  (18, 'Tract 21',    '7058 Slocum Road',   '7058 Slocum Road, Ostrander, OH 43061',   'Tract 21 — 7058 Slocum Road'),
+  (19, 'Tract 22',    '554 Brindle Road',   '554 Brindle Road, Ostrander, OH 43061',   'Tract 22 — 554 Brindle Road'),
+  (20, 'Tract 23',    '510 Brindle Road',   '510 Brindle Road, Ostrander, OH 43061',   'Tract 23 — 510 Brindle Road'),
+  (21, 'Tract 24',    '494 Brindle Road',   '494 Brindle Road, Ostrander, OH 43061',   'Tract 24 — 494 Brindle Road'),
+  (22, 'Tract 25',    '480 Brindle Road',   '480 Brindle Road, Ostrander, OH 43061',   'Tract 25 — 480 Brindle Road'),
+  (23, 'Tract 26',    '440 Brindle Road',   '440 Brindle Road, Ostrander, OH 43061',   'Tract 26 — 440 Brindle Road'),
+  (24, 'Tract 27',    '420 Brindle Road',   '420 Brindle Road, Ostrander, OH 43061',   'Tract 27 — 420 Brindle Road'),
+  (25, 'Tract 16',    'Houseman Road',      'Houseman Road, Ostrander, OH 43061',      'Tract 16 — Houseman Road'),
+  (26, 'Tract 2',     '497 Brindle Rd',     '497 Brindle Road, Ostrander, OH 43061',   'Tract 2 — 497 Brindle Rd');

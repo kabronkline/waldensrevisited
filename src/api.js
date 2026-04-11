@@ -1198,6 +1198,65 @@ export async function handleApi(request, env, session) {
     return json({ success: true });
   }
 
+  // --- Officer chat endpoints ---
+  if (path.startsWith('/api/officer/')) {
+    if (!isOfficerOrAdmin(session.user.role)) {
+      return json({ error: 'Officer access required' }, 403);
+    }
+
+    // GET /api/officer/chats — list officer group threads with unread status
+    if (path === '/api/officer/chats' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT ct.id, ct.created_at, u.name as initiator_name, u.email as initiator_email,
+                (SELECT COUNT(*) FROM chat_messages WHERE thread_id = ct.id) as message_count,
+                (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
+                (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at,
+                CASE WHEN (
+                  SELECT MAX(cm2.created_at) FROM chat_messages cm2 WHERE cm2.thread_id = ct.id
+                ) > COALESCE(
+                  (SELECT MAX(cp2.last_read_at) FROM chat_participants cp2
+                   JOIN users u2 ON cp2.user_id = u2.id
+                   WHERE cp2.thread_id = ct.id
+                   AND u2.role IN ('president','secretary','treasurer','other_officer','admin')),
+                  '1970-01-01'
+                ) THEN 1 ELSE 0 END as has_unread
+         FROM chat_threads ct
+         JOIN users u ON ct.user_a_id = u.id
+         WHERE ct.type = 'officer'
+         ORDER BY latest_message_at DESC NULLS LAST`
+      ).all();
+      return json(results);
+    }
+
+    // GET /api/officer/chats/unread-count — count of threads with unread messages
+    if (path === '/api/officer/chats/unread-count' && method === 'GET') {
+      const result = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM chat_threads ct
+         WHERE ct.type = 'officer'
+         AND (
+           SELECT MAX(cm.created_at) FROM chat_messages cm WHERE cm.thread_id = ct.id
+         ) > COALESCE(
+           (SELECT MAX(cp.last_read_at) FROM chat_participants cp
+            JOIN users u ON cp.user_id = u.id
+            WHERE cp.thread_id = ct.id
+            AND u.role IN ('president','secretary','treasurer','other_officer','admin')),
+           '1970-01-01'
+         )`
+      ).first();
+      return json({ count: result.cnt });
+    }
+
+    // PUT /api/officer/chats/:threadId/read — mark thread as read by current officer
+    const officerReadMatch = path.match(/^\/api\/officer\/chats\/(\d+)\/read$/);
+    if (officerReadMatch && method === 'PUT') {
+      const threadId = parseInt(officerReadMatch[1]);
+      await env.DB.prepare(
+        "UPDATE chat_participants SET last_read_at = datetime('now') WHERE thread_id = ? AND user_id = ?"
+      ).bind(threadId, userId).run();
+      return json({ success: true });
+    }
+  }
+
   // --- Admin/Officer endpoints ---
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
@@ -1206,9 +1265,8 @@ export async function handleApi(request, env, session) {
       return json({ error: 'Elevated access required' }, 403);
     }
 
-    // GET /api/admin/users — admin only
+    // GET /api/admin/users — officers and admin
     if (path === '/api/admin/users' && method === 'GET') {
-      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
       const offset = (page - 1) * limit;
@@ -1227,11 +1285,10 @@ export async function handleApi(request, env, session) {
       return json({ results, page, limit, total: countResult.cnt });
     }
 
-    // PUT /api/admin/users/:id/role — admin only
+    // PUT /api/admin/users/:id/role — officers and admin (with role restrictions)
     // Now supports multi-role: body.roles is an array like ['member','officer','president']
     const roleMatch = path.match(/^\/api\/admin\/users\/(\d+)\/role$/);
     if (roleMatch && method === 'PUT') {
-      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const targetId = parseInt(roleMatch[1]);
 
       // Protect global admins from role changes
@@ -1250,6 +1307,12 @@ export async function handleApi(request, env, session) {
       const validSet = ['member', 'officer', 'president', 'secretary', 'treasurer', 'other_officer', 'admin', 'auditor'];
       for (const r of roles) {
         if (!validSet.includes(r)) return json({ error: `Invalid role: ${r}` }, 400);
+      }
+
+      // Officers can only assign member and other_officer; admin/president/secretary/treasurer require admin
+      const ADMIN_ONLY_ROLES = ['admin', 'president', 'secretary', 'treasurer', 'auditor'];
+      if (userRole !== 'admin' && roles.some(r => ADMIN_ONLY_ROLES.includes(r))) {
+        return json({ error: 'Only an admin can assign Admin, President, Secretary, or Treasurer roles' }, 403);
       }
 
       // Auditor is mutually exclusive — cannot combine with any other role
@@ -1443,7 +1506,7 @@ export async function handleApi(request, env, session) {
         `SELECT COUNT(*) as cnt FROM properties`
       ).first();
       const { results } = await env.DB.prepare(
-        `SELECT p.*, a.full_label as address_label FROM properties p
+        `SELECT p.*, a.full_label as address_label, a.street_address, a.full_address, a.tract_lot FROM properties p
          JOIN addresses a ON p.address_id = a.id ORDER BY a.id LIMIT ? OFFSET ?`
       ).bind(limit, offset).all();
       return json({ results, page, limit, total: countResult.cnt });
@@ -1500,8 +1563,14 @@ export async function handleApi(request, env, session) {
 
     // POST /api/admin/pre-register — create a user record before they log in
     if (path === '/api/admin/pre-register' && method === 'POST') {
-      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const body = await request.json();
+
+      // Officers can only pre-register as member or other_officer
+      const preRegRoles = body.roles || ['member'];
+      const ADMIN_ONLY_ROLES = ['admin', 'president', 'secretary', 'treasurer', 'auditor'];
+      if (userRole !== 'admin' && (Array.isArray(preRegRoles) ? preRegRoles : [preRegRoles]).some(r => ADMIN_ONLY_ROLES.includes(r))) {
+        return json({ error: 'Only an admin can assign Admin, President, Secretary, or Treasurer roles' }, 403);
+      }
 
       if (!body.email?.trim()) return json({ error: 'Email is required' }, 400);
       if (!body.name?.trim()) return json({ error: 'Name is required' }, 400);

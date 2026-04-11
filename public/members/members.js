@@ -119,13 +119,21 @@ function initMembersSidebar(activePage) {
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Officer Tools</div>
-      <a href="/members/officer-tools.html?tab=moderation" class="sidebar-link ${activePage === 'officer-tools' && !location.search.includes('officer-chats') ? 'active' : ''}">
+      <a href="/members/officer-tools.html?tab=approvals" class="sidebar-link ${activePage === 'officer-tools' && location.search.includes('approvals') ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Approvals <span id="officerApprovalBadge" class="sidebar-badge" style="display:none;"></span>
+      </a>
+      <a href="/members/officer-tools.html?tab=users" class="sidebar-link ${activePage === 'officer-tools' && location.search.includes('tab=users') ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </a>
+      <a href="/members/officer-tools.html?tab=moderation" class="sidebar-link ${activePage === 'officer-tools' && location.search.includes('moderation') ? 'active' : ''}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Moderation <span id="officerModerationBadge" class="sidebar-badge" style="display:none;"></span>
       </a>
       <a href="/members/officer-tools.html?tab=officer-chats" class="sidebar-link ${activePage === 'officer-tools' && location.search.includes('officer-chats') ? 'active' : ''}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Officer Group Chat
+        Officer Group Chat <span id="officerChatBadge" class="sidebar-badge" style="display:none;"></span>
       </a>
     </div>` : ''}
     ${isElevated ? `
@@ -187,8 +195,10 @@ function initMembersSidebar(activePage) {
       if (data.total > 0) {
         const badge = document.getElementById('adminBadge');
         const appBadge = document.getElementById('approvalsBadge');
+        const officerAppBadge = document.getElementById('officerApprovalBadge');
         if (badge) { badge.textContent = data.total; badge.style.display = ''; }
         if (appBadge) { appBadge.textContent = data.total; appBadge.style.display = ''; }
+        if (officerAppBadge) { officerAppBadge.textContent = data.total; officerAppBadge.style.display = ''; }
       }
     }).catch(() => {});
 
@@ -199,6 +209,14 @@ function initMembersSidebar(activePage) {
         const officerBadge = document.getElementById('officerModerationBadge');
         if (badge) { badge.textContent = data.count; badge.style.display = ''; }
         if (officerBadge) { officerBadge.textContent = data.count; officerBadge.style.display = ''; }
+      }
+    }).catch(() => {});
+
+    // Fetch officer chat unread count for badge
+    fetch('/api/officer/chats/unread-count').then(r => r.json()).then(data => {
+      if (data.count > 0) {
+        const badge = document.getElementById('officerChatBadge');
+        if (badge) { badge.textContent = data.count; badge.style.display = ''; }
       }
     }).catch(() => {});
   }

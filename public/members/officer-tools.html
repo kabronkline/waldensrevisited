@@ -52,16 +52,72 @@
 
       <div class="members-header">
         <h1>Officer Tools</h1>
-        <p>Content moderation and officer group chat management.</p>
+        <p>Manage users, moderate content, and handle officer group chats.</p>
       </div>
 
       <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="moderation">Moderation</button>
+        <button class="admin-tab active" data-tab="approvals">Approvals</button>
+        <button class="admin-tab" data-tab="users">Users</button>
+        <button class="admin-tab" data-tab="moderation">Moderation</button>
         <button class="admin-tab" data-tab="officer-chats">Officer Group Chat</button>
       </div>
 
+      <!-- Approvals Tab -->
+      <div class="tab-content" id="tab-approvals">
+        <div class="profile-section">
+          <h2>Access Requests</h2>
+          <div id="pendingUsers"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+        <div class="profile-section">
+          <h2>Address Change Requests</h2>
+          <div id="addressRequests"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div class="tab-content" id="tab-users" style="display:none;">
+        <div class="profile-section">
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('addUserForm').style.display = document.getElementById('addUserForm').style.display === 'none' ? '' : 'none';" style="margin-bottom:var(--space-sm);">Add User</button>
+          <div id="addUserForm" style="display:none;">
+            <h3 style="margin-bottom:4px;">Add User</h3>
+            <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in. When they sign in with Google using this email, they'll be automatically linked.</p>
+            <div class="form-group">
+              <label>Google Email Address *</label>
+              <input type="email" id="addUserEmail" placeholder="user@gmail.com">
+            </div>
+            <div class="form-group">
+              <label>Display Name *</label>
+              <input type="text" id="addUserName" placeholder="Full name">
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
+              <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Role</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="member" checked onchange="updateAddUserForm()"> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="other_officer" onchange="updateAddUserForm()"> Other Officer</label>
+            </div>
+            <div class="form-group" id="addUserAddrGroup">
+              <label>Property Address *</label>
+              <select id="addUserAddress"><option value="">Select address...</option></select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="addUserAnonymous" style="accent-color:var(--forest-deep);">
+                Set as anonymous (hide name/PII from non-officer users)
+              </label>
+            </div>
+            <button class="btn btn-primary" id="addUserBtn">Add User</button>
+          </div>
+        </div>
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>All Users</h2>
+          <table class="users-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Joined</th><th></th></tr></thead>
+            <tbody id="usersTableBody"><tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Moderation Tab -->
-      <div class="tab-content" id="tab-moderation">
+      <div class="tab-content" id="tab-moderation" style="display:none;">
         <div class="profile-section">
           <h2>Reported Content</h2>
           <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Posts and messages reported by members for review.</p>
@@ -83,6 +139,13 @@
 
     </div>
   </div>
+
+    <div class="modal-overlay" id="editUserModal" style="display:none;" onclick="if(event.target===this)closeEditUser()">
+      <div class="modal" style="max-width:520px;">
+        <h2 id="editUserTitle">Edit User</h2>
+        <div id="editUserContent"></div>
+      </div>
+    </div>
 
     </main>
   </div>
@@ -110,6 +173,7 @@
     })();
 
     const officerRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'];
+    const isAdmin = session.role === 'admin';
     if (!officerRoles.includes(session.role)) {
       document.body.innerHTML = '<div class="pending-page"><div class="pending-card"><h1>Access Denied</h1><p>You do not have permission to access this page.</p><a href="/members/" class="btn btn-secondary">Back to Members</a></div></div>';
     }
@@ -147,6 +211,18 @@
       return d.toLocaleDateString();
     }
 
+    function formatRole(role) {
+      const map = { member: 'Member', president: 'President', secretary: 'Secretary', treasurer: 'Treasurer', other_officer: 'Other Officer', admin: 'Admin', auditor: 'Auditor', officer: 'Officer' };
+      return map[role] || role;
+    }
+
+    function getRoleBadgeClass(role) {
+      if (role === 'admin') return 'admin';
+      if (['president','secretary','treasurer','other_officer','officer'].includes(role)) return 'officer';
+      if (role === 'member') return 'member';
+      return 'pending';
+    }
+
     function showToast(msg, type) {
       const t = document.createElement('div');
       t.className = 'toast ' + (type || '');
@@ -156,7 +232,23 @@
       setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
     }
 
-    // Refresh moderation badge after actions
+    // ---- Badges ----
+    async function refreshApprovalBadge() {
+      try {
+        const res = await fetch('/api/admin/pending-count');
+        const data = await res.json();
+        const badge = document.getElementById('officerApprovalBadge');
+        const adminBadge = document.getElementById('approvalsBadge');
+        if (data.total > 0) {
+          if (badge) { badge.textContent = data.total; badge.style.display = ''; }
+          if (adminBadge) { adminBadge.textContent = data.total; adminBadge.style.display = ''; }
+        } else {
+          if (badge) badge.style.display = 'none';
+          if (adminBadge) adminBadge.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+
     async function refreshModerationBadge() {
       try {
         const res = await fetch('/api/admin/moderation-count');
@@ -170,7 +262,421 @@
       } catch (e) {}
     }
 
-    // Content reports
+    async function refreshOfficerChatBadge() {
+      try {
+        const res = await fetch('/api/officer/chats/unread-count');
+        const data = await res.json();
+        const badge = document.getElementById('officerChatBadge');
+        if (data.count > 0) {
+          if (badge) { badge.textContent = data.count; badge.style.display = ''; }
+        } else {
+          if (badge) badge.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+
+    // ---- Pending Users (Approvals) ----
+    async function loadPendingUsers() {
+      try {
+        const res = await fetch('/api/admin/pending-users');
+        if (!res.ok) { document.getElementById('pendingUsers').innerHTML = '<p style="color:var(--stone);">No pending access requests.</p>'; return; }
+        const data = await res.json();
+        const users = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+        const container = document.getElementById('pendingUsers');
+
+        if (users.length === 0) {
+          container.innerHTML = '<p style="color:var(--stone);">No pending access requests.</p>';
+          return;
+        }
+
+        let addressOptions = '';
+        try {
+          const addrRes = await fetch('/api/addresses');
+          const addrs = await addrRes.json();
+          addressOptions = addrs.map(a => `<option value="${a.id}">${escapeHtml(a.full_label)}</option>`).join('');
+        } catch(e) {}
+
+        container.innerHTML = '';
+        users.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'pending-item';
+          item.style.flexDirection = 'column';
+          item.style.alignItems = 'stretch';
+          item.innerHTML = `
+            <div style="display:flex;gap:var(--space-xs);align-items:center;margin-bottom:8px;">
+              <div class="pending-item-preview" style="border-radius:50%;">
+                ${user.google_picture ? `<img src="${escapeHtml(user.google_picture)}" alt="">` : ''}
+              </div>
+              <div class="pending-item-info">
+                <h4>${escapeHtml(user.name)}</h4>
+                <span>${escapeHtml(user.email)} &middot; Joined ${formatTimeAgo(user.created_at)}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="member" checked disabled> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="other_officer" onchange="handleOfficerCb(${user.id}, this)"> Other Officer</label>
+              ${isAdmin ? `
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="president" onchange="handleOfficerCb(${user.id}, this)"> President</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="secretary" onchange="handleOfficerCb(${user.id}, this)"> Secretary</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="treasurer" onchange="handleOfficerCb(${user.id}, this)"> Treasurer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="role-cb" data-uid="${user.id}" value="admin"> Admin</label>
+              ` : ''}
+            </div>
+            <div style="margin-bottom:8px;">
+              <label style="font-size:0.85rem;font-weight:500;">Address (required):</label>
+              <select class="role-select" id="addr-for-${user.id}" style="width:100%;margin-top:4px;padding:6px 10px;">
+                <option value="">Select address...</option>
+                ${addressOptions}
+              </select>
+            </div>
+            <div class="pending-item-actions">
+              <button class="btn btn-primary btn-sm" onclick="approveUser(${user.id})">Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectUser(${user.id})">Reject</button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (e) {
+        showToast('Failed to load access requests', 'error');
+      }
+    }
+
+    function handleOfficerCb(uid, el) {
+      const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
+      const memberCb = [...cbs].find(c => c.value === 'member');
+      if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+    }
+
+    async function approveUser(uid) {
+      const cbs = document.querySelectorAll(`.role-cb[data-uid="${uid}"]`);
+      const roles = [...cbs].filter(c => c.checked).map(c => c.value);
+      if (roles.length === 0) roles.push('member');
+
+      const addrSelect = document.getElementById(`addr-for-${uid}`);
+      const addressId = addrSelect ? parseInt(addrSelect.value) : null;
+
+      if (!addressId) {
+        showToast('Address is required', 'error');
+        addrSelect.focus();
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/users/${uid}/role`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roles, address_id: addressId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`User approved as ${roles.map(formatRole).join(', ')}`, 'success');
+          loadPendingUsers();
+          refreshApprovalBadge();
+        } else {
+          showToast(data.error || 'Error', 'error');
+        }
+      } catch (e) {
+        showToast('Error approving user', 'error');
+      }
+    }
+
+    async function rejectUser(uid) {
+      if (!confirm('Reject this access request?')) return;
+      showToast('User request rejected', 'success');
+      loadPendingUsers();
+      refreshApprovalBadge();
+    }
+
+    // ---- Address Requests ----
+    async function loadAddressRequests() {
+      try {
+        const res = await fetch('/api/admin/address-requests');
+        if (!res.ok) { document.getElementById('addressRequests').innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
+        const data = await res.json();
+        const reqs = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+        const container = document.getElementById('addressRequests');
+        if (reqs.length === 0) { container.innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
+        container.innerHTML = reqs.map(r => `
+          <div class="pending-item" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;gap:var(--space-xs);align-items:center;margin-bottom:6px;">
+              <div class="pending-item-info">
+                <h4>${escapeHtml(r.name)}</h4>
+                <span>${escapeHtml(r.email)} &middot; ${formatTimeAgo(r.created_at)}</span>
+              </div>
+            </div>
+            <div style="font-size:0.85rem;color:var(--charcoal);margin-bottom:6px;">
+              ${r.current_address ? `<strong>From:</strong> ${escapeHtml(r.current_address)}<br>` : ''}
+              <strong>${r.current_address ? 'To' : 'Requested'}:</strong> ${escapeHtml(r.requested_address)}
+            </div>
+            <div class="pending-item-actions">
+              <button class="btn btn-primary btn-sm" onclick="approveAddress(${r.id})">Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectAddress(${r.id})">Reject</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function approveAddress(id) {
+      await fetch(`/api/admin/address-requests/${id}/approve`, { method: 'PUT' });
+      showToast('Address approved', 'success');
+      loadAddressRequests();
+      refreshApprovalBadge();
+    }
+
+    async function rejectAddress(id) {
+      await fetch(`/api/admin/address-requests/${id}/reject`, { method: 'PUT' });
+      showToast('Address rejected', 'info');
+      loadAddressRequests();
+      refreshApprovalBadge();
+    }
+
+    // ---- Users ----
+    let allUsers = [];
+    let allAddresses = [];
+
+    async function loadUsers() {
+      try {
+        const [usersRes, addrRes] = await Promise.all([
+          fetch('/api/admin/users'),
+          fetch('/api/addresses')
+        ]);
+        const usersData = await usersRes.json();
+        allUsers = usersData.results || usersData;
+        const addrData = await addrRes.json();
+        allAddresses = addrData.results || addrData;
+
+        // Populate add-user address picker
+        const addUserAddr = document.getElementById('addUserAddress');
+        if (addUserAddr && addUserAddr.options.length <= 1) {
+          allAddresses.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            opt.textContent = a.full_label;
+            addUserAddr.appendChild(opt);
+          });
+        }
+
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+
+        allUsers.forEach(user => {
+          const tr = document.createElement('tr');
+          const userRoles = user.roles ? user.roles.split(',') : [user.role];
+          const displayRoles = userRoles.filter(r => r !== 'officer' && r !== 'pending');
+          const roleBadges = displayRoles.length > 0
+            ? displayRoles.map(r => `<span class="role-badge ${getRoleBadgeClass(r)}" style="font-size:0.75rem;">${formatRole(r)}</span>`).join(' ')
+            : `<span class="role-badge pending" style="font-size:0.75rem;">Pending</span>`;
+
+          const globalTag = user.is_global_admin ? ' <span style="font-size:0.65rem;background:#ede9fe;color:#5b21b6;padding:1px 6px;border-radius:4px;font-weight:600;">GLOBAL</span>' : '';
+
+          tr.innerHTML = `
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="directory-avatar">
+                  ${user.profile_picture || user.google_picture
+                    ? `<img src="${escapeHtml(user.profile_picture || user.google_picture)}" alt="">`
+                    : ''}
+                </div>
+                ${escapeHtml(user.name)}${globalTag}
+              </div>
+            </td>
+            <td>${escapeHtml(user.email)}</td>
+            <td>${roleBadges}</td>
+            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+            <td>${user.is_global_admin
+              ? '<span style="font-size:0.8rem;color:var(--lichen);">System</span>'
+              : `<button class="btn btn-secondary btn-sm" onclick="openEditUser(${user.id})">Edit</button>`}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        showToast('Failed to load users', 'error');
+      }
+    }
+
+    // Edit User Modal
+    function openEditUser(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      const userRoles = user.roles ? user.roles.split(',') : [user.role];
+      document.getElementById('editUserTitle').textContent = 'Edit User';
+
+      const addressOptions = allAddresses.map(a =>
+        `<option value="${a.id}" ${user.address_id === a.id ? 'selected' : ''}>${escapeHtml(a.full_label)}</option>`
+      ).join('');
+
+      // Role checkboxes — officers can only assign member/other_officer; admin sees all
+      const roleCheckboxes = [
+        { value: 'member', label: 'Member' },
+        { value: 'other_officer', label: 'Other Officer' },
+      ];
+      if (isAdmin) {
+        roleCheckboxes.push(
+          { value: 'president', label: 'President' },
+          { value: 'secretary', label: 'Secretary' },
+          { value: 'treasurer', label: 'Treasurer' },
+          { value: 'admin', label: 'Admin' },
+          { value: 'auditor', label: 'Auditor' },
+        );
+      }
+
+      const checkboxesHtml = roleCheckboxes.map(r => {
+        const checked = userRoles.includes(r.value) ? 'checked' : '';
+        const disabled = r.value === 'member' ? 'disabled checked' : '';
+        return `<label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" class="edit-role-cb" value="${r.value}" ${checked} ${disabled}
+            onchange="handleEditRoleCb()"> ${r.label}
+        </label>`;
+      }).join('\n');
+
+      // Show warning if user has admin-only roles and viewer is not admin
+      const adminOnlyRoles = ['admin', 'president', 'secretary', 'treasurer', 'auditor'];
+      const hasAdminOnlyRole = userRoles.some(r => adminOnlyRoles.includes(r));
+      const roleWarning = (!isAdmin && hasAdminOnlyRole)
+        ? `<p style="font-size:0.8rem;color:#b45309;margin-bottom:6px;"><em>This user has roles that only an admin can modify (${userRoles.filter(r => adminOnlyRoles.includes(r)).map(formatRole).join(', ')}). You can update their address.</em></p>`
+        : '';
+
+      document.getElementById('editUserContent').innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--space-sm);padding-bottom:var(--space-xs);border-bottom:1px solid var(--sage);">
+          <div class="directory-avatar" style="width:48px;height:48px;">
+            ${user.profile_picture || user.google_picture
+              ? `<img src="${escapeHtml(user.profile_picture || user.google_picture)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+              : ''}
+          </div>
+          <div>
+            <div style="font-weight:500;">${escapeHtml(user.name)}</div>
+            <div style="font-size:0.85rem;color:var(--stone);">${escapeHtml(user.email)}</div>
+          </div>
+        </div>
+
+        ${roleWarning}
+
+        <div style="margin-bottom:var(--space-sm);">
+          <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:6px;">Roles</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="editRoleCheckboxes">
+            ${checkboxesHtml}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:var(--space-sm);">
+          <label style="font-size:0.85rem;font-weight:500;">Property Address</label>
+          <select id="editUserAddress" class="role-select" style="width:100%;margin-top:4px;padding:6px 10px;">
+            <option value="">Select address...</option>
+            ${addressOptions}
+          </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveUserRoles(${user.id})" style="width:100%;">Save Changes</button>
+      `;
+
+      handleEditRoleCb();
+      document.getElementById('editUserModal').style.display = '';
+    }
+
+    function handleEditRoleCb() {
+      const cbs = document.querySelectorAll('.edit-role-cb');
+      const get = v => [...cbs].find(c => c.value === v);
+      const isChecked = v => { const cb = get(v); return cb && cb.checked; };
+
+      const officerTitles = ['president', 'secretary', 'treasurer', 'other_officer'];
+      const anyOfficer = officerTitles.some(r => isChecked(r));
+      const memberCb = get('member');
+      const auditorCb = get('auditor');
+
+      // Auditor is mutually exclusive
+      if (isChecked('auditor')) {
+        cbs.forEach(cb => {
+          if (cb.value !== 'auditor') { cb.checked = false; cb.disabled = true; }
+        });
+        if (memberCb) { memberCb.checked = false; memberCb.disabled = true; }
+        return;
+      }
+
+      // Re-enable all if auditor unchecked
+      cbs.forEach(cb => { if (cb.value !== 'member') cb.disabled = false; });
+
+      // Officer titles auto-check member
+      if (anyOfficer || isChecked('admin')) {
+        if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+      } else {
+        if (memberCb) { memberCb.checked = true; memberCb.disabled = true; }
+      }
+    }
+
+    async function saveUserRoles(userId) {
+      const cbs = document.querySelectorAll('.edit-role-cb');
+      const roles = [...cbs].filter(c => c.checked).map(c => c.value);
+      if (roles.length === 0) roles.push('member');
+
+      const addressId = parseInt(document.getElementById('editUserAddress').value) || undefined;
+      const body = { roles };
+      if (addressId) body.address_id = addressId;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/role`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('User updated', 'success');
+          closeEditUser();
+          loadUsers();
+        } else {
+          showToast(data.error || 'Error', 'error');
+        }
+      } catch (e) {
+        showToast('Error updating user', 'error');
+      }
+    }
+
+    function closeEditUser() {
+      document.getElementById('editUserModal').style.display = 'none';
+    }
+
+    // Add User (Pre-register)
+    function updateAddUserForm() {
+      // Address always required for member/other_officer
+      document.getElementById('addUserAddrGroup').style.display = '';
+    }
+    updateAddUserForm();
+
+    document.getElementById('addUserBtn').addEventListener('click', async () => {
+      const email = document.getElementById('addUserEmail').value.trim();
+      const name = document.getElementById('addUserName').value.trim();
+      const role = document.querySelector('input[name="addUserRole"]:checked')?.value || 'member';
+      const addressId = parseInt(document.getElementById('addUserAddress').value);
+
+      if (!email || !name) { showToast('Email and name are required', 'error'); return; }
+      if (!addressId) { showToast('Address is required', 'error'); return; }
+
+      const body = {
+        email, name, roles: [role],
+        address_id: addressId,
+        is_anonymous: document.getElementById('addUserAnonymous')?.checked || false,
+      };
+
+      const btn = document.getElementById('addUserBtn');
+      btn.disabled = true; btn.textContent = 'Adding...';
+      try {
+        const res = await fetch('/api/admin/pre-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`${name} added successfully`, 'success');
+          document.getElementById('addUserEmail').value = '';
+          document.getElementById('addUserName').value = '';
+          document.getElementById('addUserAddress').value = '';
+          document.getElementById('addUserForm').style.display = 'none';
+          loadUsers();
+        } else { showToast(data.error, 'error'); }
+      } catch (e) { showToast('Error', 'error'); }
+      btn.disabled = false; btn.textContent = 'Add User';
+    });
+
+    // ---- Content Reports (Moderation) ----
     async function loadReports() {
       try {
         const res = await fetch('/api/admin/reports');
@@ -215,44 +721,48 @@
       refreshModerationBadge();
     }
 
-    // Officer group chats
+    // ---- Officer Group Chats ----
     async function loadOfficerChats() {
       try {
-        const res = await fetch('/api/admin/officer-chats');
-        const data = await res.json();
-        const chats = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+        const res = await fetch('/api/officer/chats');
+        if (!res.ok) { document.getElementById('officerChatsBody').innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
+        const chats = await res.json();
         const tbody = document.getElementById('officerChatsBody');
-        if (chats.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
-        tbody.innerHTML = chats.map(c => `
-          <tr>
-            <td>${escapeHtml(c.initiator_name)}</td>
+        if (!chats.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
+        tbody.innerHTML = chats.map(c => {
+          const unreadStyle = c.has_unread ? 'font-weight:600;' : '';
+          const unreadDot = c.has_unread ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-right:6px;"></span>' : '';
+          return `<tr style="${unreadStyle}">
+            <td>${unreadDot}${escapeHtml(c.initiator_name)}</td>
             <td>${escapeHtml(c.initiator_email)}</td>
             <td>${new Date(c.created_at + 'Z').toLocaleDateString()}</td>
             <td>${c.message_count}</td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="exportChat(${c.id})">Export</button>
-              <a href="/members/chat.html?thread=${c.id}" class="btn btn-primary btn-sm">Open</a>
+              <a href="#" class="btn btn-primary btn-sm" onclick="openOfficerChat(event, ${c.id})">Open</a>
             </td>
-          </tr>
-        `).join('');
+          </tr>`;
+        }).join('');
       } catch (e) { showToast('Failed to load officer chats', 'error'); }
     }
 
-    async function exportChat(threadId) {
-      try {
-        const res = await fetch(`/api/admin/export/chat/${threadId}`);
-        const data = await res.json();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `chat-thread-${threadId}-export.json`; a.click();
-        URL.revokeObjectURL(url);
-        showToast('Chat exported', 'success');
-      } catch (e) { showToast('Export failed', 'error'); }
+    async function openOfficerChat(event, threadId) {
+      event.preventDefault();
+      await fetch(`/api/officer/chats/${threadId}/read`, { method: 'PUT' });
+      window.location.href = `/members/chat.html?thread=${threadId}`;
     }
 
+    // ---- Init ----
+    loadPendingUsers();
+    loadAddressRequests();
+    loadUsers();
     loadReports();
     loadOfficerChats();
+
+    // Poll officer chats every 30 seconds
+    setInterval(() => {
+      loadOfficerChats();
+      refreshOfficerChatBadge();
+    }, 30000);
   </script>
 </body>
 </html>

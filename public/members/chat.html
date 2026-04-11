@@ -549,13 +549,13 @@
             </button>
           </div>
           <!-- Officer Contact Card (hidden until threads load) -->
-          <div class="officer-contact-card" id="officerCard" style="display:none;">
+          <div class="officer-contact-card" id="officerCard" style="display:none;background:#2d4a3e;color:#faf8f4;">
             <div class="occ-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <div>
-              <h3>HOA Officers</h3>
-              <p>Questions or concerns? Message the Board directly.</p>
+              <h3 style="color:#faf8f4;">HOA Officers</h3>
+              <p style="color:#faf8f4;opacity:0.85;">Questions or concerns? Message the Board directly.</p>
               <button class="btn-contact-officers" onclick="contactOfficers()">Message Officers</button>
             </div>
           </div>
@@ -665,10 +665,11 @@
       const list = document.getElementById('threadsList');
       const search = document.getElementById('threadSearch').value.toLowerCase();
 
-      // Hide officer card if user already has an officer thread
+      // Hide officer card if user already has an officer thread, or if user is an officer
+      const isOfficerRole = ['president','secretary','treasurer','other_officer','admin'].includes(session.role);
       const hasOfficerThread = threads.some(t => t.type === 'officer');
       const officerCard = document.getElementById('officerCard');
-      if (officerCard) officerCard.style.display = hasOfficerThread ? 'none' : '';
+      if (officerCard) officerCard.style.display = (hasOfficerThread || isOfficerRole) ? 'none' : '';
       const filtered = threads.filter(t => {
         const name = (t.other_user_name || '').toLowerCase();
         const preview = (t.last_message || '').toLowerCase();
@@ -734,6 +735,11 @@
 
       await loadMessages();
       startPolling();
+
+      // Mark officer threads as read when an officer opens them
+      if (activeThreadType === 'officer' && ['president','secretary','treasurer','other_officer','admin'].includes(session.role)) {
+        fetch(`/api/officer/chats/${threadId}/read`, { method: 'PUT' }).catch(() => {});
+      }
     }
 
     function goBackToThreads() {

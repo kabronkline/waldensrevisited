@@ -98,6 +98,7 @@
               <tr>
                 <th>Designation</th>
                 <th>Address</th>
+                <th>Parcel ID</th>
                 <th>Owner</th>
                 <th>Type</th>
                 <th>Acres</th>
@@ -107,7 +108,7 @@
               </tr>
             </thead>
             <tbody id="propertiesTableBody">
-              <tr><td colspan="8" style="color:var(--stone);">Loading...</td></tr>
+              <tr><td colspan="9" style="color:var(--stone);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -964,7 +965,8 @@
           const provSnippet = p.provenance ? escapeHtml(p.provenance.substring(0, 60)) + (p.provenance.length > 60 ? '...' : '') : '';
           tr.innerHTML = `
             <td style="font-weight:500;">${escapeHtml(p.wr_designation || '')}</td>
-            <td>${escapeHtml(p.address_label)}</td>
+            <td title="${escapeHtml(p.full_address || p.street_address || '')}">${escapeHtml(p.street_address || '')}</td>
+            <td style="font-size:0.8rem;">${escapeHtml(p.parcel_number || '')}</td>
             <td>${escapeHtml(p.owner_name)}</td>
             <td>${typeBadge}</td>
             <td>${p.acres || ''}</td>
@@ -990,7 +992,10 @@
       if (!parentRow) return;
       const detailRow = document.createElement('tr');
       detailRow.id = 'prov-detail-' + propId;
-      detailRow.innerHTML = `<td colspan="8" style="background:var(--cream);padding:12px 16px;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;border-left:3px solid var(--forest-deep);">${escapeHtml(prop.provenance)}</td>`;
+      detailRow.innerHTML = `<td colspan="9" style="background:var(--cream);padding:12px 16px;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;border-left:3px solid var(--forest-deep);">
+        ${prop.full_address ? `<div style="margin-bottom:6px;"><strong>Mailing Address:</strong> ${escapeHtml(prop.full_address)}</div>` : ''}
+        <div><strong>Chain of Title:</strong> ${escapeHtml(prop.provenance)}</div>
+      </td>`;
       parentRow.after(detailRow);
     }
 
