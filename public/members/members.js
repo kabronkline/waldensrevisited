@@ -185,6 +185,23 @@ function initMembersSidebar(activePage) {
       overlay.classList.remove('open');
     });
   }
+
+  // Top nav: show Members + avatar for logged-in users
+  const navSignIn = document.getElementById('navSignIn');
+  const navMembers = document.getElementById('navMembers');
+  const navAvatar = document.getElementById('navUserAvatar');
+  if (session && navSignIn && navMembers) {
+    navSignIn.style.display = 'none';
+    navMembers.style.display = 'flex';
+    if (navAvatar) {
+      if (session.picture) {
+        navAvatar.style.backgroundImage = 'url(' + session.picture + ')';
+      } else {
+        const initials = (session.name || '').split(' ').map(n => n[0]).join('').toUpperCase();
+        navAvatar.textContent = initials || 'U';
+      }
+    }
+  }
 }
 
 // @mention autocomplete

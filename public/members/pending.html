@@ -39,12 +39,23 @@
       <p>Thank you for signing the membership agreement. Your account has not yet been assigned a role by an administrator.</p>
       <p>To request access, please contact:</p>
       <p style="margin-top: var(--space-xs);"><a href="mailto:admin@waldensrevisited.org" style="font-weight:500; color:var(--forest-deep);">admin@waldensrevisited.org</a></p>
-      <p style="margin-top: var(--space-sm); font-size:0.9rem;">Once an administrator grants you a role, you'll have access to governance documents, the community wall, the Neighbor Dogs directory, and more.</p>
-      <p style="margin-top: var(--space-md);">
+      <p style="margin-top: var(--space-sm); font-size:0.9rem;">Once an administrator grants you a role, this page will automatically take you to the members area. You can also click the button below to check.</p>
+      <p style="margin-top: var(--space-md); display:flex; gap:var(--space-xs); justify-content:center;">
+        <a href="/members/" class="btn btn-primary">Check Access</a>
         <a href="/" class="btn btn-secondary">Return Home</a>
       </p>
     </div>
   </div>
 
+  <script>
+    // Auto-check every 15 seconds if the user has been approved
+    setInterval(() => {
+      fetch('/api/me').then(r => r.json()).then(user => {
+        if (user.role && user.role !== 'pending') {
+          window.location.href = '/members/';
+        }
+      }).catch(() => {});
+    }, 15000);
+  </script>
 </body>
 </html>
