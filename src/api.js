@@ -138,7 +138,7 @@ export async function handleApi(request, env, session) {
       await env.SESSIONS.put(`session:${session.id}`, JSON.stringify(session.user), { expirationTtl: 60 * 60 * 24 * 7 });
     }
   }
-  if (!session.user.agreementSigned && session.user.role !== 'auditor') return json({ error: 'Agreement not signed' }, 403);
+  if (!session.user.agreementSigned && session.user.role !== 'auditor' && session.user.role !== 'admin') return json({ error: 'Agreement not signed' }, 403);
   if (!hasAccess(session.user.role)) return json({ error: 'Account pending approval' }, 403);
 
   // --- Profile ---

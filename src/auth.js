@@ -177,7 +177,7 @@ export async function handleCallback(request, env) {
   if (user.role === 'pending') {
     // Pending users go straight to "contact admin" — no agreement needed yet
     redirectTo = '/members/pending.html';
-  } else if (!user.agreement_signed_at && user.role !== 'auditor') {
+  } else if (!user.agreement_signed_at && user.role !== 'auditor' && user.role !== 'admin') {
     // Users with a role but no agreement must sign first (auditors exempt)
     redirectTo = '/members/agreement.html';
   }
