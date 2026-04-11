@@ -95,8 +95,9 @@
           <div id="roleDisplay" class="role-badge" style="display:inline-block;"></div>
         </div>
         <div class="form-group">
-          <label for="userBirthday">Birthday (optional)</label>
-          <input type="date" id="userBirthday" style="width:auto;">
+          <label>Birthday (optional)</label>
+          <div id="userBirthdayPicker"></div>
+          <input type="hidden" id="userBirthday">
         </div>
       </div>
 
@@ -162,8 +163,8 @@
         </div>
       </div>
 
-      <!-- My Dogs -->
-      <div class="profile-section">
+      <!-- My Dogs (hidden for anonymous users) -->
+      <div class="profile-section" id="dogsSection">
         <h2>My Dogs</h2>
         <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage your dogs here or from the <a href="/members/neighbors.html">Dogs page</a>.</p>
         <div id="profileDogsGrid" style="display:flex;flex-direction:column;gap:var(--space-sm);"></div>
@@ -178,8 +179,9 @@
             <input type="text" id="profileDogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
           </div>
           <div class="form-group">
-            <label for="profileDogBirthday">Birthday</label>
-            <input type="date" id="profileDogBirthday">
+            <label>Birthday</label>
+            <div id="profileDogBirthdayPicker"></div>
+            <input type="hidden" id="profileDogBirthday">
           </div>
           <div class="form-group">
             <label for="profileDogBio">About</label>
@@ -209,6 +211,7 @@
     </main>
   </div>
 
+  <script src="/birthday-picker.js"></script>
   <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
@@ -236,7 +239,14 @@
         // Populate fields
         document.getElementById('displayName').value = currentUser.name || '';
         document.getElementById('email').value = currentUser.email || '';
+        // Initialize birthday pickers
+        createBirthdayPicker('userBirthdayPicker', currentUser.birthday || '', (val) => {
+          document.getElementById('userBirthday').value = val;
+        });
         document.getElementById('userBirthday').value = currentUser.birthday || '';
+        createBirthdayPicker('profileDogBirthdayPicker', '', (val) => {
+          document.getElementById('profileDogBirthday').value = val;
+        });
 
         // Role
         const roleEl = document.getElementById('roleDisplay');
@@ -315,6 +325,7 @@
             ? 'Neighbors can see your email and address.'
             : 'Your email and address are hidden. You can still chat in-app.';
           document.getElementById('identityOptions').style.display = anon ? 'none' : '';
+          document.getElementById('dogsSection').style.display = anon ? 'none' : '';
         };
 
         updatePrivacyUI();

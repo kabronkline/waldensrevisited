@@ -308,8 +308,9 @@
         <input type="text" id="dogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
       </div>
       <div class="form-group">
-        <label for="dogBirthday">Birthday</label>
-        <input type="date" id="dogBirthday">
+        <label>Birthday</label>
+        <div id="dogBirthdayPicker"></div>
+        <input type="hidden" id="dogBirthday">
       </div>
       <div class="form-group">
         <label for="dogBio">About</label>
@@ -337,6 +338,7 @@
     </div>
   </div>
 
+  <script src="/birthday-picker.js"></script>
   <script src="/members/members.js"></script>
   <script>
     const session = window.__session;
@@ -630,6 +632,8 @@
             document.getElementById('dogName').value = d.name || '';
             document.getElementById('dogBreed').value = d.breed || '';
             document.getElementById('dogBirthday').value = d.birthday || '';
+            document.getElementById('dogBirthdayPicker').innerHTML = '';
+            createBirthdayPicker('dogBirthdayPicker', d.birthday || '', (v) => { document.getElementById('dogBirthday').value = v; });
             document.getElementById('dogBio').value = d.bio || '';
             if (d.picture) { document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(d.picture)}" alt="">`; dogPhotoData = d.picture; }
           }
@@ -638,6 +642,8 @@
         document.getElementById('dogModalTitle').textContent = 'Add Dog';
         document.getElementById('dogEditId').value = '';
         ['dogName','dogBreed','dogBirthday','dogBio'].forEach(k => document.getElementById(k).value = '');
+        document.getElementById('dogBirthdayPicker').innerHTML = '';
+        createBirthdayPicker('dogBirthdayPicker', '', (v) => { document.getElementById('dogBirthday').value = v; });
         document.getElementById('dogPhotoPreview').innerHTML = '<span class="dog-placeholder">&#128054;</span>';
       }
     }
