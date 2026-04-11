@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none"><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li id="navSignIn"><a href="/members/" class="nav-signin">Sign In</a></li>
+        <li id="navMembers" style="display:none;" class="nav-user-profile">
+          <a href="/members/" class="nav-members-link">Members</a>
+          <a href="/members/profile.html" class="nav-avatar" id="navUserAvatar" title="Your Profile"></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <main class="members-main">
+      <div class="container">
+
+        <div class="members-header">
+          <h1>Audit</h1>
+          <p>Membership consent records and administrative activity log.</p>
+        </div>
+
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-tab="consent">Consent Records</button>
+          <button class="admin-tab" data-tab="audit">Activity Log</button>
+        </div>
+
+        <!-- Consent Records -->
+        <div class="tab-content" id="tab-consent">
+          <div class="profile-section">
+            <h2>Membership Consent Records</h2>
+            <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-md);">All users who have digitally signed the HOA Membership Agreement. Click Certificate to generate a printable document.</p>
+            <div style="overflow-x:auto;">
+              <table class="users-table" id="consentTable">
+                <thead>
+                  <tr><th>Name</th><th>Email</th><th>Role</th><th>Address</th><th>Signed</th><th></th></tr>
+                </thead>
+                <tbody id="consentBody"><tr><td colspan="6" style="color:var(--stone);">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="tab-content" id="tab-audit" style="display:none;">
+          <div class="profile-section">
+            <h2>Activity Log</h2>
+            <div style="overflow-x:auto;">
+              <table class="users-table">
+                <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+                <tbody id="auditBody"><tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+    initMembersSidebar('audit');
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    // Tab switching
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).style.display = '';
+      });
+    });
+
+    // URL tab param
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    if (urlTab) {
+      const tabBtn = document.querySelector(`.admin-tab[data-tab="${urlTab}"]`);
+      if (tabBtn) tabBtn.click();
+    }
+
+    // Load consent records
+    async function loadConsent() {
+      try {
+        const res = await fetch('/api/admin/consent-records');
+        const records = await res.json();
+        const tbody = document.getElementById('consentBody');
+        if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--stone);">No records yet.</td></tr>'; return; }
+        tbody.innerHTML = records.map(r => {
+          const signedDate = new Date(r.agreement_signed_at + 'Z').toLocaleString();
+          return `<tr>
+            <td>${escapeHtml(r.name)}</td>
+            <td style="font-size:0.85rem;">${escapeHtml(r.email)}</td>
+            <td><span class="role-badge ${getRoleBadgeClass(r.role)}">${formatRole(r.role)}</span></td>
+            <td style="font-size:0.85rem;">${r.address_label ? escapeHtml(r.address_label) : '<span style="color:var(--lichen);">—</span>'}</td>
+            <td style="font-size:0.85rem;">${signedDate}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick='generateCert(${JSON.stringify({name:r.name,email:r.email,role:r.role,address:r.address_label,signed:r.agreement_signed_at,ip:r.agreement_ip})})'>Certificate</button></td>
+          </tr>`;
+        }).join('');
+      } catch (e) { showToast('Failed to load records', 'error'); }
+    }
+
+    function generateCert(r) {
+      const signedDate = new Date(r.signed + 'Z').toLocaleString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
+      const w = window.open('', '_blank');
+      w.document.write(`<!DOCTYPE html><html><head><title>Certificate — ${r.name}</title><style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap');*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;color:#1a2e23}
+.cert{max-width:750px;margin:40px auto;padding:50px;border:3px solid #2d4a3e;position:relative}.cert::before{content:'';position:absolute;inset:6px;border:1px solid #b8cec4}
+.cert-header{text-align:center;margin-bottom:30px}.cert-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:#2d4a3e;margin-bottom:4px}.cert-subtitle{font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;color:#6b8f7a;margin-bottom:20px}.cert-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:#2d4a3e;margin-bottom:6px}.cert-desc{font-size:0.9rem;color:#5a6b60}
+.cert-body{margin:30px 0;line-height:1.8;font-size:0.95rem}.cert-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:#2d4a3e;text-align:center;margin:20px 0;padding:10px 0;border-bottom:2px solid #2d4a3e;display:inline-block}
+.cert-details{margin:20px 0;font-size:0.85rem;color:#5a6b60}.cert-details dt{font-weight:500;color:#2d3b33;float:left;width:140px;clear:left}.cert-details dd{margin-left:150px;margin-bottom:6px}
+.cert-footer{margin-top:40px;text-align:center;font-size:0.75rem;color:#7a8b80;border-top:1px solid #b8cec4;padding-top:15px}.cert-legal{margin-top:20px;font-size:0.8rem;color:#5a6b60;line-height:1.6;font-style:italic}
+@media print{.no-print{display:none!important}.cert{border:3px solid #2d4a3e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cert::before{border:1px solid #b8cec4!important}}</style></head><body>
+<div style="text-align:center;margin:20px" class="no-print"><button onclick="window.print()" style="padding:10px 24px;background:#2d4a3e;color:white;border:none;border-radius:6px;font-size:0.95rem;cursor:pointer">Print Certificate</button></div>
+<div class="cert"><div class="cert-header"><div class="cert-logo">Walden's Revisited</div><div class="cert-subtitle">Scioto Township · Delaware County · Ohio</div><div class="cert-title">Certificate of Digital Homeowners Agreement</div><div class="cert-desc">Membership Acknowledgment</div></div>
+<div class="cert-body"><p>This certifies that the following individual has digitally executed the Walden's Revisited HOA Membership Agreement, affirming that they have fully read and agree to be bound by the <strong>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</strong>, filed March 9, 2019, as Instrument #2019-00009690, including its attached Bylaws.</p>
+<div style="text-align:center"><span class="cert-name">${r.name}</span></div>
+<dl class="cert-details"><dt>Email:</dt><dd>${r.email}</dd><dt>Role:</dt><dd>${r.role.charAt(0).toUpperCase()+r.role.slice(1)}</dd><dt>Property:</dt><dd>${r.address||'Not specified'}</dd><dt>Date Signed:</dt><dd>${signedDate}</dd><dt>IP Address:</dt><dd>${r.ip||'Not recorded'}</dd></dl>
+<p class="cert-legal">This electronic acknowledgment constitutes a legally binding agreement pursuant to the E-SIGN Act (15 U.S.C. §7001) and Ohio Rev. Code §1306.01.</p></div>
+<div class="cert-footer"><p>Walden's Revisited HOA · Brindle Road, Scioto Township, Delaware County, Ohio</p><p>Generated ${new Date().toLocaleDateString()} · waldensrevisited.org</p></div></div></body></html>`);
+      w.document.close();
+    }
+
+    // Load audit log
+    async function loadAudit() {
+      try {
+        const res = await fetch('/api/admin/audit-log');
+        const logs = await res.json();
+        const tbody = document.getElementById('auditBody');
+        if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No activity yet.</td></tr>'; return; }
+        tbody.innerHTML = logs.map(l => `<tr>
+          <td style="font-size:0.85rem;">${new Date(l.created_at).toLocaleString()}</td>
+          <td>${escapeHtml(l.admin_name)}</td>
+          <td>${escapeHtml(l.action)}</td>
+          <td>${l.target_name ? escapeHtml(l.target_name) : '—'}</td>
+          <td style="font-size:0.85rem;">${l.details ? escapeHtml(l.details) : '—'}</td>
+        </tr>`).join('');
+      } catch (e) { showToast('Failed to load audit log', 'error'); }
+    }
+
+    // Nav avatar
+    (function() {
+      if (session) {
+        document.getElementById('navSignIn').style.display = 'none';
+        document.getElementById('navMembers').style.display = 'flex';
+        var avatar = document.getElementById('navUserAvatar');
+        if (avatar && session.picture) {
+          avatar.style.backgroundImage = 'url(' + session.picture + ')';
+        } else if (avatar) {
+          var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
+          avatar.textContent = initials || 'U';
+        }
+      }
+    })();
+
+    loadConsent();
+    loadAudit();
+  </script>
+</body>
+</html>

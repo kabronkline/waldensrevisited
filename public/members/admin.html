@@ -54,10 +54,8 @@
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="posts">Approval Queue</button>
         <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
-        <button class="admin-tab" data-tab="consent">Consent Records</button>
-        <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
+                <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
         <button class="admin-tab" data-tab="officer-chats" id="officerChatsTab">Officer Chats</button>
-        <button class="admin-tab" data-tab="audit">Audit Log</button>
       </div>
 
       <!-- Approval Queue Tab -->
@@ -146,16 +144,6 @@
           </div>
           <input type="hidden" id="propEditId" value="">
           <button class="btn btn-primary" id="propSaveBtn" onclick="saveProperty()" style="width:100%;">Save Property</button>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-consent" style="display:none;">
-        <div class="profile-section">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-sm);">
-            <h2 style="margin-bottom:0;">Membership Consent Records</h2>
-          </div>
-          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-md);">All users who have digitally signed the Walden's Revisited HOA Membership Agreement. Click a record to generate a printable PDF certificate.</p>
-          <div id="consentRecords"><p style="color:var(--stone);">Loading...</p></div>
         </div>
       </div>
 
@@ -262,26 +250,6 @@
         </div>
       </div>
 
-      <!-- Audit Log Tab -->
-      <div class="tab-content" id="tab-audit" style="display:none;">
-        <div class="profile-section" style="overflow-x:auto;">
-          <h2>Recent Activity</h2>
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
     </div>
   </div>
