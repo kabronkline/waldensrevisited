@@ -245,6 +245,8 @@ h1, h2, h3, h4 {
   letter-spacing: 0.02em;
   transition: color 0.3s;
   position: relative;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .nav-links a::after {
@@ -258,8 +260,12 @@ h1, h2, h3, h4 {
   transition: width 0.3s;
 }
 
-.nav-links a:hover { color: var(--forest-deep); }
-.nav-links a:hover::after { width: 100%; }
+.nav-links a:hover,
+.nav-links a:active,
+.nav-links a:focus { color: var(--forest-deep); cursor: pointer; text-decoration: none; outline: none; }
+.nav-links a:hover::after,
+.nav-links a:active::after,
+.nav-links a:focus::after { width: 100%; }
 
 .nav-toggle {
   display: none;
