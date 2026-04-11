@@ -323,6 +323,7 @@ export async function handleApi(request, env, session) {
           p.author_name = 'Anonymous Member';
           p.author_profile_picture = null;
           p.author_google_picture = null;
+          p.author_avatar_id = null;
         }
       });
     }
