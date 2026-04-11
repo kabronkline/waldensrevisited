@@ -174,8 +174,7 @@
 
         <div class="admin-tabs" style="margin-bottom:var(--space-md);">
           <button class="admin-tab active" data-tab="properties-tab">Properties</button>
-          <button class="admin-tab" data-tab="dogs-tab">Neighbor Dogs</button>
-          <button class="admin-tab" data-tab="playdate-tab">Dog Play Dates</button>
+          <button class="admin-tab" data-tab="dogs-tab">Dogs</button>
         </div>
 
         <!-- Properties Tab -->
@@ -206,37 +205,31 @@
 
         <!-- Dogs Tab -->
         <div class="tab-content" id="tab-dogs-tab" style="display:none;">
-          <!-- Upcoming Birthdays (small section at top) -->
-          <div id="birthdaysSection" style="display:none;margin-bottom:var(--space-lg);">
-            <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">&#127874; Upcoming Birthdays</h3>
-            <div id="birthdaysList"></div>
-          </div>
-
-          <div class="profile-section">
-            <h2>Community Dogs</h2>
-            <div class="dogs-grid" id="communityDogsGrid">
-              <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
+          <!-- Upcoming Birthdays -->
+          <div id="birthdaysSection" style="display:none;margin-bottom:var(--space-md);">
+            <div class="profile-section">
+              <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">&#127874; Upcoming Birthdays</h3>
+              <div id="birthdaysList"></div>
             </div>
           </div>
 
+          <!-- My Dogs -->
           <div class="profile-section">
             <h2>My Dogs</h2>
-            <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Add up to 5 dogs. Manage your dogs here or from your Profile.</p>
+            <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Add up to 5 dogs. Manage here or from your Profile.</p>
             <div class="dogs-grid" id="myDogsGrid"></div>
           </div>
-        </div>
 
-        <!-- Play Dates Tab -->
-        <div class="tab-content" id="tab-playdate-tab" style="display:none;">
+          <!-- Play Dates -->
           <div id="playdate-setup">
             <div class="profile-section">
-              <h2>My Dogs &mdash; Play Date Status</h2>
-              <p style="color:var(--stone);margin-bottom:var(--space-sm);">Choose which dogs to include in Play Dates and add a tagline.</p>
+              <h2>Play Dates</h2>
+              <p style="color:var(--stone);margin-bottom:var(--space-sm);">Opt your dogs in for play dates with friends' dogs. You must be friends with a neighbor to match.</p>
               <div class="dogs-grid" id="playdateMyDogsGrid">
                 <p style="color:var(--stone);grid-column:1/-1;">Loading...</p>
               </div>
             </div>
-            <div class="profile-section" style="margin-top:var(--space-md);">
+            <div class="profile-section" style="margin-top:var(--space-sm);">
               <h2>Your Matches</h2>
               <div id="playdateMatchesList">
                 <p style="color:var(--stone);">Loading...</p>
@@ -345,8 +338,7 @@
         
         // Load data for the tab
         if (tabId === 'properties-tab') loadNeighbors();
-        if (tabId === 'dogs-tab') { loadMyDogs(); loadCommunityDogs(); loadBirthdays(); }
-        if (tabId === 'playdate-tab') { loadMyPlaydateDogs(); loadMatches(); }
+        if (tabId === 'dogs-tab') { loadMyDogs(); loadBirthdays(); loadMyPlaydateDogs(); loadMatches(); }
       });
     });
 
@@ -465,23 +457,6 @@
       } catch (e) { showToast('Failed to load dogs', 'error'); }
     }
 
-    async function loadCommunityDogs() {
-      try {
-        const res = await fetch('/api/members');
-        const members = await res.json();
-        const grid = document.getElementById('communityDogsGrid');
-        grid.innerHTML = '';
-        let total = 0;
-        for (const m of members) {
-          if (m.id === session.userId) continue;
-          const dr = await fetch(`/api/members/${m.id}/dogs`);
-          const dogs = await dr.json();
-          dogs.forEach(d => { grid.appendChild(createDogCard({...d, ownerName: m.name}, false)); total++; });
-        }
-        if (total === 0) grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;">No community dogs yet.</p>';
-      } catch (e) { }
-    }
-
     function createDogCard(dog, isOwn) {
       const card = document.createElement('div');
       card.className = 'dog-card';
@@ -572,7 +547,7 @@
         }
         showToast('Saved', 'success');
         document.getElementById('dogModal').style.display = 'none';
-        loadMyDogs(); loadCommunityDogs();
+        loadMyDogs();
       } catch (e) { showToast('Error', 'error'); }
     };
 
