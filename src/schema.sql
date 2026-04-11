@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS posts (
   image TEXT,
   approved INTEGER DEFAULT 0,
   visibility TEXT DEFAULT 'everybody',
+  allow_comments INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

@@ -326,8 +326,8 @@ export async function handleApi(request, env, session) {
     const autoApprove = (visibility !== 'everybody' || canAutoApprovePost(session.user.role)) ? 1 : 0;
 
     const result = await env.DB.prepare(
-      'INSERT INTO posts (user_id, content, image, approved, visibility) VALUES (?, ?, ?, ?, ?)'
-    ).bind(userId, body.content.trim(), body.image || null, autoApprove, visibility).run();
+      'INSERT INTO posts (user_id, content, image, approved, visibility, allow_comments) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(userId, body.content.trim(), body.image || null, autoApprove, visibility, body.allow_comments !== undefined ? (body.allow_comments ? 1 : 0) : 1).run();
 
     const message = autoApprove ? 'Post published.' : 'Post visible after approval.';
     return json({ id: result.meta.last_row_id, approved: autoApprove, success: true, message }, 201);

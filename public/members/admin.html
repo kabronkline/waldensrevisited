@@ -74,7 +74,8 @@
           <div id="addressRequests"><p style="color:var(--stone);">Loading...</p></div>
         </div>
         <div class="profile-section">
-          <h2>Pending Posts</h2>
+          <h2>Pending Posts — Public Visibility</h2>
+          <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">These posts are set to <strong>"All Members"</strong> visibility. Approving a post makes it visible to every logged-in member on the Community Wall. Posts to Friends or Officers are auto-approved and do not appear here.</p>
           <div id="pendingPosts"><p style="color:var(--stone);">Loading...</p></div>
         </div>
       </div>
@@ -507,15 +508,21 @@
             previewHtml = `<div class="pending-item-preview"><img src="${escapeHtml(post.image)}" alt=""></div>`;
           }
 
+          const commentsLabel = post.allow_comments === 0 ? 'Comments: Off' : 'Comments: On';
+
           item.innerHTML = `
             ${previewHtml}
             <div class="pending-item-info">
               <h4>${escapeHtml(post.author_name)}</h4>
               <span>${escapeHtml(post.author_email)} &middot; ${formatTimeAgo(post.created_at)}</span>
-              <p style="margin-top:4px;font-size:0.9rem;color:var(--charcoal);white-space:pre-wrap;">${escapeHtml(post.content.substring(0, 200))}${post.content.length > 200 ? '...' : ''}</p>
+              <div style="margin-top:6px;padding:8px 12px;background:var(--mist);border-radius:8px;font-size:0.9rem;color:var(--charcoal);white-space:pre-wrap;border-left:3px solid var(--pond-surface);">${escapeHtml(post.content.substring(0, 300))}${post.content.length > 300 ? '...' : ''}</div>
+              <div style="margin-top:6px;display:flex;gap:var(--space-sm);font-size:0.8rem;color:var(--stone);">
+                <span style="background:rgba(45,74,62,0.06);padding:2px 8px;border-radius:4px;">Visibility: All Members</span>
+                <span style="background:rgba(45,74,62,0.06);padding:2px 8px;border-radius:4px;">${commentsLabel}</span>
+              </div>
             </div>
             <div class="pending-item-actions" style="flex-direction:column;">
-              <button class="btn btn-primary btn-sm" onclick="approvePost(${post.id})">Approve</button>
+              <button class="btn btn-primary btn-sm" onclick="approvePost(${post.id})">Approve for All</button>
               <button class="btn btn-danger btn-sm" onclick="rejectPost(${post.id})">Reject</button>
             </div>
           `;

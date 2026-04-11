@@ -102,6 +102,10 @@
             </div>
           </div>
 
+          <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--stone);cursor:pointer;" title="Allow other members to comment on this post">
+            <input type="checkbox" id="allowComments" checked style="accent-color:var(--forest-deep);">
+            Comments
+          </label>
           <button class="btn-post" id="postBtn">Post</button>
         </div>
       </div>
@@ -227,7 +231,8 @@
 
       try {
         const visibility = document.querySelector('input[name="postVis"]:checked').value;
-        const body = { content, visibility };
+        const allowComments = document.getElementById('allowComments').checked;
+        const body = { content, visibility, allow_comments: allowComments };
         if (postImageData) body.image = postImageData;
 
         const res = await fetch('/api/posts', {
@@ -323,10 +328,10 @@
         <div class="post-content">${renderWithMentions(post.content)}</div>
         ${imageHtml}
         <div class="post-engagement">
-          <button class="engage-btn" onclick="toggleComments(${post.id}, this)">
+          ${post.allow_comments !== 0 ? `<button class="engage-btn" onclick="toggleComments(${post.id}, this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             ${post.comment_count > 0 ? `${post.comment_count}` : ''} Comment${post.comment_count !== 1 ? 's' : ''}
-          </button>
+          </button>` : '<span style="font-size:0.8rem;color:var(--lichen);">Comments off</span>'}
         </div>
         <div class="comments-section" id="comments-${post.id}"></div>
       `;
