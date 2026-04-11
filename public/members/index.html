@@ -306,7 +306,16 @@
       const div = document.createElement('div');
       div.className = 'post-card';
 
-      const authorPic = post.author_profile_picture || post.author_google_picture || '';
+      let authorAvatarHtml;
+      if (post.author_profile_picture) {
+        authorAvatarHtml = `<img src="${escapeHtml(post.author_profile_picture)}" alt="">`;
+      } else if (post.author_avatar_id && typeof getAvatarSvg === 'function') {
+        authorAvatarHtml = getAvatarSvg(post.author_avatar_id);
+      } else if (post.author_google_picture) {
+        authorAvatarHtml = `<img src="${escapeHtml(post.author_google_picture)}" alt="">`;
+      } else {
+        authorAvatarHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+      }
       const authorName = post.author_anonymous ? 'Anonymous Member' : escapeHtml(post.author_name);
       const roleLabel = formatRole(post.author_role);
       const timeAgo = formatTimeAgo(post.created_at);
@@ -329,7 +338,7 @@
       div.innerHTML = `
         <div class="post-header">
           <div class="post-avatar">
-            ${authorPic ? `<img src="${escapeHtml(authorPic)}" alt="">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}
+            ${authorAvatarHtml}
           </div>
           <div class="post-meta" style="flex:1;">
             <span class="post-meta-name">${authorName} <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.65rem;vertical-align:middle;">${roleLabel}</span></span>
