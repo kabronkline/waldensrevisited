@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pending Approval — Walden's Revisited</title>
+  <title>Request Access — Walden's Revisited</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -15,12 +15,7 @@
   <nav class="nav" id="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
-        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
-          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none"><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Walden's Revisited
       </a>
       <ul class="nav-links" id="navLinks">
@@ -30,24 +25,156 @@
   </nav>
 
   <div class="pending-page">
-    <div class="pending-card">
-      <svg class="pending-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <polyline points="12 6 12 12 16 14"/>
-      </svg>
-      <h1>Access Not Yet Granted</h1>
-      <p>Thank you for signing the membership agreement. Your account has not yet been assigned a role by an administrator.</p>
-      <p>To request access, please contact:</p>
-      <p style="margin-top: var(--space-xs);"><a href="mailto:admin@waldensrevisited.org" style="font-weight:500; color:var(--forest-deep);">admin@waldensrevisited.org</a></p>
-      <p style="margin-top: var(--space-sm); font-size:0.9rem;">Once an administrator grants you a role, this page will automatically take you to the members area. You can also click the button below to check.</p>
-      <p style="margin-top: var(--space-md); display:flex; gap:var(--space-xs); justify-content:center;">
-        <a href="/members/" class="btn btn-primary">Check Access</a>
-        <a href="/" class="btn btn-secondary">Return Home</a>
-      </p>
+    <div class="pending-card" style="max-width:520px;text-align:left;">
+
+      <!-- Status: already submitted -->
+      <div id="submittedView" style="display:none;text-align:center;">
+        <svg class="pending-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <h1 style="font-size:1.4rem;">Access Request Submitted</h1>
+        <p>Your request is awaiting approval. You'll be redirected automatically once approved.</p>
+        <p style="margin-top:var(--space-xs);font-size:0.9rem;color:var(--stone);">You can also contact <a href="mailto:admin@waldensrevisited.org" style="font-weight:500;color:var(--forest-deep);">admin@waldensrevisited.org</a></p>
+        <p style="margin-top:var(--space-md);display:flex;gap:var(--space-xs);justify-content:center;">
+          <a href="/members/" class="btn btn-primary">Check Access</a>
+          <a href="/" class="btn btn-secondary">Return Home</a>
+        </p>
+      </div>
+
+      <!-- Request form -->
+      <div id="requestView">
+        <h1 style="font-family:var(--font-display);font-size:1.4rem;color:var(--forest-deep);margin-bottom:var(--space-xs);text-align:center;">Request Access</h1>
+        <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-md);text-align:center;">Select your role and property to request membership access. An administrator will review your request.</p>
+
+        <!-- Role selection -->
+        <div style="margin-bottom:var(--space-md);">
+          <label style="font-size:0.85rem;font-weight:500;color:var(--charcoal);display:block;margin-bottom:6px;">I am a:</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--mist);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:0.9rem;">
+            <input type="radio" name="reqRole" value="member" checked style="accent-color:var(--forest-deep);" onchange="updateRoleForm()">
+            <div><strong>Property Owner / Resident</strong><br><span style="font-size:0.8rem;color:var(--stone);">I own or reside at a property in Walden's Revisited</span></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--mist);border-radius:8px;cursor:pointer;font-size:0.9rem;">
+            <input type="radio" name="reqRole" value="officer" style="accent-color:var(--forest-deep);" onchange="updateRoleForm()">
+            <div><strong>Board Officer</strong><br><span style="font-size:0.8rem;color:var(--stone);">I serve on the HOA board of directors</span></div>
+          </label>
+        </div>
+
+        <!-- Address (required for member/officer) -->
+        <div id="addressGroup" style="margin-bottom:var(--space-md);">
+          <label style="font-size:0.85rem;font-weight:500;color:var(--charcoal);display:block;margin-bottom:4px;">Your Property *</label>
+          <select id="reqAddress" style="width:100%;padding:10px 14px;border:1px solid rgba(139,115,85,0.2);border-radius:8px;font-family:var(--font-body);font-size:0.95rem;">
+            <option value="">Select your property...</option>
+          </select>
+        </div>
+
+        <!-- Privacy (for members) -->
+        <div id="privacyGroup" style="margin-bottom:var(--space-md);padding:var(--space-sm);background:var(--mist);border-radius:8px;">
+          <label style="font-size:0.85rem;font-weight:500;color:var(--charcoal);display:block;margin-bottom:6px;">Privacy Preference</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;margin-bottom:4px;cursor:pointer;">
+            <input type="checkbox" id="reqAnonymous" style="accent-color:var(--forest-deep);" onchange="document.getElementById('reqContactOpt').style.display=this.checked?'none':''">
+            Remain anonymous to other members
+          </label>
+          <div id="reqContactOpt">
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;margin-left:20px;cursor:pointer;">
+              <input type="checkbox" id="reqShareContact" checked style="accent-color:var(--forest-deep);">
+              Share my contact info (email, address)
+            </label>
+          </div>
+          <p style="font-size:0.75rem;color:var(--lichen);margin-top:4px;">You can change these anytime. Officers and admins always see your info.</p>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="submitRequestBtn" onclick="submitRequest()">Submit Access Request</button>
+
+        <p style="margin-top:var(--space-md);font-size:0.85rem;color:var(--stone);text-align:center;">
+          Or contact <a href="mailto:admin@waldensrevisited.org" style="font-weight:500;color:var(--forest-deep);">admin@waldensrevisited.org</a> directly.
+        </p>
+      </div>
+
     </div>
   </div>
 
   <script>
+    const session = window.__session;
+
+    // Load addresses
+    fetch('/api/addresses').then(r => r.json()).then(addrs => {
+      const sel = document.getElementById('reqAddress');
+      addrs.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.full_label;
+        sel.appendChild(opt);
+      });
+    });
+
+    // Check if already submitted
+    fetch('/api/me').then(r => r.json()).then(user => {
+      if (user.address_id || user.role !== 'pending') {
+        // Already has address or not pending — show submitted view
+        document.getElementById('requestView').style.display = 'none';
+        document.getElementById('submittedView').style.display = '';
+      }
+    });
+
+    // Also check for existing address request
+    fetch('/api/me/address-request').then(r => r.json()).then(req => {
+      if (req) {
+        document.getElementById('requestView').style.display = 'none';
+        document.getElementById('submittedView').style.display = '';
+      }
+    }).catch(() => {});
+
+    function updateRoleForm() {
+      const role = document.querySelector('input[name="reqRole"]:checked').value;
+      // Both member and officer need addresses
+      document.getElementById('addressGroup').style.display = '';
+      // Only members see privacy options
+      document.getElementById('privacyGroup').style.display = role === 'member' ? '' : 'none';
+    }
+
+    async function submitRequest() {
+      const role = document.querySelector('input[name="reqRole"]:checked').value;
+      const addressId = parseInt(document.getElementById('reqAddress').value);
+
+      if (!addressId) { alert('Please select your property.'); return; }
+
+      const btn = document.getElementById('submitRequestBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      try {
+        // Submit address request
+        await fetch('/api/me/address-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address_id: addressId }),
+        });
+
+        // Save privacy preferences if member
+        if (role === 'member') {
+          const isAnonymous = document.getElementById('reqAnonymous').checked;
+          const showContact = !isAnonymous && document.getElementById('reqShareContact').checked;
+          await fetch('/api/me', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              is_anonymous: isAnonymous ? 1 : 0,
+              show_name: isAnonymous ? 0 : 1,
+              show_contact: showContact ? 1 : 0,
+            }),
+          });
+        }
+
+        // Show submitted view
+        document.getElementById('requestView').style.display = 'none';
+        document.getElementById('submittedView').style.display = '';
+      } catch (e) {
+        alert('Error submitting request. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Access Request';
+      }
+    }
+
     // Auto-check every 15 seconds if the user has been approved
     setInterval(() => {
       fetch('/api/me').then(r => r.json()).then(user => {

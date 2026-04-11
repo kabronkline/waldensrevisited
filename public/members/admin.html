@@ -70,6 +70,10 @@
           <div id="pendingUsers"><p style="color:var(--stone);">Loading...</p></div>
         </div>
         <div class="profile-section">
+          <h2>Address Requests</h2>
+          <div id="addressRequests"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+        <div class="profile-section">
           <h2>Pending Posts</h2>
           <div id="pendingPosts"><p style="color:var(--stone);">Loading...</p></div>
         </div>
@@ -1140,6 +1144,47 @@
       }
     }
 
+    // Address requests
+    async function loadAddressRequests() {
+      try {
+        const res = await fetch('/api/admin/address-requests');
+        const reqs = await res.json();
+        const container = document.getElementById('addressRequests');
+        if (reqs.length === 0) { container.innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
+        container.innerHTML = reqs.map(r => `
+          <div class="pending-item" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;gap:var(--space-xs);align-items:center;margin-bottom:6px;">
+              <div class="pending-item-info">
+                <h4>${escapeHtml(r.name)}</h4>
+                <span>${escapeHtml(r.email)} &middot; ${formatTimeAgo(r.created_at)}</span>
+              </div>
+            </div>
+            <div style="font-size:0.85rem;color:var(--charcoal);margin-bottom:6px;">
+              ${r.current_address ? `<strong>From:</strong> ${escapeHtml(r.current_address)}<br>` : ''}
+              <strong>${r.current_address ? 'To' : 'Requested'}:</strong> ${escapeHtml(r.requested_address)}
+            </div>
+            <div class="pending-item-actions">
+              <button class="btn btn-primary btn-sm" onclick="approveAddress(${r.id})">Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectAddress(${r.id})">Reject</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function approveAddress(id) {
+      await fetch(`/api/admin/address-requests/${id}/approve`, { method: 'PUT' });
+      showToast('Address approved', 'success');
+      loadAddressRequests();
+    }
+
+    async function rejectAddress(id) {
+      await fetch(`/api/admin/address-requests/${id}/reject`, { method: 'PUT' });
+      showToast('Address rejected', 'info');
+      loadAddressRequests();
+    }
+
+    loadAddressRequests();
     loadPendingUsers();
     loadPendingPosts();
     loadConsentRecords();

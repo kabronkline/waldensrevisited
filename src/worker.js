@@ -136,7 +136,7 @@ export default {
         }
       }
 
-      // Pending users go straight to contact-admin page (no agreement needed yet)
+      // Pending users go to access request page
       if (session.user.role === 'pending' && !pathname.startsWith('/members/pending')) {
         return Response.redirect(new URL('/members/pending.html', url.origin).toString(), 302);
       }

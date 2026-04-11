@@ -94,6 +94,39 @@ export async function handleApi(request, env, session) {
     return json(safe);
   }
 
+  // POST /api/me/address-request — request address selection/change (no role needed)
+  if (path === '/api/me/address-request' && method === 'POST') {
+    const body = await request.json();
+    if (!body.address_id) return json({ error: 'Address is required' }, 400);
+    const addr = await env.DB.prepare('SELECT id FROM addresses WHERE id = ?').bind(body.address_id).first();
+    if (!addr) return json({ error: 'Invalid address' }, 400);
+
+    // Check for existing pending request
+    const existing = await env.DB.prepare(
+      "SELECT id FROM address_requests WHERE user_id = ? AND status = 'pending'"
+    ).bind(userId).first();
+    if (existing) {
+      // Update existing request
+      await env.DB.prepare(
+        "UPDATE address_requests SET requested_address_id = ?, created_at = datetime('now') WHERE id = ?"
+      ).bind(body.address_id, existing.id).run();
+    } else {
+      const user = await env.DB.prepare('SELECT address_id FROM users WHERE id = ?').bind(userId).first();
+      await env.DB.prepare(
+        "INSERT INTO address_requests (user_id, requested_address_id, current_address_id) VALUES (?, ?, ?)"
+      ).bind(userId, body.address_id, user?.address_id || null).run();
+    }
+    return json({ success: true });
+  }
+
+  // GET /api/me/address-request — check if user has a pending request
+  if (path === '/api/me/address-request' && method === 'GET') {
+    const req = await env.DB.prepare(
+      "SELECT ar.*, a.full_label FROM address_requests ar JOIN addresses a ON ar.requested_address_id = a.id WHERE ar.user_id = ? AND ar.status = 'pending'"
+    ).bind(userId).first();
+    return json(req || null);
+  }
+
   // --- Access gate (re-check DB for fresh role) ---
   if (!session.user.agreementSigned || !hasAccess(session.user.role)) {
     const fresh = await env.DB.prepare('SELECT role, agreement_signed_at FROM users WHERE id = ?').bind(userId).first();
@@ -112,14 +145,7 @@ export async function handleApi(request, env, session) {
     const updates = [];
     const params = [];
 
-    if (body.address_id !== undefined) {
-      if (body.address_id !== null) {
-        const addr = await env.DB.prepare('SELECT id FROM addresses WHERE id = ?').bind(body.address_id).first();
-        if (!addr) return json({ error: 'Invalid address' }, 400);
-      }
-      updates.push('address_id = ?');
-      params.push(body.address_id);
-    }
+    // address_id changes require approval — use /api/me/address-request instead
     if (body.is_anonymous !== undefined) { updates.push('is_anonymous = ?'); params.push(body.is_anonymous ? 1 : 0); }
     if (body.show_name !== undefined) { updates.push('show_name = ?'); params.push(body.show_name ? 1 : 0); }
     if (body.show_contact !== undefined) { updates.push('show_contact = ?'); params.push(body.show_contact ? 1 : 0); }
@@ -1142,7 +1168,51 @@ export async function handleApi(request, env, session) {
     if (path === '/api/admin/pending-count' && method === 'GET') {
       const users = await env.DB.prepare("SELECT COUNT(*) as cnt FROM users WHERE role = 'pending'").first();
       const posts = await env.DB.prepare("SELECT COUNT(*) as cnt FROM posts WHERE approved = 0").first();
-      return json({ users: users.cnt, posts: posts.cnt, total: users.cnt + posts.cnt });
+      const addresses = await env.DB.prepare("SELECT COUNT(*) as cnt FROM address_requests WHERE status = 'pending'").first();
+      return json({ users: users.cnt, posts: posts.cnt, addresses: addresses.cnt, total: users.cnt + posts.cnt + addresses.cnt });
+    }
+
+    // GET /api/admin/address-requests — pending address change requests
+    if (path === '/api/admin/address-requests' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT ar.id, ar.user_id, ar.requested_address_id, ar.current_address_id, ar.created_at,
+                u.name, u.email, u.role,
+                ra.full_label as requested_address, ca.full_label as current_address
+         FROM address_requests ar
+         JOIN users u ON ar.user_id = u.id
+         JOIN addresses ra ON ar.requested_address_id = ra.id
+         LEFT JOIN addresses ca ON ar.current_address_id = ca.id
+         WHERE ar.status = 'pending'
+         ORDER BY ar.created_at DESC`
+      ).all();
+      return json(results);
+    }
+
+    // PUT /api/admin/address-requests/:id/approve
+    const addrApproveMatch = path.match(/^\/api\/admin\/address-requests\/(\d+)\/approve$/);
+    if (addrApproveMatch && method === 'PUT') {
+      const reqId = parseInt(addrApproveMatch[1]);
+      const req = await env.DB.prepare("SELECT * FROM address_requests WHERE id = ? AND status = 'pending'").bind(reqId).first();
+      if (!req) return json({ error: 'Request not found' }, 404);
+
+      await env.DB.batch([
+        env.DB.prepare("UPDATE users SET address_id = ?, updated_at = datetime('now') WHERE id = ?").bind(req.requested_address_id, req.user_id),
+        env.DB.prepare("UPDATE address_requests SET status = 'approved', reviewed_by = ? WHERE id = ?").bind(userId, reqId),
+      ]);
+
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'address_approved', req.user_id, `Address changed to ${req.requested_address_id}`).run();
+
+      return json({ success: true });
+    }
+
+    // PUT /api/admin/address-requests/:id/reject
+    const addrRejectMatch = path.match(/^\/api\/admin\/address-requests\/(\d+)\/reject$/);
+    if (addrRejectMatch && method === 'PUT') {
+      const reqId = parseInt(addrRejectMatch[1]);
+      await env.DB.prepare("UPDATE address_requests SET status = 'rejected', reviewed_by = ? WHERE id = ?").bind(userId, reqId).run();
+      return json({ success: true });
     }
 
     // GET /api/admin/pending-users — users awaiting role assignment

@@ -189,6 +189,17 @@ CREATE TABLE IF NOT EXISTS chat_participants (
   UNIQUE(thread_id, user_id)
 );
 
+-- Address change requests (require officer/admin approval)
+CREATE TABLE IF NOT EXISTS address_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  requested_address_id INTEGER NOT NULL REFERENCES addresses(id),
+  current_address_id INTEGER,
+  status TEXT DEFAULT 'pending',
+  reviewed_by INTEGER,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Content edit history (posts and comments, max 5 versions retained)
 CREATE TABLE IF NOT EXISTS content_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

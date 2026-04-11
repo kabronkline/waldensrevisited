@@ -97,13 +97,22 @@
       </div>
 
       <!-- Address -->
-      <div class="profile-section">
+      <div class="profile-section" id="addressSection">
         <h2>Address</h2>
         <div class="form-group">
-          <label for="addressSelect">Your Property</label>
-          <select id="addressSelect">
-            <option value="">Select your address...</option>
-          </select>
+          <label>Your Property</label>
+          <div id="addressDisplay" style="padding:10px 14px;background:var(--mist);border-radius:8px;font-size:0.95rem;color:var(--charcoal);">Not set</div>
+          <div id="addressPending" style="display:none;margin-top:6px;font-size:0.85rem;color:#92400e;">Address change pending approval</div>
+          <div id="addressChangeForm" style="display:none;margin-top:var(--space-xs);">
+            <select id="addressSelect" style="width:100%;padding:8px 12px;border:1px solid rgba(139,115,85,0.2);border-radius:8px;font-family:var(--font-body);font-size:0.9rem;margin-bottom:6px;">
+              <option value="">Select new address...</option>
+            </select>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary btn-sm" onclick="submitAddressRequest()">Submit Request</button>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('addressChangeForm').style.display='none'">Cancel</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="addressChangeBtn" style="margin-top:6px;" onclick="showAddressChangeForm()">Request Change</button>
         </div>
       </div>
 
@@ -248,15 +257,32 @@
           grid.appendChild(btn);
         });
 
-        // Address dropdown
+        // Address display (read-only, change requires approval)
+        const addrDisplay = document.getElementById('addressDisplay');
+        addrDisplay.textContent = currentUser.address_label || 'Not set';
+
+        // Hide address section for admin/auditor (system roles don't need addresses)
+        if (['admin', 'auditor'].includes(currentUser.role) && !currentUser.address_id) {
+          document.getElementById('addressSection').style.display = 'none';
+        }
+
+        // Populate change form dropdown
         const select = document.getElementById('addressSelect');
         addresses.forEach(addr => {
           const opt = document.createElement('option');
           opt.value = addr.id;
           opt.textContent = addr.full_label;
-          if (currentUser.address_id === addr.id) opt.selected = true;
           select.appendChild(opt);
         });
+
+        // Check for pending address request
+        fetch('/api/me/address-request').then(r => r.json()).then(req => {
+          if (req) {
+            document.getElementById('addressPending').style.display = '';
+            document.getElementById('addressPending').textContent = `Pending: ${req.full_label}`;
+            document.getElementById('addressChangeBtn').style.display = 'none';
+          }
+        }).catch(() => {});
 
         // Privacy toggles
         const isAnon = !!currentUser.is_anonymous;
@@ -326,13 +352,11 @@
       btn.textContent = 'Saving...';
 
       try {
-        const addressVal = document.getElementById('addressSelect').value;
         const res = await fetch('/api/me', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: document.getElementById('displayName').value.trim(),
-            address_id: addressVal ? parseInt(addressVal) : null,
             is_anonymous: document.getElementById('anonymousToggle').checked ? 1 : 0,
             show_name: document.getElementById('anonymousToggle').checked ? 0 : 1,
             show_contact: document.getElementById('showContactToggle').checked ? 1 : 0,
@@ -350,6 +374,31 @@
       btn.disabled = false;
       btn.textContent = 'Save Changes';
     });
+
+    // Address change request
+    function showAddressChangeForm() {
+      document.getElementById('addressChangeForm').style.display = '';
+      document.getElementById('addressChangeBtn').style.display = 'none';
+    }
+
+    async function submitAddressRequest() {
+      const addressId = parseInt(document.getElementById('addressSelect').value);
+      if (!addressId) { showToast('Select an address', 'error'); return; }
+      try {
+        const res = await fetch('/api/me/address-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address_id: addressId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Address change request submitted for approval', 'success');
+          document.getElementById('addressChangeForm').style.display = 'none';
+          document.getElementById('addressPending').style.display = '';
+          document.getElementById('addressPending').textContent = 'Address change pending approval';
+        } else { showToast(data.error, 'error'); }
+      } catch (e) { showToast('Error submitting request', 'error'); }
+    }
 
     // Avatar picker toggle
     document.getElementById('pickAvatarBtn').addEventListener('click', () => {
