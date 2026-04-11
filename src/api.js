@@ -27,8 +27,10 @@ function maskIfAnonymous(record, nameField, picFields, viewerRole) {
   const hideContact = record.is_anonymous || record.show_contact === 0;
 
   if (hideName) {
-    const tract = record.address_label ? record.address_label.split('—')[0].trim() : null;
-    record[nameField] = tract ? 'Neighbor at ' + tract : 'Anonymous Neighbor';
+    // Use abbreviated address (house number + road) e.g. "480 Brindle Road"
+    const parts = record.address_label ? record.address_label.split('—') : [];
+    const streetAddr = parts.length > 1 ? parts[1].trim() : (parts[0] || '').trim();
+    record[nameField] = streetAddr ? 'Neighbor at ' + streetAddr : 'Anonymous Neighbor';
     for (const f of picFields) { if (record[f] !== undefined) record[f] = null; }
   }
   if (hideContact) {
@@ -537,7 +539,7 @@ export async function handleApi(request, env, session) {
         if (!hideCompletely) {
           let displayName = r.name;
           if (!isSelf && !isViewerOfficer && r.show_name === 0) {
-            displayName = `A resident at ${r.tract_lot}`;
+            displayName = `A resident at ${r.street_address}`;
           }
 
           let status = null;
