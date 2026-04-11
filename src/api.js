@@ -396,8 +396,9 @@ export async function handleApi(request, env, session) {
     const postId = parseInt(postDeleteMatch[1]);
     let post = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(postId).first();
     if (!post) return json({ error: 'Post not found' }, 404);
-    // Allow delete if: own post, OR officer/admin deleting an officer-visibility post
-    const canDelete = post.user_id === userId || (OFFICER_ROLES.includes(session.user.role) && post.visibility === 'officers');
+    // Allow delete if: own post, OR admin can delete any post, OR officer deleting officer-visibility post
+    const isAdmin = session.user.role === 'admin';
+    const canDelete = post.user_id === userId || isAdmin || (OFFICER_ROLES.includes(session.user.role) && post.visibility === 'officers');
     if (!canDelete) return json({ error: 'Not authorized' }, 403);
     await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId).run();
     return json({ success: true });

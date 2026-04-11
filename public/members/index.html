@@ -9,6 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    .ql-container { font-family: var(--font-body); font-size: 0.95rem; border: none !important; }
+    .ql-editor { min-height: 60px; padding: 8px 0; color: var(--charcoal); }
+    .ql-editor.ql-blank::before { color: var(--lichen); font-style: normal; }
+    .ql-toolbar.ql-snow { border: none !important; border-bottom: 1px solid var(--mist) !important; padding: 4px 0 !important; }
+    .ql-toolbar .ql-stroke { stroke: var(--stone); }
+    .ql-toolbar .ql-fill { fill: var(--stone); }
+    .ql-toolbar button:hover .ql-stroke { stroke: var(--forest-deep); }
+    .ql-toolbar button.ql-active .ql-stroke { stroke: var(--forest-deep); }
+    .composer-card .ql-editor { min-height: 70px; }
+  </style>
 </head>
 <body>
 
@@ -65,20 +77,15 @@
         </div>
       </div>
 
-      <!-- Post Composer (Gemini-designed) -->
+      <!-- Post Composer with Quill Editor -->
       <div class="composer-card" id="newPostSection">
-        <div class="composer-fmt-bar">
-          <button class="edit-fmt-btn" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
-          <button class="edit-fmt-btn" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
-          <button class="edit-fmt-btn" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
-          <button class="edit-fmt-btn" onclick="document.execCommand('insertUnorderedList')" title="List">&#8226;</button>
-        </div>
-
-        <div class="composer-top">
-          <div class="composer-avatar" id="postAvatar">
+        <div style="display:flex;gap:var(--space-sm);align-items:flex-start;margin-bottom:var(--space-xs);">
+          <div class="composer-avatar" id="postAvatar" style="margin-top:6px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div class="composer-input" id="postContent" contenteditable="true" data-placeholder="Share something with the community..."></div>
+          <div style="flex:1;">
+            <div id="postEditor"></div>
+          </div>
         </div>
 
         <div class="composer-preview" id="imagePreview"></div>
@@ -147,6 +154,7 @@
   </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
   <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
@@ -154,6 +162,20 @@
     if (!session) window.location.href = '/login.html';
 
     initMembersSidebar('wall');
+
+    // Initialize Quill rich text editor
+    const quill = new Quill('#postEditor', {
+      theme: 'snow',
+      placeholder: 'Share something with the community...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+          ['link'],
+          ['clean']
+        ]
+      }
+    });
 
     // Show admin card for officers and admins
     const elevatedRoles = ['admin', 'president', 'secretary', 'treasurer', 'other_officer'];
@@ -221,7 +243,7 @@
 
     // Submit post
     document.getElementById('postBtn').addEventListener('click', async () => {
-      const content = document.getElementById('postContent').innerText.trim();
+      const content = quill.getText().trim();
       if (!content) { showToast('Write something first', 'error'); return; }
 
       const btn = document.getElementById('postBtn');
@@ -242,7 +264,7 @@
         const data = await res.json();
         if (data.success) {
           showToast(data.message, 'success');
-          document.getElementById('postContent').innerHTML = '';
+          quill.setContents([]);
           clearImagePreview();
           loadPosts(true);
         } else {
@@ -291,7 +313,8 @@
       const isPending = !post.approved;
       const isOwn = post.user_id == session.userId;
       const isOfficerPost = (post.visibility === 'officers');
-      const canDelete = isOwn || (isOfficerPost && elevatedRoles.includes(session.role));
+      const isAdminUser = session.role === 'admin';
+      const canDelete = isOwn || isAdminUser || (isOfficerPost && elevatedRoles.includes(session.role));
       const wasEdited = post.updated_at && post.updated_at !== post.created_at;
       const vis = post.visibility || 'everybody';
 

@@ -192,19 +192,33 @@ function initMembersSidebar(activePage) {
   if (session && navSignIn && navMembers) {
     navSignIn.style.display = 'none';
     navMembers.style.display = 'flex';
-    if (navAvatar) {
-      if (session.profilePicture) {
-        navAvatar.style.backgroundImage = 'url(' + session.profilePicture + ')';
-      } else if (session.avatarId && typeof getAvatarSvg === 'function') {
-        navAvatar.innerHTML = getAvatarSvg(session.avatarId);
+
+    // Set avatar from session immediately, then refresh from API for latest
+    function setNavAvatar(pic, avatarId, googlePic, name) {
+      if (!navAvatar) return;
+      navAvatar.innerHTML = '';
+      navAvatar.style.backgroundImage = '';
+      navAvatar.style.padding = '';
+      navAvatar.textContent = '';
+      if (pic) {
+        navAvatar.style.backgroundImage = 'url(' + pic + ')';
+      } else if (avatarId && typeof getAvatarSvg === 'function') {
+        navAvatar.innerHTML = getAvatarSvg(avatarId);
         navAvatar.style.padding = '2px';
-      } else if (session.picture) {
-        navAvatar.style.backgroundImage = 'url(' + session.picture + ')';
+      } else if (googlePic) {
+        navAvatar.style.backgroundImage = 'url(' + googlePic + ')';
       } else {
-        const initials = (session.name || '').split(' ').map(n => n[0]).join('').toUpperCase();
-        navAvatar.textContent = initials || 'U';
+        navAvatar.textContent = (name || '').split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
       }
     }
+
+    // Immediate from session
+    setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
+
+    // Refresh from API (picks up avatar changes without re-login)
+    fetch('/api/me').then(r => r.json()).then(me => {
+      setNavAvatar(me.profile_picture, me.avatar_id, me.google_picture, me.name);
+    }).catch(() => {});
   }
 }
 
