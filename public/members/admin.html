@@ -330,6 +330,23 @@
       });
     });
 
+    // Refresh the sidebar approval badge count
+    async function refreshApprovalBadge() {
+      try {
+        const res = await fetch('/api/admin/pending-count');
+        const data = await res.json();
+        const badge = document.getElementById('adminBadge');
+        const appBadge = document.getElementById('approvalsBadge');
+        if (data.total > 0) {
+          if (badge) { badge.textContent = data.total; badge.style.display = ''; }
+          if (appBadge) { appBadge.textContent = data.total; appBadge.style.display = ''; }
+        } else {
+          if (badge) badge.style.display = 'none';
+          if (appBadge) appBadge.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+
     // Load pending access requests
     async function loadPendingUsers() {
       try {
@@ -435,6 +452,7 @@
         if (data.success) {
           showToast(`User approved as ${roles.map(formatRole).join(', ')}`, 'success');
           loadPendingUsers();
+          refreshApprovalBadge();
         } else {
           showToast(data.error || 'Error', 'error');
         }
@@ -447,6 +465,7 @@
       if (!confirm('Reject this access request?')) return;
       showToast('User request rejected', 'success');
       loadPendingUsers();
+      refreshApprovalBadge();
     }
 
     // Load pending posts
@@ -511,6 +530,7 @@
         });
         showToast('Post approved', 'success');
         loadPendingPosts();
+        refreshApprovalBadge();
       } catch (e) {
         showToast('Error approving post', 'error');
       }
@@ -522,6 +542,7 @@
         await fetch(`/api/admin/reject/post/${id}`, { method: 'DELETE' });
         showToast('Post rejected', 'success');
         loadPendingPosts();
+        refreshApprovalBadge();
       } catch (e) {
         showToast('Error rejecting post', 'error');
       }
@@ -1164,12 +1185,14 @@
       await fetch(`/api/admin/address-requests/${id}/approve`, { method: 'PUT' });
       showToast('Address approved', 'success');
       loadAddressRequests();
+      refreshApprovalBadge();
     }
 
     async function rejectAddress(id) {
       await fetch(`/api/admin/address-requests/${id}/reject`, { method: 'PUT' });
       showToast('Address rejected', 'info');
       loadAddressRequests();
+      refreshApprovalBadge();
     }
 
     loadAddressRequests();
