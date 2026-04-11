@@ -1601,3 +1601,24 @@
   color: var(--pond-surface);
   opacity: 0.6;
 }
+
+/* ---- Composer Format Bar (slides in on focus) ---- */
+.composer-fmt-bar {
+  display: flex;
+  gap: 6px;
+  padding: 0 var(--space-md);
+  border-bottom: 1px solid var(--mist);
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+.composer-card:focus-within .composer-fmt-bar {
+  opacity: 1;
+  max-height: 44px;
+  padding: 8px var(--space-md);
+}
+.comment-toggle-btn.active {
+  background: var(--forest-deep) !important;
+  color: white !important;
+}

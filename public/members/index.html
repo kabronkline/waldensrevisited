@@ -65,21 +65,20 @@
         </div>
       </div>
 
-      <!-- Modern Post Composer -->
+      <!-- Post Composer (Gemini-designed) -->
       <div class="composer-card" id="newPostSection">
+        <div class="composer-fmt-bar">
+          <button class="edit-fmt-btn" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('insertUnorderedList')" title="List">&#8226;</button>
+        </div>
+
         <div class="composer-top">
           <div class="composer-avatar" id="postAvatar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div style="flex:1;">
-            <div style="display:flex;gap:4px;margin-bottom:4px;">
-              <button class="edit-fmt-btn" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
-              <button class="edit-fmt-btn" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
-              <button class="edit-fmt-btn" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
-              <button class="edit-fmt-btn" onclick="document.execCommand('insertUnorderedList')" title="List">&#8226;</button>
-            </div>
-            <div class="composer-input" id="postContent" contenteditable="true" data-placeholder="What's happening in the neighborhood?"></div>
-          </div>
+          <div class="composer-input" id="postContent" contenteditable="true" data-placeholder="Share something with the community..."></div>
         </div>
 
         <div class="composer-preview" id="imagePreview"></div>
@@ -93,28 +92,20 @@
 
             <div class="visibility-control">
               <input type="radio" name="postVis" id="vis-everybody" value="everybody" class="vis-radio" checked>
-              <label for="vis-everybody" class="vis-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                All
-              </label>
+              <label for="vis-everybody" class="vis-label">All</label>
               <input type="radio" name="postVis" id="vis-friends" value="friends" class="vis-radio">
-              <label for="vis-friends" class="vis-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Friends
-              </label>
+              <label for="vis-friends" class="vis-label">Friends</label>
               <input type="radio" name="postVis" id="vis-officers" value="officers" class="vis-radio">
-              <label for="vis-officers" class="vis-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Officers
-              </label>
+              <label for="vis-officers" class="vis-label">Officers</label>
             </div>
           </div>
 
-          <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--stone);cursor:pointer;" title="Allow other members to comment on this post">
-            <input type="checkbox" id="allowComments" checked style="accent-color:var(--forest-deep);">
-            Comments
-          </label>
-          <button class="btn-post" id="postBtn">Post</button>
+          <div class="action-tools">
+            <button class="icon-btn comment-toggle-btn active" id="allowCommentsBtn" onclick="this.classList.toggle('active')" title="Toggle comments">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button class="btn-post" id="postBtn">Post</button>
+          </div>
         </div>
       </div>
 
@@ -239,7 +230,7 @@
 
       try {
         const visibility = document.querySelector('input[name="postVis"]:checked').value;
-        const allowComments = document.getElementById('allowComments').checked;
+        const allowComments = document.getElementById('allowCommentsBtn').classList.contains('active');
         const body = { content, visibility, allow_comments: allowComments };
         if (postImageData) body.image = postImageData;
 
