@@ -344,6 +344,7 @@
     async function loadPendingUsers() {
       try {
         const res = await fetch('/api/admin/pending-users');
+        if (!res.ok) { document.getElementById('pendingUsers').innerHTML = '<p style="color:var(--stone);">No pending access requests.</p>'; return; }
         const data = await res.json();
         const users = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('pendingUsers');
@@ -462,6 +463,7 @@
     async function loadPendingPosts() {
       try {
         const res = await fetch('/api/admin/pending-posts');
+        if (!res.ok) { document.getElementById('pendingPosts').innerHTML = '<p style="color:var(--stone);">No posts pending approval.</p>'; return; }
         const data = await res.json();
         const posts = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('pendingPosts');
@@ -1135,6 +1137,7 @@
     async function loadAddressRequests() {
       try {
         const res = await fetch('/api/admin/address-requests');
+        if (!res.ok) { document.getElementById('addressRequests').innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
         const data = await res.json();
         const reqs = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('addressRequests');
