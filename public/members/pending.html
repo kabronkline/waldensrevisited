@@ -18,6 +18,9 @@
         <svg class="nav-icon" viewBox="0 0 32 32" fill="none"><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/><path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Walden's Revisited
       </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
       <ul class="nav-links" id="navLinks">
         <li><a href="/auth/logout">Sign Out</a></li>
       </ul>
@@ -173,6 +176,25 @@
         btn.disabled = false;
         btn.textContent = 'Submit Access Request';
       }
+    }
+
+    // Hamburger toggle for mobile
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    if (toggle && links) {
+      toggle.addEventListener('click', () => {
+        links.classList.toggle('open');
+        const spans = toggle.querySelectorAll('span');
+        if (links.classList.contains('open')) {
+          spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+          spans[1].style.opacity = '0';
+          spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+        } else {
+          spans[0].style.transform = '';
+          spans[1].style.opacity = '';
+          spans[2].style.transform = '';
+        }
+      });
     }
 
     // Auto-check every 15 seconds if the user has been approved

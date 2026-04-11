@@ -177,19 +177,40 @@ function initMembersSidebar(activePage) {
     }).catch(() => {});
   }
 
-  // Mobile toggle
+  // Mobile toggle logic (unified hamburger)
   const toggle = document.getElementById('sidebarToggle');
+  const navToggle = document.getElementById('navToggle');
   const overlay = document.getElementById('sidebarOverlay');
-  if (toggle) {
-    toggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('open');
-    });
+
+  function updateNavToggle(isOpen) {
+    if (!navToggle) return;
+    const spans = navToggle.querySelectorAll('span');
+    if (spans.length < 3) return;
+    if (isOpen) {
+      spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+      spans[1].style.opacity = '0';
+      spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+    } else {
+      spans[0].style.transform = '';
+      spans[1].style.opacity = '';
+      spans[2].style.transform = '';
+    }
   }
+
+  const toggleSidebar = () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+    updateNavToggle(sidebar.classList.contains('open'));
+  };
+
+  if (toggle) toggle.addEventListener('click', toggleSidebar);
+  if (navToggle) navToggle.addEventListener('click', toggleSidebar);
+
   if (overlay) {
     overlay.addEventListener('click', () => {
       sidebar.classList.remove('open');
       overlay.classList.remove('open');
+      updateNavToggle(false);
     });
   }
 

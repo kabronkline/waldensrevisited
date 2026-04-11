@@ -1622,3 +1622,35 @@
   background: var(--forest-deep) !important;
   color: white !important;
 }
+
+/* Mobile Nav Optimization for Members */
+@media (max-width: 768px) {
+  /* Hide redundant public links and floating toggle */
+  .nav-links, .sidebar-toggle { display: none !important; }
+  
+  /* Ensure the top nav hamburger is visible and centered */
+  .nav-toggle { display: flex !important; }
+  
+  /* Sidebar fills screen below top nav */
+  .members-sidebar {
+    top: 72px;
+    height: calc(100vh - 72px);
+    width: 280px;
+    left: -280px;
+    border-right: 1px solid var(--mist);
+  }
+  
+  /* Sidebar Open State */
+  .members-sidebar.open { left: 0; }
+  
+  /* Header adjustments */
+  .members-header { margin-top: 0; padding-top: var(--space-md); }
+}
+
+@media (max-width: 480px) {
+  .members-sidebar {
+    top: 60px;
+    height: calc(100vh - 60px);
+  }
+}
+
