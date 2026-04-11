@@ -180,6 +180,15 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Chat participants (for group chats like officer threads)
+CREATE TABLE IF NOT EXISTS chat_participants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(thread_id, user_id)
+);
+
 -- Audit log for admin actions
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

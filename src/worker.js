@@ -196,4 +196,13 @@ export default {
     }
     return response;
   },
+
+  // Scheduled cron trigger: purge chat messages older than 1 year
+  async scheduled(event, env, ctx) {
+    console.log('Running scheduled chat purge...');
+    const result = await env.DB.prepare(
+      "DELETE FROM chat_messages WHERE created_at < datetime('now', '-1 year')"
+    ).run();
+    console.log(`Chat purge complete: ${result.meta.changes} messages deleted`);
+  },
 };

@@ -28,6 +28,10 @@ id = "f52131d68309439a9a1b321113493321"
 # binding = "UPLOADS"
 # bucket_name = "waldensrevisited-uploads"
 
+# Daily chat message purge at 3:17 AM UTC
+[triggers]
+crons = ["17 3 * * *"]
+
 [env.beta]
 name = "waldensrevisited-beta"
 

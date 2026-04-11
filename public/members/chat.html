@@ -513,10 +513,16 @@
         <div class="chat-threads-panel" id="threadsPanel">
           <div class="threads-header">
             <h2>Messages</h2>
-            <button class="btn btn-sm btn-primary" onclick="openAddFriendModal()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-              Add Friend
-            </button>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-sm btn-secondary" onclick="contactOfficers()" title="Contact HOA Officers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Officers
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="openAddFriendModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Add Friend
+              </button>
+            </div>
           </div>
           <div class="threads-search">
             <input type="text" id="threadSearch" placeholder="Search conversations..." oninput="filterThreads()">
@@ -858,6 +864,21 @@
       } catch (e) {
         showToast(e.message, 'error');
       }
+    }
+
+    // ---- Contact Officers ----
+    async function contactOfficers() {
+      try {
+        const res = await fetch('/api/chat/officer', { method: 'POST' });
+        const data = await res.json();
+        if (data.thread_id) {
+          showToast(data.existing ? 'Opening officer chat' : 'Officer thread created', 'success');
+          await loadThreads();
+          openThread(data.thread_id);
+        } else {
+          showToast(data.error || 'Error', 'error');
+        }
+      } catch (e) { showToast('Error contacting officers', 'error'); }
     }
 
     // ---- Add Friend Modal ----

@@ -57,6 +57,7 @@
         <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
         <button class="admin-tab" data-tab="consent">Consent Records</button>
         <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
+        <button class="admin-tab" data-tab="officer-chats" id="officerChatsTab">Officer Chats</button>
         <button class="admin-tab" data-tab="audit">Audit Log</button>
       </div>
 
@@ -193,6 +194,18 @@
             <tbody id="usersTableBody">
               <tr><td colspan="6" style="color:var(--stone);">Loading...</td></tr>
             </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Officer Chats Tab -->
+      <div class="tab-content" id="tab-officer-chats" style="display:none;">
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>Officer Group Chats</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Conversations initiated by members with HOA officers.</p>
+          <table class="users-table">
+            <thead><tr><th>Member</th><th>Email</th><th>Started</th><th>Messages</th><th></th></tr></thead>
+            <tbody id="officerChatsBody"><tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -879,6 +892,43 @@
     loadConsentRecords();
     loadProperties();
     loadUsers();
+    // Load officer chats
+    async function loadOfficerChats() {
+      if (session.role !== 'admin') return;
+      try {
+        const res = await fetch('/api/admin/officer-chats');
+        const chats = await res.json();
+        const tbody = document.getElementById('officerChatsBody');
+        if (chats.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
+        tbody.innerHTML = chats.map(c => `
+          <tr>
+            <td>${escapeHtml(c.initiator_name)}</td>
+            <td>${escapeHtml(c.initiator_email)}</td>
+            <td>${new Date(c.created_at + 'Z').toLocaleDateString()}</td>
+            <td>${c.message_count}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="exportChat(${c.id})">Export</button>
+              <a href="/members/chat.html?thread=${c.id}" class="btn btn-primary btn-sm">Open</a>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) { showToast('Failed to load officer chats', 'error'); }
+    }
+
+    async function exportChat(threadId) {
+      try {
+        const res = await fetch(`/api/admin/export/chat/${threadId}`);
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `chat-thread-${threadId}-export.json`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Chat exported', 'success');
+      } catch (e) { showToast('Export failed', 'error'); }
+    }
+
+    loadOfficerChats();
     loadAuditLog();
   </script>
 </body>

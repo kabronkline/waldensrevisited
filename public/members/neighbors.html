@@ -99,6 +99,12 @@
           <p>All properties in Walden's Revisited. Connect with your neighbors to chat, arrange dog play dates, and participate in the community. Owner identities are private — connecting sends a request that your neighbor can accept or decline.</p>
         </div>
 
+        <!-- Incoming connection requests -->
+        <div id="incomingRequests" style="display:none;margin-bottom:var(--space-md);">
+          <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--forest-deep);margin-bottom:var(--space-xs);">Connection Requests</h3>
+          <div id="incomingList"></div>
+        </div>
+
         <div class="neighbor-legend">
           <span><div class="legend-dot" style="background:var(--forest-deep);"></div> Your property</span>
           <span><div class="legend-dot" style="background:var(--pond-surface);"></div> Connected</span>
@@ -121,6 +127,56 @@
     document.getElementById('navToggle')?.addEventListener('click', () => {
       document.getElementById('navLinks').classList.toggle('active');
     });
+
+    // Load incoming friend/connection requests
+    async function loadIncomingRequests() {
+      try {
+        const res = await fetch('/api/friends/requests');
+        const requests = await res.json();
+        const section = document.getElementById('incomingRequests');
+        const list = document.getElementById('incomingList');
+
+        if (requests.length === 0) { section.style.display = 'none'; return; }
+
+        section.style.display = '';
+        list.innerHTML = '';
+        requests.forEach(req => {
+          const item = document.createElement('div');
+          item.className = 'neighbor-card';
+          item.style.borderLeft = '3px solid #3b82f6';
+          const name = req.name || 'A neighbor';
+          item.innerHTML = `
+            <div class="neighbor-info">
+              <h4>${escapeHtml(name)}</h4>
+              <span>wants to connect &middot; ${formatTimeAgo(req.created_at)}</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="connect-btn" style="background:var(--forest-deep);color:white;" onclick="acceptRequest(${req.id}, this)">Accept</button>
+              <button class="connect-btn" style="color:#991b1b;border-color:#fecaca;" onclick="rejectRequest(${req.id}, this)">Decline</button>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      } catch (e) {}
+    }
+
+    async function acceptRequest(id, btn) {
+      btn.disabled = true;
+      try {
+        await fetch(`/api/friends/requests/${id}/accept`, { method: 'PUT' });
+        showToast('Connected!', 'success');
+        loadIncomingRequests();
+        loadNeighbors();
+      } catch (e) { showToast('Error', 'error'); btn.disabled = false; }
+    }
+
+    async function rejectRequest(id, btn) {
+      btn.disabled = true;
+      try {
+        await fetch(`/api/friends/requests/${id}`, { method: 'DELETE' });
+        loadIncomingRequests();
+      } catch (e) { btn.disabled = false; }
+    }
 
     async function loadNeighbors() {
       try {
@@ -188,6 +244,7 @@
       }
     }
 
+    loadIncomingRequests();
     loadNeighbors();
   </script>
 </body>

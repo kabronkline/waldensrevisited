@@ -390,20 +390,17 @@ export async function handleApi(request, env, session) {
 
   // --- Neighbors (properties without owner PII) ---
   if (path === '/api/neighbors' && method === 'GET') {
-    // Return properties with address info but NO owner names
-    // Include whether the logged-in user is friends with the property's registered user
+    // Return properties with address info — supports multiple users per address
     const { results } = await env.DB.prepare(
       `SELECT a.id as address_id, a.tract_lot, a.street_address, a.full_label,
               p.acres, p.wr_designation,
               u.id as resident_user_id,
-              CASE WHEN u.id IS NOT NULL THEN 1 ELSE 0 END as has_registered_user,
-              CASE WHEN u.id = ? THEN 1 ELSE 0 END as is_self
+              u.is_anonymous, u.show_name
        FROM addresses a
-       LEFT JOIN properties pr ON a.id = pr.address_id
-       LEFT JOIN users u ON u.address_id = a.id AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
        LEFT JOIN properties p ON a.id = p.address_id
+       LEFT JOIN users u ON u.address_id = a.id AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
        ORDER BY a.id`
-    ).bind(userId).all();
+    ).bind().all();
 
     // Check friendships for each neighbor
     const { results: myFriends } = await env.DB.prepare(
@@ -423,21 +420,42 @@ export async function handleApi(request, env, session) {
     ).bind(userId).all();
     const recvSet = new Set(recvReqs.map(r => r.from_user_id));
 
-    const neighbors = results.map(r => ({
-      address_id: r.address_id,
-      tract_lot: r.tract_lot,
-      street_address: r.street_address,
-      full_label: r.full_label,
-      acres: r.acres,
-      wr_designation: r.wr_designation,
-      has_registered_user: !!r.has_registered_user,
-      is_self: !!r.is_self,
-      is_friend: r.resident_user_id ? friendSet.has(r.resident_user_id) : false,
-      request_sent: r.resident_user_id ? sentSet.has(r.resident_user_id) : false,
-      request_received: r.resident_user_id ? recvSet.has(r.resident_user_id) : false,
-      resident_user_id: r.resident_user_id || null,
-    }));
+    // Group by address to support multiple users per address
+    const addressMap = new Map();
+    for (const r of results) {
+      if (!addressMap.has(r.address_id)) {
+        addressMap.set(r.address_id, {
+          address_id: r.address_id,
+          tract_lot: r.tract_lot,
+          street_address: r.street_address,
+          full_label: r.full_label,
+          acres: r.acres,
+          wr_designation: r.wr_designation,
+          resident_user_ids: [],
+          registered_user_count: 0,
+          has_registered_user: false,
+          is_self: false,
+          is_friend: false,
+          request_sent: false,
+          request_received: false,
+          can_connect: false,
+        });
+      }
+      const entry = addressMap.get(r.address_id);
+      if (r.resident_user_id) {
+        entry.resident_user_ids.push(r.resident_user_id);
+        entry.registered_user_count++;
+        entry.has_registered_user = true;
+        if (r.resident_user_id === userId) entry.is_self = true;
+        if (friendSet.has(r.resident_user_id)) entry.is_friend = true;
+        if (sentSet.has(r.resident_user_id)) entry.request_sent = true;
+        if (recvSet.has(r.resident_user_id)) entry.request_received = true;
+        // Can connect if at least one non-anonymous user at the address
+        if (!r.is_anonymous && r.show_name !== 0) entry.can_connect = true;
+      }
+    }
 
+    const neighbors = Array.from(addressMap.values());
     return json(neighbors);
   }
 
@@ -781,6 +799,25 @@ export async function handleApi(request, env, session) {
        WHERE ct.user_a_id = ? OR ct.user_b_id = ?
        ORDER BY latest_message_at DESC NULLS LAST`
     ).bind(userId, userId, userId, userId, userId, userId, userId, userId, userId, userId).all();
+    // Also fetch officer group threads where user is a participant
+    const { results: groupThreads } = await env.DB.prepare(
+      `SELECT ct.id, ct.type, ct.ref_id, ct.created_at,
+              'HOA Officers' as other_user_name, 0 as other_user_id,
+              NULL as other_user_picture, NULL as other_user_google_picture,
+              0 as is_anonymous, 1 as show_name, 1 as show_contact,
+              NULL as address_label,
+              (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message,
+              (SELECT created_at FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message_at
+       FROM chat_threads ct
+       JOIN chat_participants cp ON ct.id = cp.thread_id
+       WHERE ct.type = 'officer' AND cp.user_id = ?
+       ORDER BY latest_message_at DESC NULLS LAST`
+    ).bind(userId).all();
+
+    // Merge and re-sort
+    results.push(...groupThreads);
+    results.sort((a, b) => (b.latest_message_at || '') > (a.latest_message_at || '') ? 1 : -1);
+
     const viewerRole = session.user.role;
     results.forEach(r => maskIfAnonymous(r, 'other_user_name', ['other_user_picture', 'other_user_google_picture'], viewerRole));
     return json(results);
@@ -790,9 +827,18 @@ export async function handleApi(request, env, session) {
   const chatMessagesMatch = path.match(/^\/api\/chat\/threads\/(\d+)\/messages$/);
   if (chatMessagesMatch && method === 'GET') {
     const threadId = parseInt(chatMessagesMatch[1]);
-    const thread = await env.DB.prepare(
+    let thread = await env.DB.prepare(
       'SELECT * FROM chat_threads WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
     ).bind(threadId, userId, userId).first();
+    // Also check chat_participants for group threads (e.g. officer threads)
+    if (!thread) {
+      const participant = await env.DB.prepare(
+        'SELECT id FROM chat_participants WHERE thread_id = ? AND user_id = ?'
+      ).bind(threadId, userId).first();
+      if (participant) {
+        thread = await env.DB.prepare('SELECT * FROM chat_threads WHERE id = ?').bind(threadId).first();
+      }
+    }
     if (!thread) return json({ error: 'Thread not found' }, 404);
 
     // Prune messages older than 1 year
@@ -833,9 +879,18 @@ export async function handleApi(request, env, session) {
   // POST /api/chat/threads/:threadId/messages — send a message
   if (chatMessagesMatch && method === 'POST') {
     const threadId = parseInt(chatMessagesMatch[1]);
-    const thread = await env.DB.prepare(
+    let thread = await env.DB.prepare(
       'SELECT * FROM chat_threads WHERE id = ? AND (user_a_id = ? OR user_b_id = ?)'
     ).bind(threadId, userId, userId).first();
+    // Also check chat_participants for group threads (e.g. officer threads)
+    if (!thread) {
+      const participant = await env.DB.prepare(
+        'SELECT id FROM chat_participants WHERE thread_id = ? AND user_id = ?'
+      ).bind(threadId, userId).first();
+      if (participant) {
+        thread = await env.DB.prepare('SELECT * FROM chat_threads WHERE id = ?').bind(threadId).first();
+      }
+    }
     if (!thread) return json({ error: 'Thread not found' }, 404);
 
     const body = await request.json();
@@ -889,6 +944,58 @@ export async function handleApi(request, env, session) {
     }
 
     return json({ id: result.meta.last_row_id, success: true }, 201);
+  }
+
+  // --- Friends pending count ---
+  if (path === '/api/friends/pending-count' && method === 'GET') {
+    const count = await env.DB.prepare(
+      "SELECT COUNT(*) as cnt FROM friend_requests WHERE to_user_id = ? AND status = 'pending'"
+    ).bind(userId).first();
+    return json({ count: count.cnt });
+  }
+
+  // --- Officer chat (group thread) ---
+
+  // POST /api/chat/officer — create or return existing officer group thread
+  if (path === '/api/chat/officer' && method === 'POST') {
+    // Check if user already has an active officer thread
+    const existing = await env.DB.prepare(
+      "SELECT id FROM chat_threads WHERE type = 'officer' AND user_a_id = ?"
+    ).bind(userId).first();
+
+    if (existing) {
+      return json({ thread_id: existing.id, existing: true });
+    }
+
+    // Create new officer group thread (user_b_id=0 since it's a group thread)
+    const threadResult = await env.DB.prepare(
+      "INSERT INTO chat_threads (type, user_a_id, user_b_id, created_at) VALUES ('officer', ?, 0, datetime('now'))"
+    ).bind(userId).run();
+    const newThreadId = threadResult.meta.last_row_id;
+
+    // Add current user as participant
+    await env.DB.prepare(
+      "INSERT INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
+    ).bind(newThreadId, userId).run();
+
+    // Find all users with officer roles who have signed the agreement
+    const { results: officers } = await env.DB.prepare(
+      "SELECT id FROM users WHERE role IN ('president','secretary','treasurer','other_officer','admin') AND agreement_signed_at IS NOT NULL"
+    ).all();
+
+    // Add each officer as participant
+    for (const officer of officers) {
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO chat_participants (thread_id, user_id, joined_at) VALUES (?, ?, datetime('now'))"
+      ).bind(newThreadId, officer.id).run();
+    }
+
+    // Add system message
+    await env.DB.prepare(
+      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, 0, 'Thread opened with HOA officers', datetime('now'))"
+    ).bind(newThreadId).run();
+
+    return json({ thread_id: newThreadId, success: true });
   }
 
   // --- Admin/Officer endpoints ---
@@ -1144,6 +1251,66 @@ export async function handleApi(request, env, session) {
          ORDER BY al.created_at DESC LIMIT 100`
       ).all();
       return json(results);
+    }
+
+    // GET /api/admin/officer-chats — list all officer group threads
+    if (path === '/api/admin/officer-chats' && method === 'GET') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const { results } = await env.DB.prepare(
+        `SELECT ct.id, ct.created_at, u.name as initiator_name, u.email as initiator_email,
+                (SELECT COUNT(*) FROM chat_messages WHERE thread_id = ct.id) as message_count,
+                (SELECT content FROM chat_messages WHERE thread_id = ct.id ORDER BY created_at DESC LIMIT 1) as latest_message
+         FROM chat_threads ct
+         JOIN users u ON ct.user_a_id = u.id
+         WHERE ct.type = 'officer'
+         ORDER BY ct.created_at DESC`
+      ).all();
+      return json(results);
+    }
+
+    // GET /api/admin/export/chat/:threadId — export all messages in a thread as JSON
+    const exportChatMatch = path.match(/^\/api\/admin\/export\/chat\/(\d+)$/);
+    if (exportChatMatch && method === 'GET') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const threadId = parseInt(exportChatMatch[1]);
+      const { results } = await env.DB.prepare(
+        `SELECT cm.id, cm.content, cm.created_at, u.name as sender_name, u.email as sender_email
+         FROM chat_messages cm
+         LEFT JOIN users u ON cm.sender_user_id = u.id
+         WHERE cm.thread_id = ?
+         ORDER BY cm.created_at ASC`
+      ).bind(threadId).all();
+      return json({ thread_id: threadId, messages: results, exported_at: new Date().toISOString() });
+    }
+
+    // GET /api/admin/export/user/:userId/chats — export a user's complete chat history
+    const exportUserChatsMatch = path.match(/^\/api\/admin\/export\/user\/(\d+)\/chats$/);
+    if (exportUserChatsMatch && method === 'GET') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const targetUserId = parseInt(exportUserChatsMatch[1]);
+
+      // Find all threads this user participates in (via user_a/user_b or chat_participants)
+      const { results: threads } = await env.DB.prepare(
+        `SELECT DISTINCT ct.id, ct.type, ct.ref_id, ct.created_at
+         FROM chat_threads ct
+         LEFT JOIN chat_participants cp ON ct.id = cp.thread_id
+         WHERE ct.user_a_id = ? OR ct.user_b_id = ? OR cp.user_id = ?
+         ORDER BY ct.created_at DESC`
+      ).bind(targetUserId, targetUserId, targetUserId).all();
+
+      const threadData = [];
+      for (const thread of threads) {
+        const { results: messages } = await env.DB.prepare(
+          `SELECT cm.id, cm.content, cm.created_at, u.name as sender_name, u.email as sender_email
+           FROM chat_messages cm
+           LEFT JOIN users u ON cm.sender_user_id = u.id
+           WHERE cm.thread_id = ?
+           ORDER BY cm.created_at ASC`
+        ).bind(thread.id).all();
+        threadData.push({ ...thread, messages });
+      }
+
+      return json({ user_id: targetUserId, threads: threadData, exported_at: new Date().toISOString() });
     }
   }
 
