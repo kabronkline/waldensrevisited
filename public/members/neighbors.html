@@ -10,60 +10,69 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
   <style>
-    .neighbor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-sm); }
+    .neighbor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); }
     .neighbor-card {
       background: var(--parchment);
       border: 1px solid rgba(139,115,85,0.12);
-      border-radius: 10px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .neighbor-card:hover { box-shadow: 0 4px 20px rgba(45,74,62,0.08); }
+    .neighbor-header {
       padding: var(--space-sm) var(--space-md);
+      background: rgba(45,74,62,0.03);
+      border-bottom: 1px solid rgba(139,115,85,0.08);
+    }
+    .neighbor-header h4 { font-family: var(--font-display); font-size: 1.1rem; color: var(--forest-deep); margin-bottom: 2px; }
+    .neighbor-header span { font-size: 0.8rem; color: var(--stone); display: block; }
+    .neighbor-header .acres { font-size: 0.75rem; color: var(--lichen); margin-top: 2px; }
+    
+    .neighbor-body { padding: 4px 0; flex-grow: 1; display: flex; flex-direction: column; }
+    .resident-row {
+      padding: 10px var(--space-md);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-sm);
-      transition: box-shadow 0.15s;
     }
-    .neighbor-card:hover { box-shadow: 0 2px 12px rgba(45,74,62,0.06); }
-    .neighbor-card.is-self { border-left: 3px solid var(--forest-deep); }
-    .neighbor-card.is-friend { border-left: 3px solid var(--pond-surface); }
-    .neighbor-info h4 {
-      font-family: var(--font-display);
-      font-size: 1.05rem;
-      color: var(--forest-deep);
-      margin-bottom: 2px;
-    }
-    .neighbor-info span { font-size: 0.85rem; color: var(--stone); }
-    .neighbor-info .acres { font-size: 0.8rem; color: var(--lichen); }
-    .neighbor-status {
-      font-size: 0.8rem;
-      padding: 4px 10px;
+    .resident-row:not(:last-child) { border-bottom: 1px solid rgba(139,115,85,0.04); }
+    .resident-name { font-size: 0.9rem; color: var(--forest-deep); font-weight: 400; }
+    .resident-status {
+      font-size: 0.75rem;
+      padding: 3px 8px;
       border-radius: 4px;
       white-space: nowrap;
-      flex-shrink: 0;
     }
-    .neighbor-status.you { background: rgba(45,74,62,0.08); color: var(--forest-deep); font-weight: 500; }
-    .neighbor-status.friend { background: #d1fae5; color: #065f46; }
-    .neighbor-status.pending { background: #fef3c7; color: #92400e; }
-    .neighbor-status.incoming { background: #dbeafe; color: #1e40af; }
+    .resident-status.you { background: rgba(45,74,62,0.08); color: var(--forest-deep); }
+    .resident-status.friend { background: #d1fae5; color: #065f46; }
+    .resident-status.pending { background: #fef3c7; color: #92400e; }
+    .resident-status.incoming { background: #dbeafe; color: #1e40af; }
+    
+    .private-residence, .not-registered {
+      padding: 16px var(--space-md);
+      font-size: 0.85rem;
+      color: var(--stone);
+      font-style: italic;
+      text-align: center;
+      opacity: 0.7;
+    }
+
     .connect-btn {
-      padding: 5px 12px;
-      border: 1px solid var(--pond-surface);
+      padding: 4px 10px;
+      border: 1px solid var(--stone);
       background: transparent;
       color: var(--forest-deep);
       border-radius: 6px;
-      font-size: 0.8rem;
-      font-family: var(--font-body);
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.15s;
-      white-space: nowrap;
     }
-    .connect-btn:hover { background: var(--forest-deep); color: white; }
+    .connect-btn:hover { background: var(--forest-deep); color: white; border-color: var(--forest-deep); }
     .connect-btn:disabled { opacity: 0.5; cursor: default; }
-    .neighbor-legend {
-      display: flex; gap: var(--space-md); flex-wrap: wrap;
-      font-size: 0.8rem; color: var(--stone); margin-bottom: var(--space-md);
-    }
-    .neighbor-legend span { display: flex; align-items: center; gap: 4px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
     @media (max-width: 768px) { .neighbor-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -109,6 +118,13 @@
           <span><div class="legend-dot" style="background:var(--forest-deep);"></div> Your property</span>
           <span><div class="legend-dot" style="background:var(--pond-surface);"></div> Connected</span>
           <span><div class="legend-dot" style="background:#fef3c7;border:1px solid #fde68a;"></div> Pending</span>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-xs);">
+          <label style="font-size:0.8rem;color:var(--stone);display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="showAllToggle" onchange="loadNeighbors()" style="accent-color:var(--forest-deep);">
+            Show all properties
+          </label>
         </div>
 
         <div class="neighbor-grid" id="neighborGrid">
@@ -181,36 +197,60 @@
     async function loadNeighbors() {
       try {
         const res = await fetch('/api/neighbors');
-        const neighbors = await res.json();
+        const properties = await res.json();
         const grid = document.getElementById('neighborGrid');
         grid.innerHTML = '';
 
-        neighbors.forEach(n => {
-          const card = document.createElement('div');
-          card.className = 'neighbor-card' + (n.is_self ? ' is-self' : '') + (n.is_friend ? ' is-friend' : '');
+        // Filter: by default hide properties with no visible users
+        const showAll = document.getElementById('showAllToggle')?.checked;
+        const filtered = showAll ? properties : properties.filter(p => p.users.length > 0 || p.registered_user_count > 0);
 
-          let statusHtml = '';
-          if (n.is_self) {
-            statusHtml = '<span class="neighbor-status you">You</span>';
-          } else if (n.is_friend) {
-            statusHtml = '<span class="neighbor-status friend">Connected</span>';
-          } else if (n.request_sent) {
-            statusHtml = '<span class="neighbor-status pending">Pending</span>';
-          } else if (n.request_received) {
-            statusHtml = '<span class="neighbor-status incoming">Incoming</span>';
-          } else if (n.has_registered_user) {
-            statusHtml = `<button class="connect-btn" onclick="connectNeighbor(${n.address_id}, this)">Connect</button>`;
+        if (filtered.length === 0) {
+          grid.innerHTML = '<p style="color:var(--stone);grid-column:1/-1;text-align:center;">No neighbors to display yet.</p>';
+          return;
+        }
+
+        filtered.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'neighbor-card';
+
+          let bodyHtml = '';
+          if (p.users.length > 0) {
+            bodyHtml = p.users.map(u => {
+              let actionHtml = '';
+              if (u.status === 'you') {
+                actionHtml = '<span class="resident-status you">You</span>';
+              } else if (u.status === 'friend') {
+                actionHtml = '<span class="resident-status friend">Connected</span>';
+              } else if (u.status === 'pending') {
+                actionHtml = '<span class="resident-status pending">Pending</span>';
+              } else if (u.status === 'incoming') {
+                actionHtml = '<span class="resident-status incoming">Incoming</span>';
+              } else {
+                actionHtml = `<button class="connect-btn" onclick="connectUser(${u.id}, this)">Connect</button>`;
+              }
+              return `
+                <div class="resident-row">
+                  <span class="resident-name">${escapeHtml(u.name)}</span>
+                  ${actionHtml}
+                </div>
+              `;
+            }).join('');
+          } else if (p.registered_user_count > 0) {
+            bodyHtml = '<div class="private-residence">Private residence</div>';
           } else {
-            statusHtml = '<span style="font-size:0.8rem;color:var(--lichen);">Not registered</span>';
+            bodyHtml = '<div class="not-registered">Not registered</div>';
           }
 
           card.innerHTML = `
-            <div class="neighbor-info">
-              <h4>${escapeHtml(n.tract_lot || n.wr_designation || '')}</h4>
-              <span>${escapeHtml(n.street_address)}</span>
-              ${n.acres ? `<div class="acres">${n.acres} acres</div>` : ''}
+            <div class="neighbor-header">
+              <h4>${escapeHtml(p.tract_lot)}</h4>
+              <span>${escapeHtml(p.street_address)}</span>
+              ${p.acres ? `<div class="acres">${p.acres} acres</div>` : ''}
             </div>
-            ${statusHtml}
+            <div class="neighbor-body">
+              ${bodyHtml}
+            </div>
           `;
           grid.appendChild(card);
         });
@@ -219,21 +259,21 @@
       }
     }
 
-    async function connectNeighbor(addressId, btn) {
+    async function connectUser(userId, btn) {
       btn.disabled = true;
-      btn.textContent = 'Sending...';
+      btn.textContent = '...';
       try {
-        const res = await fetch('/api/neighbors/connect', {
+        const res = await fetch('/api/friends/request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address_id: addressId }),
+          body: JSON.stringify({ to_user_id: userId }),
         });
         const data = await res.json();
-        if (data.success) {
+        if (res.ok) {
           showToast('Connection request sent', 'success');
           loadNeighbors();
         } else {
-          showToast(data.error, 'error');
+          showToast(data.error || 'Error sending request', 'error');
           btn.disabled = false;
           btn.textContent = 'Connect';
         }

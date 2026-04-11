@@ -388,106 +388,68 @@ export async function handleApi(request, env, session) {
     return json(results);
   }
 
-  // --- Neighbors (properties without owner PII) ---
+  // --- Neighbors (properties with residents) ---
   if (path === '/api/neighbors' && method === 'GET') {
-    // Return properties with address info — supports multiple users per address
     const { results } = await env.DB.prepare(
-      `SELECT a.id as address_id, a.tract_lot, a.street_address, a.full_label,
+      `SELECT a.id as address_id, a.tract_lot, a.street_address,
               p.acres, p.wr_designation,
-              u.id as resident_user_id,
-              u.is_anonymous, u.show_name
+              u.id as user_id, u.name, u.is_anonymous, u.show_name, u.role
        FROM addresses a
        LEFT JOIN properties p ON a.id = p.address_id
        LEFT JOIN users u ON u.address_id = a.id AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL
-       ORDER BY a.id`
-    ).bind().all();
+       ORDER BY a.id, u.id`
+    ).all();
 
-    // Check friendships for each neighbor
     const { results: myFriends } = await env.DB.prepare(
       `SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as fid
        FROM friendships WHERE user_a_id = ? OR user_b_id = ?`
     ).bind(userId, userId, userId).all();
     const friendSet = new Set(myFriends.map(f => f.fid));
 
-    // Check pending friend requests
-    const { results: sentReqs } = await env.DB.prepare(
-      `SELECT to_user_id FROM friend_requests WHERE from_user_id = ? AND status = 'pending'`
-    ).bind(userId).all();
-    const sentSet = new Set(sentReqs.map(r => r.to_user_id));
+    const { results: pendingReqs } = await env.DB.prepare(
+      `SELECT to_user_id, from_user_id FROM friend_requests
+       WHERE (from_user_id = ? OR to_user_id = ?) AND status = 'pending'`
+    ).bind(userId, userId).all();
+    const sentSet = new Set(pendingReqs.filter(r => r.from_user_id === userId).map(r => r.to_user_id));
+    const receivedSet = new Set(pendingReqs.filter(r => r.to_user_id === userId).map(r => r.from_user_id));
 
-    const { results: recvReqs } = await env.DB.prepare(
-      `SELECT from_user_id FROM friend_requests WHERE to_user_id = ? AND status = 'pending'`
-    ).bind(userId).all();
-    const recvSet = new Set(recvReqs.map(r => r.from_user_id));
-
-    // Group by address to support multiple users per address
+    const isViewerOfficer = OFFICER_ROLES.includes(session.user.role);
     const addressMap = new Map();
+
     for (const r of results) {
       if (!addressMap.has(r.address_id)) {
         addressMap.set(r.address_id, {
           address_id: r.address_id,
           tract_lot: r.tract_lot,
           street_address: r.street_address,
-          full_label: r.full_label,
           acres: r.acres,
-          wr_designation: r.wr_designation,
-          resident_user_ids: [],
-          registered_user_count: 0,
-          has_registered_user: false,
-          is_self: false,
-          is_friend: false,
-          request_sent: false,
-          request_received: false,
-          can_connect: false,
+          users: [],
+          registered_user_count: 0
         });
       }
       const entry = addressMap.get(r.address_id);
-      if (r.resident_user_id) {
-        entry.resident_user_ids.push(r.resident_user_id);
+      if (r.user_id) {
         entry.registered_user_count++;
-        entry.has_registered_user = true;
-        if (r.resident_user_id === userId) entry.is_self = true;
-        if (friendSet.has(r.resident_user_id)) entry.is_friend = true;
-        if (sentSet.has(r.resident_user_id)) entry.request_sent = true;
-        if (recvSet.has(r.resident_user_id)) entry.request_received = true;
-        // Can connect if at least one non-anonymous user at the address
-        if (!r.is_anonymous && r.show_name !== 0) entry.can_connect = true;
+        const isSelf = r.user_id === userId;
+        const hideCompletely = r.is_anonymous && !isSelf && !isViewerOfficer;
+        
+        if (!hideCompletely) {
+          let displayName = r.name;
+          if (!isSelf && !isViewerOfficer && r.show_name === 0) {
+            displayName = `A resident at ${r.tract_lot}`;
+          }
+
+          let status = null;
+          if (isSelf) status = 'you';
+          else if (friendSet.has(r.user_id)) status = 'friend';
+          else if (sentSet.has(r.user_id)) status = 'pending';
+          else if (receivedSet.has(r.user_id)) status = 'incoming';
+
+          entry.users.push({ id: r.user_id, name: displayName, status, is_self: isSelf });
+        }
       }
     }
-
-    const neighbors = Array.from(addressMap.values());
-    return json(neighbors);
-  }
-
-  // POST /api/neighbors/connect — send friend request to property resident
-  if (path === '/api/neighbors/connect' && method === 'POST') {
-    const body = await request.json();
-    if (!body.address_id) return json({ error: 'address_id required' }, 400);
-
-    // Find the registered user at this address
-    const resident = await env.DB.prepare(
-      `SELECT id FROM users WHERE address_id = ? AND role != 'pending' AND agreement_signed_at IS NOT NULL`
-    ).bind(body.address_id).first();
-    if (!resident) return json({ error: 'No registered member at this address' }, 404);
-    if (resident.id === userId) return json({ error: 'You cannot connect with yourself' }, 400);
-
-    // Check existing friendship
-    const existingFriend = await env.DB.prepare(
-      `SELECT id FROM friendships WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)`
-    ).bind(userId, resident.id, resident.id, userId).first();
-    if (existingFriend) return json({ error: 'Already connected' }, 400);
-
-    // Check existing request
-    const existingReq = await env.DB.prepare(
-      `SELECT id FROM friend_requests WHERE from_user_id = ? AND to_user_id = ? AND status = 'pending'`
-    ).bind(userId, resident.id).first();
-    if (existingReq) return json({ error: 'Request already sent' }, 400);
-
-    await env.DB.prepare(
-      "INSERT INTO friend_requests (from_user_id, to_user_id, status, created_at) VALUES (?, ?, 'pending', datetime('now'))"
-    ).bind(userId, resident.id).run();
-
-    return json({ success: true, message: 'Connection request sent' });
+    return json(Array.from(addressMap.values()));
   }
 
   // --- Members directory ---
