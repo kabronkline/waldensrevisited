@@ -1010,6 +1010,30 @@ export async function handleApi(request, env, session) {
     return json({ id: result.meta.last_row_id, success: true }, 201);
   }
 
+  // DELETE /api/chat/threads/:threadId — delete a chat thread
+  const chatDeleteMatch = path.match(/^\/api\/chat\/threads\/(\d+)$/);
+  if (chatDeleteMatch && method === 'DELETE') {
+    const threadId = parseInt(chatDeleteMatch[1]);
+    const thread = await env.DB.prepare('SELECT * FROM chat_threads WHERE id = ?').bind(threadId).first();
+    if (!thread) return json({ error: 'Thread not found' }, 404);
+
+    // Verify participant
+    const isParticipant = thread.user_a_id === userId || thread.user_b_id === userId ||
+      await env.DB.prepare('SELECT id FROM chat_participants WHERE thread_id = ? AND user_id = ?').bind(threadId, userId).first();
+    if (!isParticipant) return json({ error: 'Not authorized' }, 403);
+
+    if (thread.type === 'officer') {
+      // Officer threads: only officers can delete, just clear messages (thread persists)
+      if (!OFFICER_ROLES.includes(session.user.role)) return json({ error: 'Only officers can delete officer threads' }, 403);
+      await env.DB.prepare('DELETE FROM chat_messages WHERE thread_id = ?').bind(threadId).run();
+    } else {
+      // Friend threads: delete thread and all messages (CASCADE handles messages)
+      await env.DB.prepare('DELETE FROM chat_threads WHERE id = ?').bind(threadId).run();
+    }
+
+    return json({ success: true });
+  }
+
   // --- Friends pending count ---
   if (path === '/api/friends/pending-count' && method === 'GET') {
     const count = await env.DB.prepare(

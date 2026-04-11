@@ -563,6 +563,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                 Share Contact
               </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteThread()" title="Delete conversation" style="padding:6px 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
             </div>
             <div class="messages-area" id="messagesArea"></div>
             <div class="message-counter" id="messageCounter"></div>
@@ -891,6 +894,33 @@
       } catch (e) {
         showToast(e.message, 'error');
       }
+    }
+
+    // ---- Delete Thread ----
+    async function deleteThread() {
+      if (!activeThreadId) return;
+      const threadData = threads.find(t => t.id === activeThreadId);
+      const isOfficer = threadData?.type === 'officer';
+      const msg = isOfficer
+        ? 'Clear all messages in this officer thread? The thread will remain and new messages can be sent.'
+        : 'Delete this conversation and all messages?';
+      if (!confirm(msg)) return;
+
+      try {
+        const res = await fetch(`/api/chat/threads/${activeThreadId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(isOfficer ? 'Messages cleared' : 'Conversation deleted', 'success');
+          activeThreadId = null;
+          activeThreadType = null;
+          activeMessages = [];
+          document.getElementById('conversationActive').style.display = 'none';
+          document.getElementById('conversationPlaceholder').style.display = '';
+          await loadThreads();
+        } else {
+          showToast(data.error || 'Error', 'error');
+        }
+      } catch (e) { showToast('Error deleting thread', 'error'); }
     }
 
     // ---- Contact Officers ----
