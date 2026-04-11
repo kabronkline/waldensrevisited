@@ -200,6 +200,7 @@ function initMembersSidebar(activePage) {
   const toggleSidebar = () => {
     sidebar.classList.toggle('open');
     overlay.classList.toggle('open');
+    document.body.classList.toggle('body-lock', sidebar.classList.contains('open'));
     updateNavToggle(sidebar.classList.contains('open'));
   };
 
@@ -210,7 +211,18 @@ function initMembersSidebar(activePage) {
     overlay.addEventListener('click', () => {
       sidebar.classList.remove('open');
       overlay.classList.remove('open');
+      document.body.classList.remove('body-lock');
       updateNavToggle(false);
+    });
+  }
+
+  // Auto-close on link click (for mobile)
+  if (sidebar) {
+    sidebar.addEventListener('click', (e) => {
+      const link = e.target.closest('.sidebar-link');
+      if (link && window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        toggleSidebar();
+      }
     });
   }
 

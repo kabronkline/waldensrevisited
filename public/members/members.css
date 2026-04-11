@@ -181,10 +181,10 @@
 @media (max-width: 768px) {
   .members-sidebar {
     position: fixed;
-    left: -240px;
+    left: -280px;
     top: 72px;
     z-index: 145;
-    width: 240px;
+    width: 280px;
     transition: left 0.3s ease;
     box-shadow: none;
   }
@@ -197,6 +197,11 @@
   .sidebar-overlay.open { display: block; }
 
   .sidebar-toggle { display: flex; }
+}
+
+.body-lock {
+  overflow: hidden !important;
+}
 
   .members-main { padding: var(--space-md) var(--space-sm); }
 }
