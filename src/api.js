@@ -1379,11 +1379,17 @@ export async function handleApi(request, env, session) {
       return json({ results, page, limit, total: countResult.cnt });
     }
 
-    // PUT /api/admin/approve/post/:id
+    // PUT /api/admin/approve/post/:id (with optional allow_comments override)
     const approvePostMatch = path.match(/^\/api\/admin\/approve\/post\/(\d+)$/);
     if (approvePostMatch && method === 'PUT') {
       const postId = parseInt(approvePostMatch[1]);
-      await env.DB.prepare("UPDATE posts SET approved = 1 WHERE id = ?").bind(postId).run();
+      let allowComments = null;
+      try { const body = await request.json(); allowComments = body.allow_comments; } catch (e) {}
+      if (allowComments !== null && allowComments !== undefined) {
+        await env.DB.prepare("UPDATE posts SET approved = 1, allow_comments = ? WHERE id = ?").bind(allowComments ? 1 : 0, postId).run();
+      } else {
+        await env.DB.prepare("UPDATE posts SET approved = 1 WHERE id = ?").bind(postId).run();
+      }
       await env.DB.prepare(
         'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
       ).bind(userId, 'approve_post', null, `approved post #${postId}`).run();

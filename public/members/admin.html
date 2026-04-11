@@ -483,7 +483,7 @@
             previewHtml = `<div class="pending-item-preview"><img src="${escapeHtml(post.image)}" alt=""></div>`;
           }
 
-          const commentsLabel = post.allow_comments === 0 ? 'Comments: Off' : 'Comments: On';
+          const commentsChecked = post.allow_comments !== 0 ? 'checked' : '';
 
           item.innerHTML = `
             ${previewHtml}
@@ -491,9 +491,12 @@
               <h4>${escapeHtml(post.author_name)}</h4>
               <span>${escapeHtml(post.author_email)} &middot; ${formatTimeAgo(post.created_at)}</span>
               <div style="margin-top:6px;padding:8px 12px;background:var(--mist);border-radius:8px;font-size:0.9rem;color:var(--charcoal);white-space:pre-wrap;border-left:3px solid var(--pond-surface);">${escapeHtml(post.content.substring(0, 300))}${post.content.length > 300 ? '...' : ''}</div>
-              <div style="margin-top:6px;display:flex;gap:var(--space-sm);font-size:0.8rem;color:var(--stone);">
+              <div style="margin-top:6px;display:flex;gap:var(--space-sm);align-items:center;font-size:0.8rem;color:var(--stone);">
                 <span style="background:rgba(45,74,62,0.06);padding:2px 8px;border-radius:4px;">Visibility: All Members</span>
-                <span style="background:rgba(45,74,62,0.06);padding:2px 8px;border-radius:4px;">${commentsLabel}</span>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;background:rgba(45,74,62,0.06);padding:2px 8px;border-radius:4px;">
+                  <input type="checkbox" id="comments-${post.id}" ${commentsChecked} style="accent-color:var(--forest-deep);">
+                  Comments
+                </label>
               </div>
             </div>
             <div class="pending-item-actions" style="flex-direction:column;">
@@ -510,7 +513,12 @@
 
     async function approvePost(id) {
       try {
-        await fetch(`/api/admin/approve/post/${id}`, { method: 'PUT' });
+        const allowComments = document.getElementById(`comments-${id}`)?.checked ? 1 : 0;
+        await fetch(`/api/admin/approve/post/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ allow_comments: allowComments }),
+        });
         showToast('Post approved', 'success');
         loadPendingPosts();
       } catch (e) {
