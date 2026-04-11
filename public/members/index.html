@@ -199,24 +199,21 @@
       }).catch(() => {});
     }
 
-    // Set avatar from session immediately, then refine from API
+    // Set post composer avatar — use cache first, then API
     const avatarEl = document.getElementById('postAvatar');
-    // Immediate: use session data
-    if (session.profilePicture) {
-      avatarEl.innerHTML = `<img src="${escapeHtml(session.profilePicture)}" alt="">`;
-    } else if (session.avatarId && typeof getAvatarSvg === 'function') {
-      avatarEl.innerHTML = getAvatarSvg(session.avatarId);
-    } else if (session.picture) {
-      avatarEl.innerHTML = `<img src="${escapeHtml(session.picture)}" alt="">`;
+    function setPostAvatar(pp, avId, gp) {
+      if (pp) avatarEl.innerHTML = `<img src="${escapeHtml(pp)}" alt="">`;
+      else if (avId && typeof getAvatarSvg === 'function') avatarEl.innerHTML = getAvatarSvg(avId);
+      else if (gp) avatarEl.innerHTML = `<img src="${escapeHtml(gp)}" alt="">`;
     }
-    // Refine: fetch latest from API (in case avatar was changed)
+    try {
+      const cached = JSON.parse(sessionStorage.getItem('wr_user_avatar') || 'null');
+      if (cached) setPostAvatar(cached.pp, cached.av, cached.gp);
+      else setPostAvatar(session.profilePicture, session.avatarId, session.picture);
+    } catch(e) { setPostAvatar(session.profilePicture, session.avatarId, session.picture); }
+    // Refine from API
     fetch('/api/me').then(r => r.json()).then(me => {
-      if (me.profile_picture) {
-        avatarEl.innerHTML = `<img src="${escapeHtml(me.profile_picture)}" alt="">`;
-      } else if (me.avatar_id && typeof getAvatarSvg === 'function') {
-        avatarEl.innerHTML = getAvatarSvg(me.avatar_id);
-      } else if (me.google_picture) {
-        avatarEl.innerHTML = `<img src="${escapeHtml(me.google_picture)}" alt="">`;
+      setPostAvatar(me.profile_picture, me.avatar_id, me.google_picture);
       }
     }).catch(() => {});
 

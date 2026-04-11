@@ -820,7 +820,7 @@
           try {
             var cached = JSON.parse(sessionStorage.getItem('wr_user_avatar') || 'null');
             if (cached) setHomeAvatar(cached.pp, cached.av, cached.gp, cached.nm);
-            else if (session.picture) avatar.style.backgroundImage = 'url(' + session.picture + ')';
+            else setHomeAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
           } catch(e) {}
           // Refresh from API and cache
           fetch('/api/me').then(function(r){return r.json()}).then(function(me) {

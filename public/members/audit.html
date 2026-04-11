@@ -83,6 +83,7 @@
     </main>
   </div>
 
+  <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
     const session = window.__session;
@@ -173,19 +174,8 @@
       } catch (e) { showToast('Failed to load audit log', 'error'); }
     }
 
-    // Nav avatar
+    // Nav avatar handled by initMembersSidebar() above
     (function() {
-      if (session) {
-        document.getElementById('navSignIn').style.display = 'none';
-        document.getElementById('navMembers').style.display = 'flex';
-        var avatar = document.getElementById('navUserAvatar');
-        if (avatar && session.picture) {
-          avatar.style.backgroundImage = 'url(' + session.picture + ')';
-        } else if (avatar) {
-          var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
-          avatar.textContent = initials || 'U';
-        }
-      }
     })();
 
     loadConsent();
