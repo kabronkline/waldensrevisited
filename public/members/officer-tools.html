@@ -80,35 +80,7 @@
       <!-- Users Tab -->
       <div class="tab-content" id="tab-users" style="display:none;">
         <div class="profile-section">
-          <button class="btn btn-primary btn-sm" onclick="document.getElementById('addUserForm').style.display = document.getElementById('addUserForm').style.display === 'none' ? '' : 'none';" style="margin-bottom:var(--space-sm);">Add User</button>
-          <div id="addUserForm" style="display:none;">
-            <h3 style="margin-bottom:4px;">Add User</h3>
-            <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in. When they sign in with Google using this email, they'll be automatically linked.</p>
-            <div class="form-group">
-              <label>Google Email Address *</label>
-              <input type="email" id="addUserEmail" placeholder="user@gmail.com">
-            </div>
-            <div class="form-group">
-              <label>Display Name *</label>
-              <input type="text" id="addUserName" placeholder="Full name">
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
-              <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Role</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="member" checked onchange="updateAddUserForm()"> Member</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="other_officer" onchange="updateAddUserForm()"> Other Officer</label>
-            </div>
-            <div class="form-group" id="addUserAddrGroup">
-              <label>Property Address *</label>
-              <select id="addUserAddress"><option value="">Select address...</option></select>
-            </div>
-            <div class="form-group">
-              <label style="display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="addUserAnonymous" style="accent-color:var(--forest-deep);">
-                Set as anonymous (hide name/PII from non-officer users)
-              </label>
-            </div>
-            <button class="btn btn-primary" id="addUserBtn">Add User</button>
-          </div>
+          <button class="btn btn-primary btn-sm" onclick="showAddUserModal()" style="margin-bottom:var(--space-sm);">Add User</button>
         </div>
         <div class="profile-section" style="overflow-x:auto;">
           <h2>All Users</h2>
@@ -250,6 +222,43 @@
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('createDocModal').style.display='none'">Cancel</button>
             <button type="submit" class="btn btn-primary btn-sm" id="createDocBtn">Add Document</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="addUserModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+      <div class="modal" style="max-width:520px;">
+        <h2>Add User</h2>
+        <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Pre-register an account. When they sign in with Google using this email, they'll be automatically linked.</p>
+        <form id="addUserFormModal" onsubmit="return submitAddUser(event)" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Google Email *</label><input name="email" type="email" required placeholder="user@gmail.com" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Display Name *</label><input name="name" required placeholder="Full name" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:6px;">Role</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px 14px;">
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="member" checked onchange="updateAddUserAddrGroup()"> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="president" onchange="updateAddUserAddrGroup()"> President</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="secretary" onchange="updateAddUserAddrGroup()"> Secretary</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="treasurer" onchange="updateAddUserAddrGroup()"> Treasurer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="other_officer" onchange="updateAddUserAddrGroup()"> Other Officer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="admin" onchange="updateAddUserAddrGroup()"> Admin</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="addUserRole" value="auditor" onchange="updateAddUserAddrGroup()"> Auditor</label>
+            </div>
+          </div>
+          <div id="addUserAddrGroupModal">
+            <label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Property Address *</label>
+            <select name="address_id" id="addUserAddressModal" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"><option value="">Select address...</option></select>
+          </div>
+          <div>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:8px;"><input type="checkbox" name="is_anonymous" style="accent-color:var(--forest-deep);"> Set as anonymous (hide name/PII from non-officer users)</label>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('addUserModal').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="addUserSubmitBtn">Add User</button>
           </div>
         </form>
       </div>
@@ -574,8 +583,8 @@
         const addrData = await addrRes.json();
         allAddresses = addrData.results || addrData;
 
-        // Populate add-user address picker
-        const addUserAddr = document.getElementById('addUserAddress');
+        // Populate add-user modal address picker
+        const addUserAddr = document.getElementById('addUserAddressModal');
         if (addUserAddr && addUserAddr.options.length <= 1) {
           allAddresses.forEach(a => {
             const opt = document.createElement('option');
@@ -765,44 +774,52 @@
       document.getElementById('editUserModal').style.display = 'none';
     }
 
-    // Add User (Pre-register)
-    function updateAddUserForm() {
-      // Address always required for member/other_officer
-      document.getElementById('addUserAddrGroup').style.display = '';
+    // Add User (Pre-register) — modal
+    function showAddUserModal() {
+      document.getElementById('addUserFormModal').reset();
+      updateAddUserAddrGroup();
+      document.getElementById('addUserModal').style.display = '';
     }
-    updateAddUserForm();
 
-    document.getElementById('addUserBtn').addEventListener('click', async () => {
-      const email = document.getElementById('addUserEmail').value.trim();
-      const name = document.getElementById('addUserName').value.trim();
+    function updateAddUserAddrGroup() {
       const role = document.querySelector('input[name="addUserRole"]:checked')?.value || 'member';
-      const addressId = parseInt(document.getElementById('addUserAddress').value);
+      const needsAddress = !['admin', 'auditor'].includes(role);
+      document.getElementById('addUserAddrGroupModal').style.display = needsAddress ? '' : 'none';
+    }
 
-      if (!email || !name) { showToast('Email and name are required', 'error'); return; }
-      if (!addressId) { showToast('Address is required', 'error'); return; }
+    async function submitAddUser(e) {
+      e.preventDefault();
+      const form = document.getElementById('addUserFormModal');
+      const fd = new FormData(form);
+      const email = fd.get('email').trim();
+      const name = fd.get('name').trim();
+      const role = document.querySelector('input[name="addUserRole"]:checked')?.value || 'member';
+      const needsAddress = !['admin', 'auditor'].includes(role);
+      const addressId = needsAddress ? parseInt(fd.get('address_id')) : null;
+
+      if (!email || !name) { showToast('Email and name are required', 'error'); return false; }
+      if (needsAddress && !addressId) { showToast('Address is required for this role', 'error'); return false; }
 
       const body = {
         email, name, roles: [role],
         address_id: addressId,
-        is_anonymous: document.getElementById('addUserAnonymous')?.checked || false,
+        is_anonymous: fd.get('is_anonymous') === 'on',
       };
 
-      const btn = document.getElementById('addUserBtn');
+      const btn = document.getElementById('addUserSubmitBtn');
       btn.disabled = true; btn.textContent = 'Adding...';
       try {
         const res = await fetch('/api/admin/pre-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const data = await res.json();
         if (data.success) {
           showToast(`${name} added successfully`, 'success');
-          document.getElementById('addUserEmail').value = '';
-          document.getElementById('addUserName').value = '';
-          document.getElementById('addUserAddress').value = '';
-          document.getElementById('addUserForm').style.display = 'none';
+          document.getElementById('addUserModal').style.display = 'none';
           loadUsers();
         } else { showToast(data.error, 'error'); }
       } catch (e) { showToast('Error', 'error'); }
       btn.disabled = false; btn.textContent = 'Add User';
-    });
+      return false;
+    }
 
     // ---- Content Reports (Moderation) ----
     async function loadReports() {
