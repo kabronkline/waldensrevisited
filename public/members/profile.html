@@ -123,30 +123,36 @@
 
         <div class="form-group">
           <div class="toggle-group">
-            <label class="toggle">
-              <input type="checkbox" id="anonymousToggle">
-              <span class="toggle-slider"></span>
-            </label>
-            <div>
-              <strong style="font-size:0.95rem;">Remain anonymous</strong>
-              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When on, your identity is completely hidden from other members. You appear as "Neighbor at [your address]." You can still connect with neighbors and chat anonymously.</p>
+            <div class="privacy-label-row">
+              <strong style="font-size:0.95rem;">Identity Visibility</strong>
+              <span class="privacy-status-label" id="anonStatus">Visible</span>
             </div>
+            <div class="segmented-switch">
+              <input type="radio" name="anon" id="anon_false" value="0">
+              <label for="anon_false">Public Name</label>
+              
+              <input type="radio" name="anon" id="anon_true" value="1">
+              <label for="anon_true">Anonymous</label>
+            </div>
+            <p class="privacy-hint">When anonymous, you appear as "Neighbor at [Address]".</p>
           </div>
         </div>
 
-        <div id="identityOptions" style="margin-left:var(--space-lg);border-left:2px solid rgba(139,115,85,0.1);padding-left:var(--space-md);">
-          <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Since you're sharing your identity, your name is visible to other members. You may optionally share contact info.</p>
-
+        <div id="identityOptions" style="margin-left:var(--space-md);border-left:2px solid rgba(139,115,85,0.1);padding-left:var(--space-md);margin-top:var(--space-sm);">
           <div class="form-group">
             <div class="toggle-group">
-              <label class="toggle">
-                <input type="checkbox" id="showContactToggle" checked>
-                <span class="toggle-slider"></span>
-              </label>
-              <div>
-                <strong style="font-size:0.95rem;">Share contact info</strong>
-                <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When on, your email and address are visible to other members. When off, you can still communicate via in-app chat.</p>
+              <div class="privacy-label-row">
+                <strong style="font-size:0.95rem;">Contact Info</strong>
+                <span class="privacy-status-label" id="contactStatus">Hidden</span>
               </div>
+              <div class="segmented-switch">
+                <input type="radio" name="contact" id="contact_false" value="0">
+                <label for="contact_false">Private</label>
+                
+                <input type="radio" name="contact" id="contact_true" value="1">
+                <label for="contact_true">Shared</label>
+              </div>
+              <p class="privacy-hint">When shared, neighbors can see your email and address.</p>
             </div>
           </div>
         </div>
@@ -284,16 +290,34 @@
           }
         }).catch(() => {});
 
-        // Privacy toggles
+        // Privacy settings
         const isAnon = !!currentUser.is_anonymous;
-        document.getElementById('anonymousToggle').checked = isAnon;
-        document.getElementById('showContactToggle').checked = currentUser.show_contact !== 0;
-        document.getElementById('identityOptions').style.display = isAnon ? 'none' : '';
+        const isContactShared = currentUser.show_contact !== 0;
 
-        // Toggle identity options when anonymous changes
-        document.getElementById('anonymousToggle').addEventListener('change', (e) => {
-          document.getElementById('identityOptions').style.display = e.target.checked ? 'none' : '';
-          if (e.target.checked) document.getElementById('showContactToggle').checked = false;
+        document.getElementById(isAnon ? 'anon_true' : 'anon_false').checked = true;
+        document.getElementById(isContactShared ? 'contact_true' : 'contact_false').checked = true;
+        
+        const updatePrivacyUI = () => {
+          const anon = document.getElementById('anon_true').checked;
+          const shared = document.getElementById('contact_true').checked;
+          
+          document.getElementById('anonStatus').textContent = anon ? 'Anonymous' : 'Visible';
+          document.getElementById('contactStatus').textContent = shared ? 'Shared' : 'Hidden';
+          document.getElementById('identityOptions').style.display = anon ? 'none' : '';
+        };
+
+        updatePrivacyUI();
+
+        document.querySelectorAll('input[name="anon"]').forEach(r => {
+          r.addEventListener('change', () => {
+            if (document.getElementById('anon_true').checked) {
+              document.getElementById('contact_false').checked = true;
+            }
+            updatePrivacyUI();
+          });
+        });
+        document.querySelectorAll('input[name="contact"]').forEach(r => {
+          r.addEventListener('change', updatePrivacyUI);
         });
 
       } catch (e) {
@@ -357,9 +381,9 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: document.getElementById('displayName').value.trim(),
-            is_anonymous: document.getElementById('anonymousToggle').checked ? 1 : 0,
-            show_name: document.getElementById('anonymousToggle').checked ? 0 : 1,
-            show_contact: document.getElementById('showContactToggle').checked ? 1 : 0,
+            is_anonymous: document.getElementById('anon_true').checked ? 1 : 0,
+            show_name: document.getElementById('anon_true').checked ? 0 : 1,
+            show_contact: document.getElementById('contact_true').checked ? 1 : 0,
           }),
         });
         const data = await res.json();

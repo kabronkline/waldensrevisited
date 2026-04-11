@@ -604,46 +604,66 @@
 
 .toggle-group {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs) 0;
+}
+
+.privacy-label-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 4px;
 }
 
-.toggle {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  flex-shrink: 0;
+.privacy-status-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pond-surface);
+  background: var(--morning);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
-.toggle input { opacity: 0; width: 0; height: 0; }
+.segmented-switch {
+  display: flex;
+  background: var(--mist);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(139, 115, 85, 0.1);
+  width: 100%;
+}
 
-.toggle-slider {
-  position: absolute;
-  inset: 0;
-  background: var(--lichen);
-  border-radius: 12px;
+.segmented-switch input {
+  display: none;
+}
+
+.segmented-switch label {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--stone);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  left: 3px;
-  bottom: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: transform 0.2s;
-}
-
-.toggle input:checked + .toggle-slider {
+.segmented-switch input:checked + label {
   background: var(--forest-deep);
+  color: var(--parchment);
+  box-shadow: 0 2px 8px rgba(45, 74, 62, 0.15);
 }
 
-.toggle input:checked + .toggle-slider::before {
-  transform: translateX(20px);
+.privacy-hint {
+  font-size: 0.8rem;
+  color: var(--lichen);
+  line-height: 1.5;
+  margin-top: 4px;
 }
 
 /* ---- Profile Picture ---- */
