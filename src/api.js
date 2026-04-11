@@ -342,10 +342,10 @@ export async function handleApi(request, env, session) {
       if (err) return json({ error: err }, 400);
     }
 
-    const visibility = ['everybody', 'friends', 'officers'].includes(body.visibility) ? body.visibility : 'everybody';
+    const visibility = ['everybody', 'friends'].includes(body.visibility) ? body.visibility : 'friends';
 
-    // Auto-approve: friends/officers posts always approved; "everybody" posts need approval unless from elevated roles
-    const autoApprove = (visibility !== 'everybody' || canAutoApprovePost(session.user.role)) ? 1 : 0;
+    // Friends posts auto-approved; All posts ALWAYS need approval (two-person rule)
+    const autoApprove = (visibility !== 'everybody') ? 1 : 0;
 
     const result = await env.DB.prepare(
       'INSERT INTO posts (user_id, content, image, approved, visibility, allow_comments) VALUES (?, ?, ?, ?, ?, ?)'

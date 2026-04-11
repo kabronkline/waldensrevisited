@@ -66,28 +66,25 @@
       </div>
 
       <!-- Post Composer -->
-      <div class="composer-card" id="newPostSection">
-        <div style="display:flex;gap:var(--space-xs);align-items:flex-start;">
-          <div class="composer-avatar" id="postAvatar" style="margin-top:4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div id="newPostSection" style="background:var(--parchment);border:1px solid rgba(139,115,85,0.15);border-radius:12px;padding:var(--space-md);margin-bottom:var(--space-md);box-shadow:0 2px 8px rgba(45,74,62,0.06);">
+        <div style="display:flex;gap:12px;margin-bottom:12px;">
+          <div class="composer-avatar" id="postAvatar" style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--pond-surface);background:var(--parchment);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:6px;color:var(--lichen);width:100%;height:100%;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <textarea class="composer-input" id="postContent" placeholder="Share something with the community..." rows="2" style="flex:1;border:none;resize:none;font-family:var(--font-body);font-size:0.95rem;outline:none;background:transparent;min-height:50px;"></textarea>
+          <textarea id="postContent" placeholder="What's on your mind?" rows="3" style="flex:1;border:1px solid rgba(139,115,85,0.15);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:16px;resize:none;outline:none;background:white;transition:border-color 0.2s;min-height:60px;" onfocus="this.style.borderColor='var(--forest-deep)'" onblur="this.style.borderColor='rgba(139,115,85,0.15)'"></textarea>
         </div>
-        <div class="composer-preview" id="imagePreview"></div>
-        <div class="composer-actions" style="gap:6px;">
-          <label for="postImage" class="icon-btn" title="Add photo" style="width:32px;height:32px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <div class="composer-preview" id="imagePreview" style="margin-bottom:8px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid rgba(139,115,85,0.08);">
+          <label for="postImage" style="cursor:pointer;color:var(--forest-deep);padding:6px;border-radius:6px;display:flex;transition:background 0.15s;" title="Add photo" onmouseover="this.style.background='var(--mist)'" onmouseout="this.style.background=''">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </label>
           <input type="file" id="postImage" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
-          <select id="postVisibility" style="padding:4px 6px;border:1px solid rgba(139,115,85,0.15);border-radius:6px;font-size:0.75rem;font-family:var(--font-body);background:var(--mist);color:var(--charcoal);flex-shrink:0;">
-            <option value="everybody">All</option>
-            <option value="friends">Friends</option>
-            <option value="officers">Officers</option>
+          <select id="postVisibility" style="padding:5px 8px;border:1px solid rgba(139,115,85,0.15);border-radius:6px;font-size:13px;font-family:var(--font-body);background:white;color:var(--charcoal);">
+            <option value="friends" selected>Friends</option>
+            <option value="everybody">All (approval required)</option>
           </select>
-          <button class="icon-btn comment-toggle-btn active" id="allowCommentsBtn" onclick="this.classList.toggle('active')" title="Toggle comments" style="width:32px;height:32px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </button>
-          <button class="btn-post" id="postBtn" style="padding:6px 16px;font-size:0.85rem;">Post</button>
+          <button id="allowCommentsBtn" onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.textContent = this.dataset.on === '1' ? 'Comments ON' : 'Comments OFF'; this.style.color = this.dataset.on === '1' ? 'var(--forest-deep)' : 'var(--lichen)';" data-on="1" style="background:none;border:1px solid rgba(139,115,85,0.12);border-radius:6px;padding:4px 10px;font-size:12px;font-family:var(--font-body);cursor:pointer;color:var(--forest-deep);font-weight:500;transition:color 0.15s;">Comments ON</button>
+          <button class="btn-post" id="postBtn" style="margin-left:auto;padding:7px 20px;font-size:0.85rem;">Post</button>
         </div>
       </div>
 
@@ -97,34 +94,11 @@
         <button class="btn btn-secondary" id="loadMoreBtn">Load More</button>
       </div>
 
-      <!-- Feed End & Discovery -->
-      <footer class="feed-footer">
-        <div class="discover-section">
-          <div class="discover-header">
-            <h3>Connect with Neighbors</h3>
-            <a href="/members/neighbors.html" style="font-size: 0.8rem; color: var(--pond-surface); text-decoration: none;">View Directory &rarr;</a>
-          </div>
-          <div class="discover-grid">
-            <a href="/members/neighbors.html" class="suggested-neighbor">
-              <div class="suggested-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:10px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-              <span class="suggested-name">Neighbors</span>
-            </a>
-            <a href="/members/neighbors.html" class="suggested-neighbor">
-              <div class="suggested-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:10px;color:var(--lichen);"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.855-1.076 2.344-2.5"/></svg></div>
-              <span class="suggested-name">Neighbor Dogs</span>
-            </a>
-            <!-- Dynamic content can be added here -->
-          </div>
-        </div>
-
-        <div class="caught-up">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          <p>You're all caught up for now.</p>
-        </div>
-      </footer>
+      <!-- Feed End -->
+      <div style="text-align:center;padding:var(--space-lg) 0;color:var(--lichen);font-size:0.85rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;margin-bottom:4px;opacity:0.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <p>You're all caught up.</p>
+      </div>
     </div>
   </main>
   </div>
@@ -208,7 +182,7 @@
 
       try {
         const visibility = document.getElementById('postVisibility').value;
-        const allowComments = document.getElementById('allowCommentsBtn').classList.contains('active');
+        const allowComments = document.getElementById('allowCommentsBtn').dataset.on === '1';
         const body = { content, visibility, allow_comments: allowComments };
         if (postImageData) body.image = postImageData;
 
