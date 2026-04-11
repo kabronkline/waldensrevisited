@@ -248,7 +248,7 @@ export async function handleApi(request, env, session) {
     const { results } = await env.DB.prepare(
       `SELECT p.*, u.name as author_name, u.role as author_role,
               u.profile_picture as author_profile_picture, u.google_picture as author_google_picture,
-              u.is_anonymous, u.show_name, u.show_contact as author_anonymous, u.avatar_id as author_avatar_id,
+              u.is_anonymous as author_anonymous, u.show_name, u.show_contact, u.avatar_id as author_avatar_id,
               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
        FROM posts p
        JOIN users u ON p.user_id = u.id
@@ -322,7 +322,7 @@ export async function handleApi(request, env, session) {
     const postId = parseInt(commentsGetMatch[1]);
     const { results } = await env.DB.prepare(
       `SELECT c.*, u.name as author_name, u.profile_picture as author_profile_picture,
-              u.google_picture as author_google_picture, u.is_anonymous, u.show_name, u.show_contact as author_anonymous
+              u.google_picture as author_google_picture, u.is_anonymous as author_anonymous, u.show_name, u.show_contact
        FROM comments c JOIN users u ON c.user_id = u.id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`
