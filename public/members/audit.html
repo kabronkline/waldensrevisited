@@ -114,7 +114,7 @@
       try {
         const res = await fetch('/api/admin/consent-records');
         const data = await res.json();
-        const records = data.results || data;
+        const records = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const tbody = document.getElementById('consentBody');
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--stone);">No records yet.</td></tr>'; return; }
         tbody.innerHTML = records.map(r => {
@@ -156,7 +156,7 @@
       try {
         const res = await fetch('/api/admin/audit-log');
         const data = await res.json();
-        const logs = data.results || data;
+        const logs = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const tbody = document.getElementById('auditBody');
         if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No activity yet.</td></tr>'; return; }
         tbody.innerHTML = logs.map(l => `<tr>

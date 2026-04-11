@@ -345,7 +345,7 @@
       try {
         const res = await fetch('/api/admin/pending-users');
         const data = await res.json();
-        const users = data.results || data;
+        const users = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('pendingUsers');
 
         if (users.length === 0) {
@@ -463,7 +463,7 @@
       try {
         const res = await fetch('/api/admin/pending-posts');
         const data = await res.json();
-        const posts = data.results || data;
+        const posts = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('pendingPosts');
 
         if (posts.length === 0) {
@@ -1136,7 +1136,7 @@
       try {
         const res = await fetch('/api/admin/address-requests');
         const data = await res.json();
-        const reqs = data.results || data;
+        const reqs = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const container = document.getElementById('addressRequests');
         if (reqs.length === 0) { container.innerHTML = '<p style="color:var(--stone);">No pending address requests.</p>'; return; }
         container.innerHTML = reqs.map(r => `
@@ -1183,7 +1183,7 @@
       try {
         const res = await fetch('/api/admin/officer-chats');
         const data = await res.json();
-        const chats = data.results || data;
+        const chats = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
         const tbody = document.getElementById('officerChatsBody');
         if (chats.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--stone);">No officer chats yet.</td></tr>'; return; }
         tbody.innerHTML = chats.map(c => `

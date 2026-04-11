@@ -586,6 +586,7 @@
     </div>
   </footer>
 
+  <script src="/members/avatars.js"></script>
   <script src="/script.js"></script>
   <script src="/pdf-viewer.js" type="module"></script>
   <script type="module">
@@ -793,19 +794,33 @@
         if (members) members.style.display = 'flex';
 
         var avatar = document.getElementById('navUserAvatar');
+        // Set from session immediately
+        if (avatar && session.picture) {
+          avatar.style.backgroundImage = 'url(' + session.picture + ')';
+        }
+        // Then fetch fresh data from API (picks up avatar changes)
         if (avatar) {
-          if (session.profilePicture) {
-            avatar.style.backgroundImage = 'url(' + session.profilePicture + ')';
-          } else if (session.avatarId) {
-            // Can't use getAvatarSvg on home page (no avatars.js), use initials fallback
-            var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
-            avatar.textContent = initials || 'U';
-          } else if (session.picture) {
-            avatar.style.backgroundImage = 'url(' + session.picture + ')';
-          } else {
-            var initials = (session.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
-            avatar.textContent = initials || 'U';
-          }
+          fetch('/api/me').then(function(r){return r.json()}).then(function(me) {
+            avatar.style.backgroundImage = '';
+            avatar.style.backgroundColor = '';
+            avatar.style.color = '';
+            avatar.innerHTML = '';
+            avatar.textContent = '';
+            if (me.profile_picture) {
+              avatar.style.backgroundImage = 'url(' + me.profile_picture + ')';
+            } else if (me.avatar_id && typeof getAvatarSvg === 'function') {
+              avatar.innerHTML = getAvatarSvg(me.avatar_id);
+              avatar.style.padding = '2px';
+              avatar.style.backgroundColor = 'var(--parchment)';
+            } else if (me.google_picture) {
+              avatar.style.backgroundImage = 'url(' + me.google_picture + ')';
+            } else {
+              avatar.style.backgroundColor = 'var(--forest-deep)';
+              avatar.style.color = 'white';
+              var initials = (me.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
+              avatar.textContent = initials || 'U';
+            }
+          }).catch(function(){});
         }
       }
       // Fix hash scroll on page load (browser sometimes restores scroll before applying hash)
