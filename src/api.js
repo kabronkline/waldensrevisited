@@ -667,29 +667,21 @@ export async function handleApi(request, env, session) {
     const fromDog = await env.DB.prepare('SELECT id FROM dogs WHERE id = ? AND user_id = ?').bind(fromDogId, userId).first();
     if (!fromDog) return json({ error: 'Dog not found or not yours' }, 404);
 
-    // Only discover dogs belonging to friends
-    // First get friend user IDs
-    const { results: friendRows } = await env.DB.prepare(
-      `SELECT CASE WHEN user_a_id = ? THEN user_b_id ELSE user_a_id END as friend_id
-       FROM friendships WHERE user_a_id = ? OR user_b_id = ?`
-    ).bind(userId, userId, userId).all();
-    const friendIds = friendRows.map(r => r.friend_id);
-
-    let candidate = null;
-    if (friendIds.length > 0) {
-      const placeholders = friendIds.map(() => '?').join(',');
-      candidate = await env.DB.prepare(
-        `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, u.name as owner_name, u.id as owner_id, u.is_anonymous, u.show_name, u.show_contact, pd.tagline
-         FROM playdate_dogs pd
-         JOIN dogs d ON pd.dog_id = d.id
-         JOIN users u ON d.user_id = u.id
-         WHERE pd.is_active = 1
-           AND d.user_id IN (${placeholders})
-           AND d.id NOT IN (SELECT to_dog_id FROM playdate_swipes WHERE from_dog_id = ?)
-         ORDER BY RANDOM()
-         LIMIT 1`
-      ).bind(...friendIds, fromDogId).first();
-    }
+    // Discover ANY active playdate dog (not own) — play dates are the gateway to friendships
+    const candidate = await env.DB.prepare(
+      `SELECT d.id, d.name, d.breed, d.age, d.bio, d.picture, d.birthday,
+              u.name as owner_name, u.id as owner_id, u.is_anonymous, u.show_name, u.show_contact,
+              a.full_label as address_label, pd.tagline
+       FROM playdate_dogs pd
+       JOIN dogs d ON pd.dog_id = d.id
+       JOIN users u ON d.user_id = u.id
+       LEFT JOIN addresses a ON u.address_id = a.id
+       WHERE pd.is_active = 1
+         AND d.user_id != ?
+         AND d.id NOT IN (SELECT to_dog_id FROM playdate_swipes WHERE from_dog_id = ?)
+       ORDER BY RANDOM()
+       LIMIT 1`
+    ).bind(userId, fromDogId).first();
     if (!candidate) return json(null);
     if (candidate.is_anonymous && !OFFICER_ROLES.includes(session.user.role)) {
       candidate.owner_name = 'Anonymous Neighbor';
@@ -728,17 +720,42 @@ export async function handleApi(request, env, session) {
         ).bind(body.from_dog_id, body.to_dog_id).run();
         match_id = matchResult.meta.last_row_id;
 
-        // Find existing friend chat thread and send match notification
         const toUser = toDogInfo.user_id;
-        const thread = await env.DB.prepare(
-          `SELECT id FROM chat_threads WHERE type = 'friend'
-           AND ((user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?))`
+
+        // Auto-create friendship if not already friends (play dates build community!)
+        const existingFriend = await env.DB.prepare(
+          `SELECT id FROM friendships WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)`
         ).bind(userId, toUser, toUser, userId).first();
 
-        if (thread) {
+        let threadId;
+        if (!existingFriend) {
+          // Create friendship
+          await env.DB.prepare(
+            "INSERT INTO friendships (user_a_id, user_b_id, source, created_at) VALUES (?, ?, 'playdate', datetime('now'))"
+          ).bind(userId, toUser).run();
+          // Create chat thread
+          const chatResult = await env.DB.prepare(
+            "INSERT INTO chat_threads (type, ref_id, user_a_id, user_b_id, created_at) VALUES ('friend', ?, ?, ?, datetime('now'))"
+          ).bind(match_id, userId, toUser).run();
+          threadId = chatResult.meta.last_row_id;
+          // Remove any pending friend requests between them
+          await env.DB.prepare(
+            "DELETE FROM friend_requests WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)"
+          ).bind(userId, toUser, toUser, userId).run();
+        } else {
+          // Find existing chat thread
+          const t = await env.DB.prepare(
+            `SELECT id FROM chat_threads WHERE type = 'friend'
+             AND ((user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?))`
+          ).bind(userId, toUser, toUser, userId).first();
+          threadId = t?.id;
+        }
+
+        // Send match notification in chat
+        if (threadId) {
           await env.DB.prepare(
             "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
-          ).bind(thread.id, userId, `[System] 🐾 Play Date Match! ${fromDogInfo.name} and ${toDogInfo.name} both want to play! Arrange a meetup in this chat.`).run();
+          ).bind(threadId, userId, `[System] 🐾 Play Date Match! ${fromDogInfo.name} and ${toDogInfo.name} both want to play! Arrange a meetup in this chat.`).run();
         }
 
         matched = true;

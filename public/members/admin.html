@@ -173,47 +173,20 @@
               <label>Display Name *</label>
               <input type="text" id="preRegName" placeholder="Full name">
             </div>
-            <div class="form-group">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
+              <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Role</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="member" checked onchange="updatePreregForm()"> Member</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="president" onchange="updatePreregForm()"> President</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="secretary" onchange="updatePreregForm()"> Secretary</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="treasurer" onchange="updatePreregForm()"> Treasurer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="other_officer" onchange="updatePreregForm()"> Other Officer</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="admin" onchange="updatePreregForm()"> Admin</label>
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="radio" name="preregRole" value="auditor" onchange="updatePreregForm()"> Auditor</label>
+            </div>
+
+            <div class="form-group" id="preRegAddressGroup">
               <label>Property Address *</label>
               <select id="preRegAddress"><option value="">Select address...</option></select>
-            </div>
-
-            <div class="form-group">
-              <label>Owner Type</label>
-              <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
-                <strong>Natural person:</strong> A human being who owns property in their own right.<br>
-                <strong>Legal person:</strong> An entity (LLC, corporation, trust, estate, etc.) that holds title through a legal framework.
-              </div>
-              <select id="preRegOwnerType">
-                <option value="natural">Natural Person (individual)</option>
-                <option value="legal">Legal Person (trust, LLC, corporation, etc.)</option>
-              </select>
-            </div>
-
-            <div id="agentSection" style="display:none;">
-              <div class="form-group">
-                <div style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;line-height:1.5;">
-                  When the owner is a legal person, an <strong>authorized agent</strong> is the natural person (human) who acts on behalf of that entity — e.g., a trustee acting for a trust.
-                </div>
-                <label style="display:flex;align-items:center;gap:8px;">
-                  <input type="checkbox" id="preRegIsAgent" style="accent-color:var(--forest-deep);">
-                  This user is an authorized agent acting on behalf of the legal entity
-                </label>
-              </div>
-              <div class="form-group">
-                <label>Entity Name (the legal person)</label>
-                <input type="text" id="preRegEntityName" placeholder="e.g., Smith Family Trust, Walden Holdings LLC">
-              </div>
-            </div>
-
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-sm);">
-              <label style="font-size:0.85rem;font-weight:500;width:100%;margin-bottom:4px;">Roles</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="member" checked disabled> Member</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="president"> President</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="secretary"> Secretary</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="treasurer"> Treasurer</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="other_officer"> Other Officer</label>
-              <label style="font-size:0.85rem;display:flex;align-items:center;gap:4px;"><input type="checkbox" class="prereg-role" value="admin"> Admin</label>
             </div>
 
             <div class="form-group">
@@ -907,25 +880,29 @@
       addrs.forEach(a => { const o = document.createElement('option'); o.value = a.id; o.textContent = a.full_label; sel.appendChild(o); });
     });
 
-    document.getElementById('preRegOwnerType').addEventListener('change', (e) => {
-      document.getElementById('agentSection').style.display = e.target.value === 'legal' ? '' : 'none';
-    });
+    function updatePreregForm() {
+      const role = document.querySelector('input[name="preregRole"]:checked')?.value || 'member';
+      const needsAddress = !['admin', 'auditor'].includes(role);
+      document.getElementById('preRegAddressGroup').style.display = needsAddress ? '' : 'none';
+    }
+    updatePreregForm();
 
     document.getElementById('preRegBtn').addEventListener('click', async () => {
       const email = document.getElementById('preRegEmail').value.trim();
       const name = document.getElementById('preRegName').value.trim();
-      const addressId = parseInt(document.getElementById('preRegAddress').value);
-      if (!email || !name || !addressId) { showToast('Email, name, and address are required', 'error'); return; }
+      const role = document.querySelector('input[name="preregRole"]:checked')?.value || 'member';
+      const needsAddress = !['admin', 'auditor'].includes(role);
+      const addressId = needsAddress ? parseInt(document.getElementById('preRegAddress').value) : null;
 
-      const roles = [...document.querySelectorAll('.prereg-role:checked')].map(c => c.value);
-      if (!roles.includes('member')) roles.push('member');
+      if (!email || !name) { showToast('Email and name are required', 'error'); return; }
+      if (needsAddress && !addressId) { showToast('Address is required for this role', 'error'); return; }
+
+      const roles = [role];
 
       const body = {
-        email, name, address_id: addressId, roles,
-        owner_type: document.getElementById('preRegOwnerType').value,
-        is_authorized_agent: document.getElementById('preRegIsAgent')?.checked || false,
-        agent_for_entity: document.getElementById('preRegEntityName')?.value.trim() || null,
-        is_anonymous: document.getElementById('preRegAnonymous').checked,
+        email, name, roles,
+        address_id: addressId,
+        is_anonymous: document.getElementById('preRegAnonymous')?.checked || false,
       };
 
       const btn = document.getElementById('preRegBtn');
