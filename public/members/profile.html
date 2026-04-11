@@ -115,25 +115,29 @@
         <div class="form-group">
           <div class="toggle-group">
             <label class="toggle">
-              <input type="checkbox" id="showNameToggle" checked>
+              <input type="checkbox" id="anonymousToggle">
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <strong style="font-size:0.95rem;">Show my name</strong>
-              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When off, other members see you as "Neighbor at [your tract]" instead of your real name. Friends included — becoming friends does not reveal your name.</p>
+              <strong style="font-size:0.95rem;">Remain anonymous</strong>
+              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When on, your identity is completely hidden from other members. You appear as "Neighbor at [your tract]." You can still connect with neighbors and chat anonymously.</p>
             </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <div class="toggle-group">
-            <label class="toggle">
-              <input type="checkbox" id="showContactToggle" checked>
-              <span class="toggle-slider"></span>
-            </label>
-            <div>
-              <strong style="font-size:0.95rem;">Share contact info</strong>
-              <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When off, your email and address are hidden from other members, including friends. You can still communicate via the in-app chat.</p>
+        <div id="identityOptions" style="margin-left:var(--space-lg);border-left:2px solid rgba(139,115,85,0.1);padding-left:var(--space-md);">
+          <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Since you're sharing your identity, your name is visible to other members. You may optionally share contact info.</p>
+
+          <div class="form-group">
+            <div class="toggle-group">
+              <label class="toggle">
+                <input type="checkbox" id="showContactToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <strong style="font-size:0.95rem;">Share contact info</strong>
+                <p style="font-size:0.85rem;color:var(--stone);margin-top:2px;">When on, your email and address are visible to other members. When off, you can still communicate via in-app chat.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -255,8 +259,16 @@
         });
 
         // Privacy toggles
-        document.getElementById('showNameToggle').checked = currentUser.show_name !== 0;
+        const isAnon = !!currentUser.is_anonymous;
+        document.getElementById('anonymousToggle').checked = isAnon;
         document.getElementById('showContactToggle').checked = currentUser.show_contact !== 0;
+        document.getElementById('identityOptions').style.display = isAnon ? 'none' : '';
+
+        // Toggle identity options when anonymous changes
+        document.getElementById('anonymousToggle').addEventListener('change', (e) => {
+          document.getElementById('identityOptions').style.display = e.target.checked ? 'none' : '';
+          if (e.target.checked) document.getElementById('showContactToggle').checked = false;
+        });
 
       } catch (e) {
         showToast('Failed to load profile', 'error');
@@ -321,9 +333,9 @@
           body: JSON.stringify({
             name: document.getElementById('displayName').value.trim(),
             address_id: addressVal ? parseInt(addressVal) : null,
-            show_name: document.getElementById('showNameToggle').checked ? 1 : 0,
+            is_anonymous: document.getElementById('anonymousToggle').checked ? 1 : 0,
+            show_name: document.getElementById('anonymousToggle').checked ? 0 : 1,
             show_contact: document.getElementById('showContactToggle').checked ? 1 : 0,
-            is_anonymous: (!document.getElementById('showNameToggle').checked && !document.getElementById('showContactToggle').checked) ? 1 : 0,
           }),
         });
         const data = await res.json();

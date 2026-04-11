@@ -135,14 +135,16 @@
         </label>
 
         <div style="margin:var(--space-xs) 0 var(--space-sm);font-size:0.85rem;color:var(--charcoal);">
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;">
-            <input type="checkbox" id="tosShowName" checked style="accent-color:var(--forest-deep);">
-            Show my name to other members
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer;">
+            <input type="checkbox" id="tosAnonymous" style="accent-color:var(--forest-deep);" onchange="document.getElementById('tosContactOption').style.display=this.checked?'none':''">
+            Remain anonymous to other members
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-            <input type="checkbox" id="tosShowContact" checked style="accent-color:var(--forest-deep);">
-            Share my contact info with other members
-          </label>
+          <div id="tosContactOption">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-left:20px;">
+              <input type="checkbox" id="tosShowContact" checked style="accent-color:var(--forest-deep);">
+              Also share my contact info (email, address)
+            </label>
+          </div>
           <p style="font-size:0.8rem;color:var(--lichen);margin-top:4px;">You can change these anytime in your profile. Officers and admins can always see your info.</p>
         </div>
 
@@ -162,12 +164,12 @@
       btn.disabled = true;
       btn.textContent = 'Please wait...';
       try {
-        const showName = document.getElementById('tosShowName').checked;
-        const showContact = document.getElementById('tosShowContact').checked;
+        const isAnonymous = document.getElementById('tosAnonymous').checked;
+        const showContact = !isAnonymous && document.getElementById('tosShowContact').checked;
         const res = await fetch('/api/me/agreement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ show_name: showName ? 1 : 0, show_contact: showContact ? 1 : 0, is_anonymous: (!showName && !showContact) ? 1 : 0 }),
+          body: JSON.stringify({ is_anonymous: isAnonymous ? 1 : 0, show_name: isAnonymous ? 0 : 1, show_contact: showContact ? 1 : 0 }),
         });
         const data = await res.json();
         if (data.success) {
