@@ -1022,13 +1022,10 @@ export async function handleApi(request, env, session) {
       await env.DB.prepare('SELECT id FROM chat_participants WHERE thread_id = ? AND user_id = ?').bind(threadId, userId).first();
     if (!isParticipant) return json({ error: 'Not authorized' }, 403);
 
-    if (thread.type === 'officer') {
-      // Officer threads: clear messages, thread persists for reuse
-      await env.DB.prepare('DELETE FROM chat_messages WHERE thread_id = ?').bind(threadId).run();
-    } else {
-      // Friend threads: delete thread and all messages (CASCADE handles messages)
-      await env.DB.prepare('DELETE FROM chat_threads WHERE id = ?').bind(threadId).run();
-    }
+    // Delete thread and all messages (CASCADE handles messages and participants)
+    await env.DB.prepare('DELETE FROM chat_messages WHERE thread_id = ?').bind(threadId).run();
+    await env.DB.prepare('DELETE FROM chat_participants WHERE thread_id = ?').bind(threadId).run();
+    await env.DB.prepare('DELETE FROM chat_threads WHERE id = ?').bind(threadId).run();
 
     return json({ success: true });
   }

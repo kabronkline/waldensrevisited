@@ -900,17 +900,13 @@
     async function deleteThread() {
       if (!activeThreadId) return;
       const threadData = threads.find(t => t.id === activeThreadId);
-      const isOfficer = threadData?.type === 'officer';
-      const msg = isOfficer
-        ? 'Clear all messages in this officer thread? The thread will remain and new messages can be sent.'
-        : 'Delete this conversation and all messages?';
-      if (!confirm(msg)) return;
+      if (!confirm('Delete this conversation and all messages?')) return;
 
       try {
         const res = await fetch(`/api/chat/threads/${activeThreadId}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
-          showToast(isOfficer ? 'Messages cleared' : 'Conversation deleted', 'success');
+          showToast('Conversation deleted', 'success');
           activeThreadId = null;
           activeThreadType = null;
           activeMessages = [];
