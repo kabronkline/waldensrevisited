@@ -218,12 +218,19 @@ function initMembersSidebar(activePage) {
       }
     }
 
-    // Immediate from session
-    setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
+    // Use cached avatar data first (instant, no flash), then refresh from API
+    try {
+      const cached = JSON.parse(sessionStorage.getItem('wr_user_avatar') || 'null');
+      if (cached) setNavAvatar(cached.pp, cached.av, cached.gp, cached.nm);
+      else setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
+    } catch (e) {
+      setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
+    }
 
-    // Refresh from API (picks up avatar changes without re-login)
+    // Refresh from API and cache
     fetch('/api/me').then(r => r.json()).then(me => {
       setNavAvatar(me.profile_picture, me.avatar_id, me.google_picture, me.name);
+      sessionStorage.setItem('wr_user_avatar', JSON.stringify({ pp: me.profile_picture, av: me.avatar_id, gp: me.google_picture, nm: me.name }));
     }).catch(() => {});
   }
 }

@@ -794,32 +794,38 @@
         if (members) members.style.display = 'flex';
 
         var avatar = document.getElementById('navUserAvatar');
-        // Set from session immediately
-        if (avatar && session.picture) {
-          avatar.style.backgroundImage = 'url(' + session.picture + ')';
-        }
-        // Then fetch fresh data from API (picks up avatar changes)
         if (avatar) {
-          fetch('/api/me').then(function(r){return r.json()}).then(function(me) {
+          function setHomeAvatar(pic, avId, gPic, name) {
             avatar.style.backgroundImage = '';
             avatar.style.backgroundColor = '';
             avatar.style.color = '';
+            avatar.style.padding = '';
             avatar.innerHTML = '';
             avatar.textContent = '';
-            if (me.profile_picture) {
-              avatar.style.backgroundImage = 'url(' + me.profile_picture + ')';
-            } else if (me.avatar_id && typeof getAvatarSvg === 'function') {
-              avatar.innerHTML = getAvatarSvg(me.avatar_id);
+            if (pic) {
+              avatar.style.backgroundImage = 'url(' + pic + ')';
+            } else if (avId && typeof getAvatarSvg === 'function') {
+              avatar.innerHTML = getAvatarSvg(avId);
               avatar.style.padding = '2px';
               avatar.style.backgroundColor = 'var(--parchment)';
-            } else if (me.google_picture) {
-              avatar.style.backgroundImage = 'url(' + me.google_picture + ')';
+            } else if (gPic) {
+              avatar.style.backgroundImage = 'url(' + gPic + ')';
             } else {
               avatar.style.backgroundColor = 'var(--forest-deep)';
               avatar.style.color = 'white';
-              var initials = (me.name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase();
-              avatar.textContent = initials || 'U';
+              avatar.textContent = (name || '').split(' ').map(function(n){return n[0]}).join('').toUpperCase() || 'U';
             }
+          }
+          // Use cached data first (consistent across pages)
+          try {
+            var cached = JSON.parse(sessionStorage.getItem('wr_user_avatar') || 'null');
+            if (cached) setHomeAvatar(cached.pp, cached.av, cached.gp, cached.nm);
+            else if (session.picture) avatar.style.backgroundImage = 'url(' + session.picture + ')';
+          } catch(e) {}
+          // Refresh from API and cache
+          fetch('/api/me').then(function(r){return r.json()}).then(function(me) {
+            setHomeAvatar(me.profile_picture, me.avatar_id, me.google_picture, me.name);
+            sessionStorage.setItem('wr_user_avatar', JSON.stringify({ pp: me.profile_picture, av: me.avatar_id, gp: me.google_picture, nm: me.name }));
           }).catch(function(){});
         }
       }
