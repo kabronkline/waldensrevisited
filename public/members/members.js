@@ -198,6 +198,8 @@ function initMembersSidebar(activePage) {
       if (!navAvatar) return;
       navAvatar.innerHTML = '';
       navAvatar.style.backgroundImage = '';
+      navAvatar.style.backgroundColor = '';
+      navAvatar.style.color = '';
       navAvatar.style.padding = '';
       navAvatar.textContent = '';
       if (pic) {
@@ -205,9 +207,13 @@ function initMembersSidebar(activePage) {
       } else if (avatarId && typeof getAvatarSvg === 'function') {
         navAvatar.innerHTML = getAvatarSvg(avatarId);
         navAvatar.style.padding = '2px';
+        navAvatar.style.backgroundColor = 'var(--parchment)';
       } else if (googlePic) {
         navAvatar.style.backgroundImage = 'url(' + googlePic + ')';
       } else {
+        // Initials: use dark background with white text
+        navAvatar.style.backgroundColor = 'var(--forest-deep)';
+        navAvatar.style.color = 'white';
         navAvatar.textContent = (name || '').split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
       }
     }
