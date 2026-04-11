@@ -304,6 +304,45 @@ export async function handleApi(request, env, session) {
     return json({ id: result.meta.last_row_id, approved: autoApprove, success: true, message }, 201);
   }
 
+  // PUT /api/posts/:id — edit own post (saves version history, max 5)
+  const postPutMatch = path.match(/^\/api\/posts\/(\d+)$/);
+  if (postPutMatch && method === 'PUT') {
+    const postId = parseInt(postPutMatch[1]);
+    const post = await env.DB.prepare('SELECT * FROM posts WHERE id = ? AND user_id = ?').bind(postId, userId).first();
+    if (!post) return json({ error: 'Post not found' }, 404);
+
+    const body = await request.json();
+    if (!body.content?.trim()) return json({ error: 'Content required' }, 400);
+    if (body.content.length > 2000) return json({ error: 'Too long (max 2000)' }, 400);
+
+    // Count existing versions
+    const verCount = await env.DB.prepare(
+      "SELECT COUNT(*) as cnt FROM content_history WHERE content_type = 'post' AND content_id = ?"
+    ).bind(postId).first();
+    const nextVersion = (verCount.cnt || 0) + 1;
+
+    // Save current content as history
+    await env.DB.prepare(
+      "INSERT INTO content_history (content_type, content_id, previous_content, edited_by_user_id, version) VALUES ('post', ?, ?, ?, ?)"
+    ).bind(postId, post.content, userId, nextVersion).run();
+
+    // Prune to keep only last 5 versions
+    if (nextVersion > 5) {
+      await env.DB.prepare(
+        `DELETE FROM content_history WHERE content_type = 'post' AND content_id = ? AND id NOT IN (
+          SELECT id FROM content_history WHERE content_type = 'post' AND content_id = ? ORDER BY version DESC LIMIT 5
+        )`
+      ).bind(postId, postId).run();
+    }
+
+    // Update the post
+    await env.DB.prepare(
+      "UPDATE posts SET content = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(body.content.trim(), postId).run();
+
+    return json({ success: true });
+  }
+
   // DELETE /api/posts/:id — delete own post
   const postDeleteMatch = path.match(/^\/api\/posts\/(\d+)$/);
   if (postDeleteMatch && method === 'DELETE') {
@@ -356,6 +395,42 @@ export async function handleApi(request, env, session) {
       'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)'
     ).bind(postId, userId, body.content.trim()).run();
     return json({ id: result.meta.last_row_id, success: true }, 201);
+  }
+
+  // PUT /api/comments/:id — edit own comment (saves version history, max 5)
+  const commentPutMatch = path.match(/^\/api\/comments\/(\d+)$/);
+  if (commentPutMatch && method === 'PUT') {
+    const commentId = parseInt(commentPutMatch[1]);
+    const comment = await env.DB.prepare('SELECT * FROM comments WHERE id = ?').bind(commentId).first();
+    if (!comment) return json({ error: 'Comment not found' }, 404);
+    if (comment.user_id !== userId && session.user.role !== 'admin') return json({ error: 'Not authorized' }, 403);
+
+    const body = await request.json();
+    if (!body.content?.trim()) return json({ error: 'Content required' }, 400);
+    if (body.content.length > 1000) return json({ error: 'Too long (max 1000)' }, 400);
+
+    const verCount = await env.DB.prepare(
+      "SELECT COUNT(*) as cnt FROM content_history WHERE content_type = 'comment' AND content_id = ?"
+    ).bind(commentId).first();
+    const nextVersion = (verCount.cnt || 0) + 1;
+
+    await env.DB.prepare(
+      "INSERT INTO content_history (content_type, content_id, previous_content, edited_by_user_id, version) VALUES ('comment', ?, ?, ?, ?)"
+    ).bind(commentId, comment.content, userId, nextVersion).run();
+
+    if (nextVersion > 5) {
+      await env.DB.prepare(
+        `DELETE FROM content_history WHERE content_type = 'comment' AND content_id = ? AND id NOT IN (
+          SELECT id FROM content_history WHERE content_type = 'comment' AND content_id = ? ORDER BY version DESC LIMIT 5
+        )`
+      ).bind(commentId, commentId).run();
+    }
+
+    await env.DB.prepare(
+      "UPDATE comments SET content = ? WHERE id = ?"
+    ).bind(body.content.trim(), commentId).run();
+
+    return json({ success: true });
   }
 
   // DELETE /api/comments/:id — delete own comment (or admin)
@@ -1229,6 +1304,19 @@ export async function handleApi(request, env, session) {
          WHERE u.agreement_signed_at IS NOT NULL
          ORDER BY u.agreement_signed_at DESC`
       ).all();
+      return json(results);
+    }
+
+    // GET /api/admin/content-history/:type/:id — view edit history for a post or comment
+    const historyMatch = path.match(/^\/api\/admin\/content-history\/(post|comment)\/(\d+)$/);
+    if (historyMatch && method === 'GET') {
+      const [, type, id] = historyMatch;
+      const { results } = await env.DB.prepare(
+        `SELECT ch.*, u.name as editor_name FROM content_history ch
+         JOIN users u ON ch.edited_by_user_id = u.id
+         WHERE ch.content_type = ? AND ch.content_id = ?
+         ORDER BY ch.version DESC`
+      ).bind(type, parseInt(id)).all();
       return json(results);
     }
 

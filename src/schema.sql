@@ -189,6 +189,17 @@ CREATE TABLE IF NOT EXISTS chat_participants (
   UNIQUE(thread_id, user_id)
 );
 
+-- Content edit history (posts and comments, max 5 versions retained)
+CREATE TABLE IF NOT EXISTS content_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content_type TEXT NOT NULL,
+  content_id INTEGER NOT NULL,
+  previous_content TEXT NOT NULL,
+  edited_by_user_id INTEGER NOT NULL,
+  version INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Audit log for admin actions
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
