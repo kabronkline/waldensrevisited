@@ -398,9 +398,16 @@
 
       neighborMap = L.map('neighborMap').setView([40.3240, -83.2040], 16);
       
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
+      // Satellite imagery with road labels
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri, Maxar, Earthstar Geographics',
         maxZoom: 19
+      }).addTo(neighborMap);
+      // Road/label overlay on top of satellite
+      L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png', {
+        attribution: '&copy; Stamen Design',
+        maxZoom: 19,
+        opacity: 0.7
       }).addTo(neighborMap);
 
       try {
@@ -681,7 +688,11 @@
         const dr = await fetch('/api/dogs'); const dogs = await dr.json();
         let pdDogs = []; try { const pdr = await fetch('/api/playdate/dogs'); pdDogs = await pdr.json(); } catch(e){}
         const optedIds = new Set(pdDogs.map(d => d.dog_id || d.id));
-        grid.innerHTML = dogs.length ? '' : '<p>No dogs yet.</p>';
+        if (!dogs.length) {
+          grid.innerHTML = '<p style="color:var(--stone);">Add a dog in the <strong>My Dogs</strong> section above first, then come back here to opt them in for play dates.</p>';
+          return;
+        }
+        grid.innerHTML = '';
         dogs.forEach(dog => {
           const isOpt = optedIds.has(dog.id);
           const pd = pdDogs.find(d => (d.dog_id || d.id) === dog.id);
@@ -705,7 +716,7 @@
 
     async function optInDog(id) {
       const tagline = document.getElementById('tagline-'+id)?.value || '';
-      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dogId: id, tagline}) }); loadMyPlaydateDogs(); } catch(e){}
+      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dog_id: id, tagline}) }); loadMyPlaydateDogs(); } catch(e){}
     }
     async function optOutDog(id) {
       if (!confirm('Leave?')) return;
@@ -713,7 +724,7 @@
     }
     async function updateTagline(id) {
       const tagline = document.getElementById('tagline-'+id)?.value || '';
-      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dogId: id, tagline}) }); showToast('Saved', 'success'); } catch(e){}
+      try { await fetch('/api/playdate/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({dog_id: id, tagline}) }); showToast('Saved', 'success'); } catch(e){}
     }
     function startSwiping(id, name) {
       playdateSwipingDogId = id;
