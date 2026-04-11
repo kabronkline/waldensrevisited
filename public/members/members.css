@@ -1111,6 +1111,12 @@
 }
 
 .composer-input::placeholder { color: var(--lichen); }
+.composer-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--lichen);
+  pointer-events: none;
+}
+.composer-input:focus { outline: none; }
 
 .composer-preview {
   display: flex;
@@ -1332,6 +1338,24 @@
 }
 
 .vis-indicator svg { width: 11px; height: 11px; }
+
+/* ---- Inline Edit Toolbar ---- */
+.edit-toolbar { margin-bottom: 6px; }
+.edit-fmt-btn {
+  background: var(--mist);
+  border: 1px solid rgba(139, 115, 85, 0.15);
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--forest-deep);
+  transition: background 0.15s;
+}
+.edit-fmt-btn:hover { background: var(--morning); }
 
 /* ---- @Mentions ---- */
 .mention {

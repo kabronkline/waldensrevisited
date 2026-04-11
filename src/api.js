@@ -1317,7 +1317,7 @@ export async function handleApi(request, env, session) {
     const approvePostMatch = path.match(/^\/api\/admin\/approve\/post\/(\d+)$/);
     if (approvePostMatch && method === 'PUT') {
       const postId = parseInt(approvePostMatch[1]);
-      await env.DB.prepare("UPDATE posts SET approved = 1, updated_at = datetime('now') WHERE id = ?").bind(postId).run();
+      await env.DB.prepare("UPDATE posts SET approved = 1 WHERE id = ?").bind(postId).run();
       await env.DB.prepare(
         'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
       ).bind(userId, 'approve_post', null, `approved post #${postId}`).run();

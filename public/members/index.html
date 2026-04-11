@@ -71,7 +71,15 @@
           <div class="composer-avatar" id="postAvatar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <textarea class="composer-input" id="postContent" placeholder="What's happening in the neighborhood?"></textarea>
+          <div style="flex:1;">
+            <div style="display:flex;gap:4px;margin-bottom:4px;">
+              <button class="edit-fmt-btn" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+              <button class="edit-fmt-btn" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+              <button class="edit-fmt-btn" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+              <button class="edit-fmt-btn" onclick="document.execCommand('insertUnorderedList')" title="List">&#8226;</button>
+            </div>
+            <div class="composer-input" id="postContent" contenteditable="true" data-placeholder="What's happening in the neighborhood?"></div>
+          </div>
         </div>
 
         <div class="composer-preview" id="imagePreview"></div>
@@ -222,7 +230,7 @@
 
     // Submit post
     document.getElementById('postBtn').addEventListener('click', async () => {
-      const content = document.getElementById('postContent').value.trim();
+      const content = document.getElementById('postContent').innerText.trim();
       if (!content) { showToast('Write something first', 'error'); return; }
 
       const btn = document.getElementById('postBtn');
@@ -243,7 +251,7 @@
         const data = await res.json();
         if (data.success) {
           showToast(data.message, 'success');
-          document.getElementById('postContent').value = '';
+          document.getElementById('postContent').innerHTML = '';
           clearImagePreview();
           loadPosts(true);
         } else {
@@ -339,21 +347,65 @@
     }
 
     async function editPost(id) {
-      const postCard = document.querySelector(`[data-post-id="${id}"]`) ||
-        [...document.querySelectorAll('.post-card')].find(el => el.innerHTML.includes(`editPost(${id})`));
+      const postCard = [...document.querySelectorAll('.post-card')].find(el => el.innerHTML.includes(`editPost(${id})`));
       const contentEl = postCard?.querySelector('.post-content');
       if (!contentEl) return;
 
-      const currentText = contentEl.innerText;
-      const newText = prompt('Edit your post:', currentText);
-      if (newText === null || newText.trim() === currentText) return;
-      if (!newText.trim()) { showToast('Post cannot be empty', 'error'); return; }
+      const originalText = contentEl.innerText;
+      // Switch to inline editing mode
+      contentEl.setAttribute('contenteditable', 'true');
+      contentEl.style.border = '1px solid var(--pond-surface)';
+      contentEl.style.borderRadius = '8px';
+      contentEl.style.padding = '8px 12px';
+      contentEl.style.background = 'white';
+      contentEl.style.outline = 'none';
+      contentEl.style.minHeight = '60px';
+      contentEl.focus();
+
+      // Add toolbar and save/cancel buttons
+      const toolbar = document.createElement('div');
+      toolbar.className = 'edit-toolbar';
+      toolbar.innerHTML = `
+        <div style="display:flex;gap:4px;margin-bottom:6px;">
+          <button class="edit-fmt-btn" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+          <button class="edit-fmt-btn" onclick="document.execCommand('insertUnorderedList')" title="List">&#8226;</button>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-secondary btn-sm" onclick="cancelEditPost(this, '${id}')">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveEditPost(${id})">Save</button>
+        </div>
+      `;
+      contentEl.parentNode.insertBefore(toolbar, contentEl);
+      contentEl._originalText = originalText;
+      return;
+    }
+
+    function cancelEditPost(btn, id) {
+      const toolbar = btn.closest('.edit-toolbar');
+      const contentEl = toolbar.nextElementSibling;
+      contentEl.removeAttribute('contenteditable');
+      contentEl.style.cssText = '';
+      contentEl.innerText = contentEl._originalText;
+      toolbar.remove();
+    }
+
+    async function saveEditPost(id) {
+      const postCard = [...document.querySelectorAll('.post-card')].find(el => el.innerHTML.includes(`saveEditPost(${id})`));
+      const toolbar = postCard?.querySelector('.edit-toolbar');
+      const contentEl = toolbar?.nextElementSibling;
+      if (!contentEl) return;
+
+      const newText = contentEl.innerText.trim();
+      if (!newText) { showToast('Post cannot be empty', 'error'); return; }
+      if (newText === contentEl._originalText) { cancelEditPost(toolbar.querySelector('.btn-secondary'), id); return; }
 
       try {
         const res = await fetch(`/api/posts/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: newText.trim() }),
+          body: JSON.stringify({ content: newText }),
         });
         const data = await res.json();
         if (data.success) {
