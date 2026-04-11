@@ -1461,7 +1461,16 @@ export async function handleApi(request, env, session) {
     const propDeleteMatch = path.match(/^\/api\/admin\/properties\/(\d+)$/);
     if (propDeleteMatch && method === 'DELETE') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
-      await env.DB.prepare('DELETE FROM properties WHERE id = ?').bind(parseInt(propDeleteMatch[1])).run();
+      const propId = parseInt(propDeleteMatch[1]);
+      // Check if any users reference this property's address
+      const prop = await env.DB.prepare('SELECT address_id FROM properties WHERE id = ?').bind(propId).first();
+      if (prop) {
+        const usersAtAddr = await env.DB.prepare('SELECT COUNT(*) as cnt FROM users WHERE address_id = ?').bind(prop.address_id).first();
+        if (usersAtAddr.cnt > 0) {
+          return json({ error: 'Cannot delete: users are assigned to this property. Remove or reassign them first.' }, 400);
+        }
+      }
+      await env.DB.prepare('DELETE FROM properties WHERE id = ?').bind(propId).run();
       return json({ success: true });
     }
 

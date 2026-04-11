@@ -214,7 +214,6 @@
     // Refine from API
     fetch('/api/me').then(r => r.json()).then(me => {
       setPostAvatar(me.profile_picture, me.avatar_id, me.google_picture);
-      }
     }).catch(() => {});
 
     document.getElementById('navToggle')?.addEventListener('click', () => {
