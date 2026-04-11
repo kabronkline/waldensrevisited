@@ -1023,8 +1023,7 @@ export async function handleApi(request, env, session) {
     if (!isParticipant) return json({ error: 'Not authorized' }, 403);
 
     if (thread.type === 'officer') {
-      // Officer threads: only officers can delete, just clear messages (thread persists)
-      if (!OFFICER_ROLES.includes(session.user.role)) return json({ error: 'Only officers can delete officer threads' }, 403);
+      // Officer threads: clear messages, thread persists for reuse
       await env.DB.prepare('DELETE FROM chat_messages WHERE thread_id = ?').bind(threadId).run();
     } else {
       // Friend threads: delete thread and all messages (CASCADE handles messages)
