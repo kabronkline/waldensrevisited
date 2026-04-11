@@ -360,32 +360,33 @@
     });
 
     // --- Map Logic ---
+    // Geocoded coordinates (Nominatim + interpolated for rural addresses)
     const PROPERTY_COORDS = {
-      1:  [40.3204, -83.2044], // Lot 1
-      2:  [40.3206, -83.2045], // Lot 2/3
-      3:  [40.3208, -83.2046], // Lot 4
-      4:  [40.3223, -83.2049], // Tract 1
-      5:  [40.3234, -83.2052], // Tract 3
-      6:  [40.3248, -83.2055], // Tract 4
-      7:  [40.3255, -83.2058], // Tract 5
-      8:  [40.3262, -83.2061], // Tract 6
-      9:  [40.3270, -83.2064], // Tract 7
-      10: [40.3278, -83.2067], // Tract 8
-      11: [40.3293, -83.2071], // Tract 9
-      12: [40.3299, -83.2073], // Tract 10/11
-      13: [40.3245, -83.2030], // Tract 12
-      14: [40.3247, -83.2015], // Tract 13
-      15: [40.3248, -83.2005], // Tract 14
-      16: [40.3250, -83.1990], // Tract 15
-      17: [40.3185, -83.2005], // Tract 20
-      18: [40.3184, -83.1995], // Tract 21
-      19: [40.3255, -83.2065], // Tract 22
-      20: [40.3240, -83.2060], // Tract 23
-      21: [40.3235, -83.2058], // Tract 24
-      22: [40.3230, -83.2055], // Tract 25
-      23: [40.3215, -83.2052], // Tract 26
-      24: [40.3205, -83.2050], // Tract 27
-      25: [40.3252, -83.1980]  // Tract 16
+      1:  [40.3234, -83.2026], // Lot 1 - 423 Brindle
+      2:  [40.3230, -83.2025], // Lot 2/3 - 427 Brindle
+      3:  [40.3228, -83.2024], // Lot 4 - 431 Brindle
+      4:  [40.3220, -83.2022], // Tract 1 - 475 Brindle
+      5:  [40.3211, -83.2020], // Tract 3 - 505 Brindle
+      6:  [40.3204, -83.2018], // Tract 4 - 541 Brindle
+      7:  [40.3200, -83.2017], // Tract 5 - 563 Brindle
+      8:  [40.3197, -83.2016], // Tract 6 - 561 Brindle
+      9:  [40.3192, -83.2015], // Tract 7 - 585 Brindle
+      10: [40.3183, -83.2012], // Tract 8 - 623 Brindle
+      11: [40.3166, -83.2008], // Tract 9 - 661 Brindle
+      12: [40.3163, -83.2007], // Tract 10/11 - 675 Brindle
+      13: [40.3160, -83.1989], // Tract 12 - 6810 Houseman
+      14: [40.3163, -83.1975], // Tract 13 - 6724 Houseman
+      15: [40.3164, -83.1972], // Tract 14 - 6720 Houseman
+      16: [40.3168, -83.1960], // Tract 15 - Houseman
+      17: [40.3191, -83.2030], // Tract 20 - 7070 Slocum
+      18: [40.3189, -83.2025], // Tract 21 - 7058 Slocum
+      19: [40.3200, -83.2019], // Tract 22 - 554 Brindle
+      20: [40.3207, -83.2020], // Tract 23 - 510 Brindle
+      21: [40.3213, -83.2021], // Tract 24 - 494 Brindle
+      22: [40.3217, -83.2022], // Tract 25 - 480 Brindle
+      23: [40.3222, -83.2024], // Tract 26 - 440 Brindle
+      24: [40.3226, -83.2026], // Tract 27 - 420 Brindle
+      25: [40.3170, -83.1955]  // Tract 16 - Houseman
     };
 
     let neighborMap = null;
@@ -396,18 +397,19 @@
         return;
       }
 
-      neighborMap = L.map('neighborMap').setView([40.3240, -83.2040], 16);
+      neighborMap = L.map('neighborMap').setView([40.3195, -83.2000], 15);
       
-      // Satellite imagery with road labels
+      // Satellite imagery
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri, Maxar, Earthstar Geographics',
         maxZoom: 19
       }).addTo(neighborMap);
-      // Road/label overlay on top of satellite
-      L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png', {
-        attribution: '&copy; Stamen Design',
-        maxZoom: 19,
-        opacity: 0.7
+      // Road and label overlay (Esri reference, clear white labels on satellite)
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, opacity: 0.9
+      }).addTo(neighborMap);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, opacity: 0.9
       }).addTo(neighborMap);
 
       try {
@@ -426,16 +428,17 @@
           // and "The current user's property should have a distinct marker"
           if (!hasUsers) return;
 
-          const markerColor = isCurrentUser ? '#2d4a3e' : '#8b7355';
-          const markerRadius = isCurrentUser ? 10 : 7;
+          const markerColor = isCurrentUser ? '#00e5ff' : '#ffeb3b';
+          const markerRadius = isCurrentUser ? 12 : 8;
+          const borderColor = isCurrentUser ? '#ffffff' : '#ffffff';
 
           const marker = L.circleMarker(coords, {
             radius: markerRadius,
             fillColor: markerColor,
-            color: '#fff',
-            weight: 2,
+            color: borderColor,
+            weight: isCurrentUser ? 3 : 2,
             opacity: 1,
-            fillOpacity: 0.9
+            fillOpacity: 0.95
           }).addTo(neighborMap);
 
           let userHtml = p.users.map(u => {

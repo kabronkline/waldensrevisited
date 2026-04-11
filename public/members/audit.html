@@ -134,14 +134,18 @@
     function generateCert(r) {
       const signedDate = new Date(r.signed + 'Z').toLocaleString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
       const w = window.open('', '_blank');
-      w.document.write(`<!DOCTYPE html><html><head><title>Certificate — ${r.name}</title><style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap');*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;color:#1a2e23}
+      w.document.write(`<!DOCTYPE html><html><head><title>Certificate — ${r.name}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;color:#1a2e23}
 .cert{max-width:750px;margin:40px auto;padding:50px;border:3px solid #2d4a3e;position:relative}.cert::before{content:'';position:absolute;inset:6px;border:1px solid #b8cec4}
 .cert-header{text-align:center;margin-bottom:30px}.cert-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:#2d4a3e;margin-bottom:4px}.cert-subtitle{font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;color:#6b8f7a;margin-bottom:20px}.cert-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:#2d4a3e;margin-bottom:6px}.cert-desc{font-size:0.9rem;color:#5a6b60}
 .cert-body{margin:30px 0;line-height:1.8;font-size:0.95rem}.cert-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:#2d4a3e;text-align:center;margin:20px 0;padding:10px 0;border-bottom:2px solid #2d4a3e;display:inline-block}
 .cert-details{margin:20px 0;font-size:0.85rem;color:#5a6b60}.cert-details dt{font-weight:500;color:#2d3b33;float:left;width:140px;clear:left}.cert-details dd{margin-left:150px;margin-bottom:6px}
 .cert-footer{margin-top:40px;text-align:center;font-size:0.75rem;color:#7a8b80;border-top:1px solid #b8cec4;padding-top:15px}.cert-legal{margin-top:20px;font-size:0.8rem;color:#5a6b60;line-height:1.6;font-style:italic}
 @media print{.no-print{display:none!important}.cert{border:3px solid #2d4a3e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cert::before{border:1px solid #b8cec4!important}}</style></head><body>
-<div style="text-align:center;margin:20px" class="no-print"><button onclick="window.print()" style="padding:10px 24px;background:#2d4a3e;color:white;border:none;border-radius:6px;font-size:0.95rem;cursor:pointer">Print Certificate</button></div>
+<div style="text-align:center;margin:20px" class="no-print"><button onclick="document.fonts.ready.then(function(){window.print()})" style="padding:10px 24px;background:#2d4a3e;color:white;border:none;border-radius:6px;font-size:0.95rem;cursor:pointer">Print Certificate</button></div>
 <div class="cert"><div class="cert-header"><div class="cert-logo">Walden's Revisited</div><div class="cert-subtitle">Scioto Township · Delaware County · Ohio</div><div class="cert-title">Certificate of Digital Homeowners Agreement</div><div class="cert-desc">Membership Acknowledgment</div></div>
 <div class="cert-body"><p>This certifies that the following individual has digitally executed the Walden's Revisited HOA Membership Agreement, affirming that they have fully read and agree to be bound by the <strong>Restated Declaration of Protective Covenants and Restrictions for Walden's Revisited</strong>, filed March 9, 2019, as Instrument #2019-00009690, including its attached Bylaws.</p>
 <div style="text-align:center"><span class="cert-name">${r.name}</span></div>
