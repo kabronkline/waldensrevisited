@@ -61,30 +61,44 @@
         </div>
       </div>
 
-      <!-- New Post Form -->
-      <div class="profile-section" id="newPostSection">
-        <div style="display:flex; gap: var(--space-sm); align-items:flex-start;">
-          <div class="avatar-preview" id="postAvatar" style="width:44px;height:44px;">
-            <span class="placeholder">?</span>
+      <!-- Modern Post Composer -->
+      <div class="composer-card" id="newPostSection">
+        <div class="composer-top">
+          <div class="composer-avatar" id="postAvatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div style="flex:1;">
-            <textarea id="postContent" placeholder="What's happening in the neighborhood?" rows="3" style="width:100%; padding:10px 14px; border:1px solid rgba(139,115,85,0.2); border-radius:8px; font-family:var(--font-body); font-size:0.95rem; resize:vertical;"></textarea>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-              <div>
-                <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
-                  <input type="file" id="postImage" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
-                  Add Photo
-                </label>
-                <span id="postImageName" style="font-size:0.8rem; color:var(--stone); margin-left:8px;"></span>
-              </div>
-              <select id="postVisibility" style="padding:5px 8px;border:1px solid rgba(139,115,85,0.2);border-radius:6px;font-size:0.8rem;font-family:var(--font-body);background:white;margin-right:6px;">
-                <option value="everybody">Everybody</option>
-                <option value="friends">Friends Only</option>
-                <option value="officers">Officers Only</option>
-              </select>
-              <button class="btn btn-primary btn-sm" id="postBtn">Post</button>
+          <textarea class="composer-input" id="postContent" placeholder="What's happening in the neighborhood?"></textarea>
+        </div>
+
+        <div class="composer-preview" id="imagePreview"></div>
+
+        <div class="composer-actions">
+          <div class="action-tools">
+            <label for="postImage" class="icon-btn" title="Add photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </label>
+            <input type="file" id="postImage" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+
+            <div class="visibility-control">
+              <input type="radio" name="postVis" id="vis-everybody" value="everybody" class="vis-radio" checked>
+              <label for="vis-everybody" class="vis-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                All
+              </label>
+              <input type="radio" name="postVis" id="vis-friends" value="friends" class="vis-radio">
+              <label for="vis-friends" class="vis-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Friends
+              </label>
+              <input type="radio" name="postVis" id="vis-officers" value="officers" class="vis-radio">
+              <label for="vis-officers" class="vis-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Officers
+              </label>
             </div>
           </div>
+
+          <button class="btn-post" id="postBtn">Post</button>
         </div>
       </div>
 
@@ -187,15 +201,22 @@
       document.getElementById('navLinks').classList.toggle('active');
     });
 
-    // Image attachment
+    // Image attachment with preview
     let postImageData = null;
     document.getElementById('postImage').addEventListener('change', async (e) => {
       const file = e.target.files[0];
-      if (!file) { postImageData = null; document.getElementById('postImageName').textContent = ''; return; }
+      const preview = document.getElementById('imagePreview');
+      if (!file) { postImageData = null; preview.innerHTML = ''; return; }
       if (file.size > 2 * 1024 * 1024) { showToast('Image too large (max 2MB)', 'error'); return; }
       postImageData = await fileToBase64(file);
-      document.getElementById('postImageName').textContent = file.name;
+      preview.innerHTML = `<div class="preview-thumb"><img src="${postImageData}" alt=""><button class="preview-thumb-remove" onclick="clearImagePreview()" type="button">&times;</button></div>`;
     });
+
+    function clearImagePreview() {
+      postImageData = null;
+      document.getElementById('imagePreview').innerHTML = '';
+      document.getElementById('postImage').value = '';
+    }
 
     // Submit post
     document.getElementById('postBtn').addEventListener('click', async () => {
@@ -207,7 +228,7 @@
       btn.textContent = 'Posting...';
 
       try {
-        const visibility = document.getElementById('postVisibility').value;
+        const visibility = document.querySelector('input[name="postVis"]:checked').value;
         const body = { content, visibility };
         if (postImageData) body.image = postImageData;
 
@@ -220,9 +241,7 @@
         if (data.success) {
           showToast(data.message, 'success');
           document.getElementById('postContent').value = '';
-          postImageData = null;
-          document.getElementById('postImageName').textContent = '';
-          document.getElementById('postImage').value = '';
+          clearImagePreview();
           loadPosts(true);
         } else {
           showToast(data.error || 'Error creating post', 'error');
@@ -261,8 +280,7 @@
 
     function createPostEl(post) {
       const div = document.createElement('div');
-      div.className = 'profile-section';
-      div.style.marginBottom = 'var(--space-sm)';
+      div.className = 'post-card';
 
       const authorPic = post.author_profile_picture || post.author_google_picture || '';
       const authorName = post.author_anonymous ? 'Anonymous Member' : escapeHtml(post.author_name);
@@ -270,45 +288,43 @@
       const timeAgo = formatTimeAgo(post.created_at);
       const isPending = !post.approved;
       const isOwn = post.user_id === session.userId;
+      const vis = post.visibility || 'everybody';
 
-      let imageHtml = '';
-      if (post.image) {
-        imageHtml = `<div style="margin-top:var(--space-xs);border-radius:8px;overflow:hidden;"><img src="${escapeHtml(post.image)}" alt="" style="max-width:100%;max-height:400px;object-fit:cover;"></div>`;
-      }
+      const visIcons = {
+        everybody: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        friends: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+        officers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      };
 
-      let pendingBadge = '';
-      if (isPending) {
-        pendingBadge = '<span class="approval-badge pending" style="margin-left:8px;">Pending Approval</span>';
-      }
+      let imageHtml = post.image ? `<img src="${escapeHtml(post.image)}" alt="" class="post-image">` : '';
 
-      let deleteBtn = '';
-      if (isOwn) {
-        deleteBtn = `<button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">Delete</button>`;
-      }
+      let pendingBadge = isPending ? '<span class="approval-badge pending">Pending</span>' : '';
 
       div.innerHTML = `
-        <div style="display:flex;gap:var(--space-xs);align-items:flex-start;">
-          <div class="avatar-preview" style="width:40px;height:40px;flex-shrink:0;">
-            ${authorPic ? `<img src="${escapeHtml(authorPic)}" alt="">` : '<span class="placeholder">?</span>'}
+        <div class="post-header">
+          <div class="post-avatar">
+            ${authorPic ? `<img src="${escapeHtml(authorPic)}" alt="">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}
           </div>
-          <div style="flex:1;">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <strong style="font-size:0.95rem;color:var(--forest-deep);">${authorName}</strong>
-              <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.7rem;">${roleLabel}</span>
-              ${pendingBadge}
-              <span style="font-size:0.8rem;color:var(--lichen);margin-left:auto;">${timeAgo}</span>
+          <div class="post-meta">
+            <span class="post-meta-name">${authorName} <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.65rem;vertical-align:middle;">${roleLabel}</span> ${pendingBadge}</span>
+            <div class="post-meta-info">
+              ${timeAgo}
+              <span class="vis-indicator">${visIcons[vis] || visIcons.everybody} ${vis === 'everybody' ? 'All' : vis === 'friends' ? 'Friends' : 'Officers'}</span>
             </div>
-            <div style="margin-top:6px;font-size:0.95rem;line-height:1.6;white-space:pre-wrap;">${renderWithMentions(post.content)}</div>
-            ${imageHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
-              <span class="toggle-comments" onclick="toggleComments(${post.id}, this)">
-                ${post.comment_count > 0 ? `${post.comment_count} comment${post.comment_count !== 1 ? 's' : ''}` : 'Comment'}
-              </span>
-              ${deleteBtn}
-            </div>
-            <div class="comments-section" id="comments-${post.id}" style="display:none;"></div>
           </div>
+          ${isOwn ? `<button class="engage-btn" onclick="deletePost(${post.id})" title="Delete" style="margin-left:auto;color:var(--lichen);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>` : ''}
         </div>
+        <div class="post-content">${renderWithMentions(post.content)}</div>
+        ${imageHtml}
+        <div class="post-engagement">
+          <button class="engage-btn" onclick="toggleComments(${post.id}, this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            ${post.comment_count > 0 ? `${post.comment_count}` : ''} Comment${post.comment_count !== 1 ? 's' : ''}
+          </button>
+        </div>
+        <div class="comments-section" id="comments-${post.id}"></div>
       `;
       return div;
     }
@@ -330,11 +346,11 @@
     // Comments
     async function toggleComments(postId, el) {
       const section = document.getElementById(`comments-${postId}`);
-      if (section.style.display === 'none') {
-        section.style.display = '';
+      if (!section.classList.contains('open')) {
+        section.classList.add('open');
         await loadComments(postId);
       } else {
-        section.style.display = 'none';
+        section.classList.remove('open');
       }
     }
 

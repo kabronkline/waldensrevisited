@@ -164,7 +164,7 @@
         <div class="profile-section" id="preRegSection">
           <button class="btn btn-primary btn-sm" id="togglePreRegBtn" onclick="document.getElementById('preRegForm').style.display = document.getElementById('preRegForm').style.display === 'none' ? '' : 'none';" style="margin-bottom:var(--space-sm);">Add User</button>
           <div id="preRegForm" style="display:none;">
-            <h3 style="margin-bottom:4px;">Pre-Register a Member</h3>
+            <h3 style="margin-bottom:4px;">Add User</h3>
             <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Create an account before the user logs in for the first time. When they sign in with Google using this email, they'll be automatically linked and won't see the "contact admin" screen.</p>
 
             <div class="form-group">
@@ -226,7 +226,7 @@
               </label>
             </div>
 
-            <button class="btn btn-primary" id="preRegBtn">Pre-Register User</button>
+            <button class="btn btn-primary" id="preRegBtn">Add User</button>
           </div>
         </div>
 
@@ -901,13 +901,13 @@
         const res = await fetch('/api/admin/pre-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const data = await res.json();
         if (data.success) {
-          showToast(`${name} pre-registered successfully`, 'success');
+          showToast(`${name} added successfully`, 'success');
           document.getElementById('preRegEmail').value = '';
           document.getElementById('preRegName').value = '';
           document.getElementById('preRegAddress').value = '';
         } else { showToast(data.error, 'error'); }
       } catch (e) { showToast('Error', 'error'); }
-      btn.disabled = false; btn.textContent = 'Pre-Register User';
+      btn.disabled = false; btn.textContent = 'Add User';
     });
 
     // Properties
