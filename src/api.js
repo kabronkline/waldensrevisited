@@ -152,6 +152,7 @@ export async function handleApi(request, env, session) {
     if (body.show_name !== undefined) { updates.push('show_name = ?'); params.push(body.show_name ? 1 : 0); }
     if (body.show_contact !== undefined) { updates.push('show_contact = ?'); params.push(body.show_contact ? 1 : 0); }
     if (body.name !== undefined) { updates.push('name = ?'); params.push(body.name); }
+    if (body.birthday !== undefined) { updates.push('birthday = ?'); params.push(body.birthday || null); }
     if (body.avatar_id !== undefined) { updates.push('avatar_id = ?'); params.push(body.avatar_id); }
 
     if (updates.length > 0) {
@@ -202,8 +203,8 @@ export async function handleApi(request, env, session) {
     if (!body.name || !body.name.trim()) return json({ error: 'Dog name is required' }, 400);
 
     const result = await env.DB.prepare(
-      'INSERT INTO dogs (user_id, name, breed, age, bio) VALUES (?, ?, ?, ?, ?)'
-    ).bind(userId, body.name.trim(), body.breed || null, body.age || null, body.bio || null).run();
+      'INSERT INTO dogs (user_id, name, breed, age, birthday, bio) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(userId, body.name.trim(), body.breed || null, body.age || null, body.birthday || null, body.bio || null).run();
     return json({ id: result.meta.last_row_id, success: true }, 201);
   }
 
@@ -215,8 +216,8 @@ export async function handleApi(request, env, session) {
 
     const body = await request.json();
     await env.DB.prepare(
-      "UPDATE dogs SET name = ?, breed = ?, age = ?, bio = ?, updated_at = datetime('now') WHERE id = ?"
-    ).bind(body.name?.trim() || dog.name, body.breed !== undefined ? body.breed : dog.breed, body.age !== undefined ? body.age : dog.age, body.bio !== undefined ? body.bio : dog.bio, dogId).run();
+      "UPDATE dogs SET name = ?, breed = ?, age = ?, birthday = ?, bio = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(body.name?.trim() || dog.name, body.breed !== undefined ? body.breed : dog.breed, body.age !== undefined ? body.age : dog.age, body.birthday !== undefined ? body.birthday : dog.birthday, body.bio !== undefined ? body.bio : dog.bio, dogId).run();
     return json({ success: true });
   }
 
@@ -379,6 +380,46 @@ export async function handleApi(request, env, session) {
     if (!post) return json({ error: 'Post not found' }, 404);
     await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId).run();
     return json({ success: true });
+  }
+
+  // GET /api/dogs/birthdays — upcoming dog birthdays (next 30 days)
+  if (path === '/api/dogs/birthdays' && method === 'GET') {
+    const { results } = await env.DB.prepare(
+      `SELECT d.id, d.name, d.breed, d.birthday, d.picture, d.user_id,
+              u.name as owner_name, u.is_anonymous, u.show_name, u.show_contact, a.full_label as address_label
+       FROM dogs d
+       JOIN users u ON d.user_id = u.id
+       LEFT JOIN addresses a ON u.address_id = a.id
+       WHERE d.birthday IS NOT NULL
+       AND u.role != 'pending' AND u.agreement_signed_at IS NOT NULL`
+    ).all();
+
+    // Filter to birthdays in next 30 days (compare month-day)
+    const now = new Date();
+    const upcoming = results.filter(d => {
+      try {
+        const bday = new Date(d.birthday);
+        const thisYear = new Date(now.getFullYear(), bday.getMonth(), bday.getDate());
+        const diffDays = (thisYear - now) / 86400000;
+        if (diffDays >= -1 && diffDays <= 30) return true;
+        // Also check next year wrap
+        const nextYear = new Date(now.getFullYear() + 1, bday.getMonth(), bday.getDate());
+        const diffNext = (nextYear - now) / 86400000;
+        return diffNext >= 0 && diffNext <= 30;
+      } catch (e) { return false; }
+    }).sort((a, b) => {
+      const aDate = new Date(a.birthday);
+      const bDate = new Date(b.birthday);
+      const aDay = (aDate.getMonth() * 31 + aDate.getDate());
+      const bDay = (bDate.getMonth() * 31 + bDate.getDate());
+      return aDay - bDay;
+    });
+
+    // Mask anonymous owners
+    const viewerRole = session.user.role;
+    upcoming.forEach(d => maskIfAnonymous(d, 'owner_name', [], viewerRole));
+
+    return json(upcoming);
   }
 
   // --- Comments ---

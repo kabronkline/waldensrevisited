@@ -122,6 +122,7 @@
 
       <div class="admin-tabs" style="margin-bottom:var(--space-md);">
         <button class="admin-tab active" data-tab="dogs-tab">Dogs</button>
+        <button class="admin-tab" data-tab="birthdays-tab">Birthdays</button>
         <button class="admin-tab" data-tab="playdate-tab">Play Dates</button>
       </div>
 
@@ -144,6 +145,15 @@
       </div>
 
       <!-- Play Dates Tab -->
+      <!-- Birthdays Tab -->
+      <div class="tab-content" id="tab-birthdays-tab" style="display:none;">
+        <div class="profile-section">
+          <h2>Upcoming Dog Birthdays</h2>
+          <p style="font-size:0.85rem;color:var(--stone);margin-bottom:var(--space-sm);">Dog birthdays coming up in the next 30 days.</p>
+          <div id="birthdaysList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
       <div class="tab-content" id="tab-playdate-tab" style="display:none;">
 
         <!-- Sub-view: Setup (my dogs opt-in/out) -->
@@ -218,8 +228,8 @@
         <input type="text" id="dogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
       </div>
       <div class="form-group">
-        <label for="dogAge">Age</label>
-        <input type="text" id="dogAge" placeholder="e.g., 3 years" maxlength="50">
+        <label for="dogAge">Birthday</label>
+        <input type="text" id="dogAge" type="date" id="dogBirthday">
       </div>
       <div class="form-group">
         <label for="dogBio">About</label>
@@ -370,7 +380,7 @@
           if (dog) {
             document.getElementById('dogName').value = dog.name || '';
             document.getElementById('dogBreed').value = dog.breed || '';
-            document.getElementById('dogAge').value = dog.age || '';
+            document.getElementById('dogBirthday').value = dog.birthday || '';
             document.getElementById('dogBio').value = dog.bio || '';
             if (dog.picture) {
               document.getElementById('dogPhotoPreview').innerHTML = `<img src="${escapeHtml(dog.picture)}" alt="">`;
@@ -384,7 +394,7 @@
         document.getElementById('dogEditId').value = '';
         document.getElementById('dogName').value = '';
         document.getElementById('dogBreed').value = '';
-        document.getElementById('dogAge').value = '';
+        document.getElementById('dogBirthday').value = '';
         document.getElementById('dogBio').value = '';
         document.getElementById('dogPhotoPreview').innerHTML = '<span class="dog-placeholder">&#128054;</span>';
       }
@@ -420,7 +430,7 @@
       const body = {
         name,
         breed: document.getElementById('dogBreed').value.trim() || null,
-        age: document.getElementById('dogAge').value.trim() || null,
+        birthday: document.getElementById('dogBirthday').value || null,
         bio: document.getElementById('dogBio').value.trim() || null,
       };
 
@@ -482,8 +492,36 @@
       }
     }
 
+    // Upcoming birthdays
+    async function loadBirthdays() {
+      try {
+        const res = await fetch('/api/dogs/birthdays');
+        const dogs = await res.json();
+        const container = document.getElementById('birthdaysList');
+        if (dogs.length === 0) {
+          container.innerHTML = '<p style="color:var(--stone);">No upcoming dog birthdays. Add a birthday to your dog\'s profile!</p>';
+          return;
+        }
+        container.innerHTML = '<div class="dogs-grid">' + dogs.map(d => {
+          const bday = new Date(d.birthday);
+          const monthDay = bday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+          const age = new Date().getFullYear() - bday.getFullYear();
+          const isToday = bday.getMonth() === new Date().getMonth() && bday.getDate() === new Date().getDate();
+          return `<div class="dog-card">
+            <div class="dog-card-image">${d.picture ? `<img src="${escapeHtml(d.picture)}" alt="">` : '<span class="dog-placeholder">&#128054;</span>'}</div>
+            <div class="dog-card-body">
+              <h3>${isToday ? '&#127874; ' : ''}${escapeHtml(d.name)}</h3>
+              <div class="dog-meta">${monthDay} &middot; Turning ${age} &middot; ${escapeHtml(d.owner_name)}</div>
+              ${d.breed ? `<div class="dog-meta">${escapeHtml(d.breed)}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+      } catch (e) { document.getElementById('birthdaysList').innerHTML = '<p style="color:var(--stone);">Failed to load birthdays.</p>'; }
+    }
+
     loadMyDogs();
     loadCommunityDogs();
+    loadBirthdays();
 
     // ---- Tab switching ----
     document.querySelectorAll('.admin-tabs .admin-tab').forEach(btn => {

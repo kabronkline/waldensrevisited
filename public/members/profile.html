@@ -94,6 +94,10 @@
           <label>Role</label>
           <div id="roleDisplay" class="role-badge" style="display:inline-block;"></div>
         </div>
+        <div class="form-group">
+          <label for="userBirthday">Birthday (optional)</label>
+          <input type="date" id="userBirthday" style="width:auto;">
+        </div>
       </div>
 
       <!-- Address -->
@@ -134,7 +138,7 @@
               <input type="radio" name="anon" id="anon_true" value="1">
               <label for="anon_true">Anonymous</label>
             </div>
-            <p class="privacy-hint">When anonymous, you appear as "Neighbor at [Address]".</p>
+            <p class="privacy-hint" id="anonHint">When anonymous, you appear as "Neighbor at [Address]".</p>
           </div>
         </div>
 
@@ -174,8 +178,8 @@
             <input type="text" id="profileDogBreed" placeholder="e.g., Golden Retriever" maxlength="100">
           </div>
           <div class="form-group">
-            <label for="profileDogAge">Age</label>
-            <input type="text" id="profileDogAge" placeholder="e.g., 3 years" maxlength="50">
+            <label for="profileDogBirthday">Birthday</label>
+            <input type="date" id="profileDogBirthday">
           </div>
           <div class="form-group">
             <label for="profileDogBio">About</label>
@@ -232,6 +236,7 @@
         // Populate fields
         document.getElementById('displayName').value = currentUser.name || '';
         document.getElementById('email').value = currentUser.email || '';
+        document.getElementById('userBirthday').value = currentUser.birthday || '';
 
         // Role
         const roleEl = document.getElementById('roleDisplay');
@@ -300,8 +305,11 @@
         const updatePrivacyUI = () => {
           const anon = document.getElementById('anon_true').checked;
           const shared = document.getElementById('contact_true').checked;
-          
+
           document.getElementById('anonStatus').textContent = anon ? 'Anonymous' : 'Visible';
+          document.getElementById('anonHint').textContent = anon
+            ? 'You appear as "Neighbor at [Address]" to other members.'
+            : 'Your name is visible to other members.';
           document.getElementById('contactStatus').textContent = shared ? 'Shared' : 'Hidden';
           document.getElementById('identityOptions').style.display = anon ? 'none' : '';
         };
@@ -381,6 +389,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: document.getElementById('displayName').value.trim(),
+            birthday: document.getElementById('userBirthday').value || null,
             is_anonymous: document.getElementById('anon_true').checked ? 1 : 0,
             show_name: document.getElementById('anon_true').checked ? 0 : 1,
             show_contact: document.getElementById('contact_true').checked ? 1 : 0,
@@ -510,7 +519,7 @@
           body: JSON.stringify({
             name,
             breed: document.getElementById('profileDogBreed').value.trim(),
-            age: document.getElementById('profileDogAge').value.trim(),
+            birthday: document.getElementById('profileDogBirthday').value || null,
             bio: document.getElementById('profileDogBio').value.trim(),
           }),
         });
@@ -531,7 +540,7 @@
         // Reset form
         document.getElementById('profileDogName').value = '';
         document.getElementById('profileDogBreed').value = '';
-        document.getElementById('profileDogAge').value = '';
+        document.getElementById('profileDogBirthday').value = '';
         document.getElementById('profileDogBio').value = '';
         document.getElementById('profileDogPhoto').value = '';
         document.getElementById('profileDogPhotoName').textContent = '';
