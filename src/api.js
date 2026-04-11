@@ -934,19 +934,18 @@ export async function handleApi(request, env, session) {
     if (!body.content?.trim()) return json({ error: 'Message content is required' }, 400);
     if (body.content.length > 1000) return json({ error: 'Message too long (max 1000 characters)' }, 400);
 
-    const result = await env.DB.prepare(
-      "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
-    ).bind(threadId, userId, body.content.trim()).run();
+    // Insert message and enforce 500 cap atomically via batch
+    const [insertResult] = await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO chat_messages (thread_id, sender_user_id, content, created_at) VALUES (?, ?, ?, datetime('now'))"
+      ).bind(threadId, userId, body.content.trim()),
+      env.DB.prepare(
+        `DELETE FROM chat_messages WHERE thread_id = ?
+         AND id <= (SELECT id FROM chat_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 1 OFFSET 500)`
+      ).bind(threadId, threadId),
+    ]);
 
-    // Enforce 500 message cap
-    const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM chat_messages WHERE thread_id = ?').bind(threadId).first();
-    if (count.cnt > 500) {
-      await env.DB.prepare(
-        'DELETE FROM chat_messages WHERE thread_id = ? AND id NOT IN (SELECT id FROM chat_messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT 500)'
-      ).bind(threadId, threadId).run();
-    }
-
-    return json({ id: result.meta.last_row_id, success: true }, 201);
+    return json({ id: insertResult.meta.last_row_id, success: true }, 201);
   }
 
   // POST /api/chat/threads/:threadId/share-contact — share contact info as system message
@@ -1392,6 +1391,88 @@ export async function handleApi(request, env, session) {
       }
 
       return json({ user_id: targetUserId, threads: threadData, exported_at: new Date().toISOString() });
+    }
+
+    // --- Backup & Restore (admin only) ---
+
+    // GET /api/admin/backup/export — Export entire database as JSON
+    if (path === '/api/admin/backup/export' && method === 'GET') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const includeBlobs = url.searchParams.get('includeBlobs') === 'true';
+
+      const tables = [
+        'addresses', 'properties', 'users', 'dogs', 'posts', 'surveys',
+        'survey_responses', 'comments', 'playdate_dogs', 'playdate_swipes',
+        'playdate_matches', 'playdate_messages', 'friend_requests', 'friendships',
+        'chat_threads', 'chat_participants', 'chat_messages', 'content_history', 'audit_log'
+      ];
+
+      const backup = {
+        version: 1,
+        exported_at: new Date().toISOString(),
+        tables: {}
+      };
+
+      for (const table of tables) {
+        let query = `SELECT * FROM ${table}`;
+        if (!includeBlobs) {
+          // Exclude large base64 strings if requested
+          if (table === 'users') query = 'SELECT id, google_id, email, name, google_picture, address_id, is_anonymous, show_name, show_contact, role, roles, avatar_id, owner_type, is_authorized_agent, agent_for_entity, pre_registered, pre_registered_email, profile_confirmed, agreement_signed_at, agreement_ip, created_at, updated_at FROM users';
+          if (table === 'dogs') query = 'SELECT id, user_id, name, breed, age, bio, created_at, updated_at FROM dogs';
+          if (table === 'posts') query = 'SELECT id, user_id, content, approved, visibility, created_at, updated_at FROM posts';
+        }
+        const { results } = await env.DB.prepare(query).all();
+        backup.tables[table] = results;
+      }
+
+      return json(backup);
+    }
+
+    // POST /api/admin/backup/import — Restore database from JSON (WARNING: overwrites all tables)
+    if (path === '/api/admin/backup/import' && method === 'POST') {
+      if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
+      const data = await request.json();
+      if (!data.tables) return json({ error: 'Invalid backup format' }, 400);
+
+      const tables = [
+        'addresses', 'properties', 'users', 'dogs', 'posts', 'surveys',
+        'survey_responses', 'comments', 'playdate_dogs', 'playdate_swipes',
+        'playdate_matches', 'playdate_messages', 'friend_requests', 'friendships',
+        'chat_threads', 'chat_participants', 'chat_messages', 'content_history', 'audit_log'
+      ];
+
+      const batch = [];
+
+      // 1. Delete all existing data in reverse dependency order
+      const reverseTables = [...tables].reverse();
+      for (const table of reverseTables) {
+        batch.push(env.DB.prepare(`DELETE FROM ${table}`));
+      }
+
+      // 2. Insert backup data in dependency order
+      for (const table of tables) {
+        const rows = data.tables[table];
+        if (!rows || rows.length === 0) continue;
+
+        const columns = Object.keys(rows[0]);
+        const placeholders = columns.map(() => '?').join(', ');
+        const sql = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+        for (const row of rows) {
+          const values = columns.map(c => row[c]);
+          batch.push(env.DB.prepare(sql).bind(...values));
+        }
+      }
+
+      // 3. Execute everything in a single transaction
+      await env.DB.batch(batch);
+
+      // 4. Log the action
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'backup_restore', null, `Restored backup from ${data.exported_at}`).run();
+
+      return json({ success: true });
     }
   }
 

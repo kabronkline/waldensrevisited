@@ -733,7 +733,7 @@
             // System message
             return `<div class="message message-system">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>${escapeHtml(m.body)}</span>
+              <span>${escapeHtml(m.content)}</span>
             </div>`;
           }
           const isSelf = m.sender_user_id === myId;
@@ -741,7 +741,7 @@
           const senderLabel = (!isSelf && isGroup && m.sender_name) ? `<div class="msg-sender-name">${escapeHtml(m.sender_name)}</div>` : '';
           return `<div class="message ${isSelf ? 'message-self' : 'message-other'}">
             ${senderLabel}
-            <div>${escapeHtml(m.body)}</div>
+            <div>${escapeHtml(m.content)}</div>
             <div class="message-time">${m.created_at ? formatTimeAgo(m.created_at) : ''}</div>
           </div>`;
         }).join('');
@@ -757,8 +757,8 @@
     // ---- Send Message ----
     async function sendMessage() {
       const input = document.getElementById('messageInput');
-      const body = input.value.trim();
-      if (!body || !activeThreadId) return;
+      const msgText = input.value.trim();
+      if (!msgText || !activeThreadId) return;
 
       const sendBtn = document.getElementById('sendBtn');
       sendBtn.disabled = true;
@@ -768,7 +768,7 @@
         const res = await fetch(`/api/chat/threads/${activeThreadId}/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body })
+          body: JSON.stringify({ content: msgText })
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -803,15 +803,16 @@
       }
     }
 
-    // ---- Polling ----
+    // ---- Polling (smart: slower when tab hidden) ----
     function startPolling() {
       stopPolling();
+      const interval = document.hidden ? 30000 : 10000;
       pollInterval = setInterval(async () => {
         if (activeThreadId) {
           await loadMessages();
           await loadThreads();
         }
-      }, 10000);
+      }, interval);
     }
 
     function stopPolling() {
@@ -820,6 +821,11 @@
         pollInterval = null;
       }
     }
+
+    // Adjust polling rate when tab visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (activeThreadId) startPolling();
+    });
 
     // ---- Friend Requests ----
     async function loadFriendRequests() {

@@ -56,6 +56,7 @@
         <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
                 <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
         <button class="admin-tab" data-tab="officer-chats" id="officerChatsTab">Officer Chats</button>
+        <button class="admin-tab" data-tab="system" id="systemTab">System</button>
       </div>
 
       <!-- Approval Queue Tab -->
@@ -246,6 +247,53 @@
           <table class="users-table">
             <thead><tr><th>Member</th><th>Email</th><th>Started</th><th>Messages</th><th></th></tr></thead>
             <tbody id="officerChatsBody"><tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- System Tab (Admin only) -->
+      <div class="tab-content" id="tab-system" style="display:none;">
+        <div class="profile-section">
+          <h2>Backup & Restore</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">
+            Export the entire database as a JSON file, or restore from a previous backup. 
+            <strong>Warning:</strong> Restoring will overwrite all current data.
+          </p>
+          
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:var(--space-md);">
+            <div style="flex:1;min-width:300px;padding:16px;border:1px solid var(--sage);border-radius:8px;background:var(--cream);">
+              <h3 style="margin-bottom:8px;">Export</h3>
+              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Download a complete backup of all tables.</p>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:12px;cursor:pointer;">
+                <input type="checkbox" id="exportBlobs" checked style="accent-color:var(--forest-deep);"> Include images (blobs) — will make file much larger
+              </label>
+              <button class="btn btn-primary" onclick="exportBackup()">Export Database</button>
+            </div>
+            
+            <div style="flex:1;min-width:300px;padding:16px;border:1px solid var(--sage);border-radius:8px;background:var(--cream);">
+              <h3 style="margin-bottom:8px;">Restore</h3>
+              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Upload a JSON backup file to restore the database.</p>
+              <input type="file" id="restoreFile" accept=".json" style="margin-bottom:12px;display:block;font-size:0.85rem;width:100%;">
+              <button class="btn btn-danger" onclick="importBackup()" id="restoreBtn">Restore Database</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section" style="overflow-x:auto;">
+          <h2>Audit Log</h2>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -1013,6 +1061,79 @@
     if (session.role !== 'admin') {
       document.getElementById('propsTab').style.display = 'none';
       document.getElementById('preRegSection').style.display = 'none';
+      document.getElementById('systemTab').style.display = 'none';
+    }
+
+    async function exportBackup() {
+      const includeBlobs = document.getElementById('exportBlobs').checked;
+      try {
+        showToast('Preparing backup...', 'info');
+        const res = await fetch(`/api/admin/backup/export?includeBlobs=${includeBlobs}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const date = new Date().toISOString().split('T')[0];
+        a.href = url;
+        a.download = `waldens-revisited-backup-${date}${includeBlobs ? '-with-blobs' : ''}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Backup downloaded successfully', 'success');
+      } catch (e) {
+        console.error(e);
+        showToast('Export failed: ' + e.message, 'error');
+      }
+    }
+
+    async function importBackup() {
+      const fileInput = document.getElementById('restoreFile');
+      if (!fileInput.files.length) {
+        showToast('Please select a backup file first', 'error');
+        return;
+      }
+
+      if (!confirm('CRITICAL WARNING: This will DELETE all current data and restore from the backup file. This cannot be undone. Are you absolutely sure?')) {
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const btn = document.getElementById('restoreBtn');
+      const originalText = btn.textContent;
+      
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Restoring...';
+        showToast('Reading file...', 'info');
+        
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (!data.tables) {
+          throw new Error('Invalid backup file format');
+        }
+
+        showToast('Uploading backup (this may take a while)...', 'info');
+        const res = await fetch('/api/admin/backup/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: text
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Server error during restore');
+        }
+
+        showToast('Database restored successfully! Reloading...', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+      } catch (e) {
+        console.error(e);
+        showToast('Restore failed: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
     }
 
     loadPendingUsers();
