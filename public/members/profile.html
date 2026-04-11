@@ -156,7 +156,7 @@
                 <input type="radio" name="contact" id="contact_true" value="1">
                 <label for="contact_true">Shared</label>
               </div>
-              <p class="privacy-hint">When shared, neighbors can see your email and address.</p>
+              <p class="privacy-hint" id="contactHint">When shared, neighbors can see your email and address.</p>
             </div>
           </div>
         </div>
@@ -311,14 +311,39 @@
             ? 'You appear as "Neighbor at [Address]" to other members.'
             : 'Your name is visible to other members.';
           document.getElementById('contactStatus').textContent = shared ? 'Shared' : 'Hidden';
+          document.getElementById('contactHint').textContent = shared
+            ? 'Neighbors can see your email and address.'
+            : 'Your email and address are hidden. You can still chat in-app.';
           document.getElementById('identityOptions').style.display = anon ? 'none' : '';
         };
 
         updatePrivacyUI();
 
         document.querySelectorAll('input[name="anon"]').forEach(r => {
-          r.addEventListener('change', () => {
+          r.addEventListener('change', async () => {
             if (document.getElementById('anon_true').checked) {
+              // Check if user has dogs — they must be deleted to go anonymous
+              try {
+                const dogsRes = await fetch('/api/dogs');
+                const dogs = await dogsRes.json();
+                const myDogs = (dogs.results || dogs).filter(d => d.is_mine !== 0);
+                if (myDogs.length > 0) {
+                  const confirmed = confirm(
+                    `You have ${myDogs.length} dog(s) registered. Going anonymous requires deleting all your dogs because anonymous users cannot participate in play dates.\n\nDelete all your dogs and switch to anonymous?`
+                  );
+                  if (!confirmed) {
+                    document.getElementById('anon_false').checked = true;
+                    updatePrivacyUI();
+                    return;
+                  }
+                  // Delete all user's dogs
+                  for (const dog of myDogs) {
+                    await fetch(`/api/dogs/${dog.id}`, { method: 'DELETE' });
+                  }
+                  showToast(`${myDogs.length} dog(s) deleted`, 'info');
+                  loadProfileDogs();
+                }
+              } catch (e) {}
               document.getElementById('contact_false').checked = true;
             }
             updatePrivacyUI();
