@@ -1179,6 +1179,22 @@ export async function handleApi(request, env, session) {
     }
   }
 
+  // --- Content reporting ---
+  if (path === '/api/report' && method === 'POST') {
+    const body = await request.json();
+    if (!body.content_type || !body.content_id) return json({ error: 'content_type and content_id required' }, 400);
+    if (!['post', 'comment', 'chat_message'].includes(body.content_type)) return json({ error: 'Invalid content type' }, 400);
+    // Check for duplicate report
+    const existing = await env.DB.prepare(
+      "SELECT id FROM content_reports WHERE reporter_user_id = ? AND content_type = ? AND content_id = ? AND status = 'pending'"
+    ).bind(userId, body.content_type, body.content_id).first();
+    if (existing) return json({ error: 'Already reported' }, 400);
+    await env.DB.prepare(
+      'INSERT INTO content_reports (reporter_user_id, content_type, content_id, reason) VALUES (?, ?, ?, ?)'
+    ).bind(userId, body.content_type, body.content_id, body.reason || null).run();
+    return json({ success: true });
+  }
+
   // --- Admin/Officer endpoints ---
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
@@ -1523,6 +1539,58 @@ export async function handleApi(request, env, session) {
       ).bind(userId, 'pre_register', result.meta.last_row_id, `Pre-registered ${body.email} as ${roles.join(',')}`).run();
 
       return json({ id: result.meta.last_row_id, success: true });
+    }
+
+    // GET /api/admin/reports — pending content reports
+    if (path === '/api/admin/reports' && method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT cr.*, u.name as reporter_name, u.email as reporter_email
+         FROM content_reports cr JOIN users u ON cr.reporter_user_id = u.id
+         WHERE cr.status = 'pending' ORDER BY cr.created_at DESC`
+      ).all();
+      // Fetch the reported content for each
+      for (const r of results) {
+        if (r.content_type === 'post') {
+          r.content = await env.DB.prepare('SELECT content, user_id FROM posts WHERE id = ?').bind(r.content_id).first();
+          if (r.content) { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(r.content.user_id).first(); r.author_name = u?.name; }
+        } else if (r.content_type === 'comment') {
+          r.content = await env.DB.prepare('SELECT content, user_id FROM comments WHERE id = ?').bind(r.content_id).first();
+          if (r.content) { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(r.content.user_id).first(); r.author_name = u?.name; }
+        } else if (r.content_type === 'chat_message') {
+          r.content = await env.DB.prepare('SELECT content, sender_user_id FROM chat_messages WHERE id = ?').bind(r.content_id).first();
+          if (r.content) { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(r.content.sender_user_id).first(); r.author_name = u?.name; }
+        }
+      }
+      return json(results);
+    }
+
+    // PUT /api/admin/reports/:id/dismiss
+    const reportDismissMatch = path.match(/^\/api\/admin\/reports\/(\d+)\/dismiss$/);
+    if (reportDismissMatch && method === 'PUT') {
+      const reportId = parseInt(reportDismissMatch[1]);
+      await env.DB.prepare("UPDATE content_reports SET status = 'dismissed', reviewed_by = ? WHERE id = ?").bind(userId, reportId).run();
+      return json({ success: true });
+    }
+
+    // PUT /api/admin/reports/:id/action — take action (delete the content)
+    const reportActionMatch = path.match(/^\/api\/admin\/reports\/(\d+)\/action$/);
+    if (reportActionMatch && method === 'PUT') {
+      const reportId = parseInt(reportActionMatch[1]);
+      const report = await env.DB.prepare("SELECT * FROM content_reports WHERE id = ?").bind(reportId).first();
+      if (!report) return json({ error: 'Report not found' }, 404);
+      // Delete the reported content
+      if (report.content_type === 'post') await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(report.content_id).run();
+      else if (report.content_type === 'comment') await env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(report.content_id).run();
+      else if (report.content_type === 'chat_message') await env.DB.prepare('DELETE FROM chat_messages WHERE id = ?').bind(report.content_id).run();
+      await env.DB.prepare("UPDATE content_reports SET status = 'actioned', reviewed_by = ? WHERE id = ?").bind(userId, reportId).run();
+      await env.DB.prepare('INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)').bind(userId, 'content_moderation', null, `Removed ${report.content_type} #${report.content_id}`).run();
+      return json({ success: true });
+    }
+
+    // GET /api/admin/moderation-count — count pending reports + officer chats
+    if (path === '/api/admin/moderation-count' && method === 'GET') {
+      const reports = await env.DB.prepare("SELECT COUNT(*) as cnt FROM content_reports WHERE status = 'pending'").first();
+      return json({ count: reports.cnt });
     }
 
     // GET /api/admin/consent-records — users who signed the agreement

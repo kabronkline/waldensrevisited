@@ -204,6 +204,18 @@ CREATE TABLE IF NOT EXISTS address_requests (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Content reports (user-reported posts and chat messages)
+CREATE TABLE IF NOT EXISTS content_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reporter_user_id INTEGER NOT NULL REFERENCES users(id),
+  content_type TEXT NOT NULL,
+  content_id INTEGER NOT NULL,
+  reason TEXT,
+  status TEXT DEFAULT 'pending',
+  reviewed_by INTEGER,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Content edit history (posts and comments, max 5 versions retained)
 CREATE TABLE IF NOT EXISTS content_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -59,7 +59,7 @@
         <button class="admin-tab active" data-tab="posts">Approval Queue</button>
         <button class="admin-tab" data-tab="properties" id="propsTab">Properties</button>
                 <button class="admin-tab" data-tab="users" id="usersTab">Users</button>
-        <button class="admin-tab" data-tab="officer-chats" id="officerChatsTab">Officer Chats</button>
+        <button class="admin-tab" data-tab="officer-chats" id="officerChatsTab">Moderation</button>
         <button class="admin-tab" data-tab="system" id="systemTab">System</button>
       </div>
 
@@ -220,8 +220,14 @@
         </div>
       </div>
 
-      <!-- Officer Chats Tab -->
+      <!-- Moderation Tab -->
       <div class="tab-content" id="tab-officer-chats" style="display:none;">
+        <div class="profile-section">
+          <h2>Reported Content</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Posts and messages reported by members for review.</p>
+          <div id="reportsList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+
         <div class="profile-section" style="overflow-x:auto;">
           <h2>Officer Group Chats</h2>
           <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Conversations initiated by members with HOA officers.</p>
@@ -260,23 +266,6 @@
           </div>
         </div>
 
-        <div class="profile-section" style="overflow-x:auto;">
-          <h2>Audit Log</h2>
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <tr><td colspan="5" style="color:var(--stone);">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
 
 
@@ -1224,6 +1213,50 @@
       } catch (e) { showToast('Export failed', 'error'); }
     }
 
+    // Content reports
+    async function loadReports() {
+      try {
+        const res = await fetch('/api/admin/reports');
+        if (!res.ok) { document.getElementById('reportsList').innerHTML = '<p style="color:var(--stone);">No reports.</p>'; return; }
+        const reports = await res.json();
+        const container = document.getElementById('reportsList');
+        if (!reports.length) { container.innerHTML = '<p style="color:var(--stone);">No pending reports.</p>'; return; }
+        container.innerHTML = reports.map(r => {
+          const contentText = r.content?.content || '[Content deleted]';
+          const typeLabel = r.content_type === 'post' ? 'Post' : r.content_type === 'comment' ? 'Comment' : 'Chat Message';
+          return `<div class="pending-item" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div>
+                <span class="role-badge officer" style="font-size:0.7rem;">${typeLabel}</span>
+                <strong style="margin-left:6px;">${escapeHtml(r.author_name || 'Unknown')}</strong>
+              </div>
+              <span style="font-size:0.8rem;color:var(--stone);">Reported by ${escapeHtml(r.reporter_name)} &middot; ${formatTimeAgo(r.created_at)}</span>
+            </div>
+            <div style="padding:8px 12px;background:var(--mist);border-radius:8px;font-size:0.9rem;border-left:3px solid #dc2626;margin-bottom:6px;">${escapeHtml(contentText.substring(0, 300))}</div>
+            ${r.reason ? `<p style="font-size:0.85rem;color:var(--stone);margin-bottom:6px;"><em>Reason: ${escapeHtml(r.reason)}</em></p>` : ''}
+            <div class="pending-item-actions">
+              <button class="btn btn-danger btn-sm" onclick="actionReport(${r.id})">Remove Content</button>
+              <button class="btn btn-secondary btn-sm" onclick="dismissReport(${r.id})">Dismiss</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (e) { document.getElementById('reportsList').innerHTML = '<p style="color:var(--stone);">No reports.</p>'; }
+    }
+
+    async function actionReport(id) {
+      if (!confirm('Remove this content? This cannot be undone.')) return;
+      await fetch(`/api/admin/reports/${id}/action`, { method: 'PUT' });
+      showToast('Content removed', 'success');
+      loadReports();
+    }
+
+    async function dismissReport(id) {
+      await fetch(`/api/admin/reports/${id}/dismiss`, { method: 'PUT' });
+      showToast('Report dismissed', 'info');
+      loadReports();
+    }
+
+    loadReports();
     loadOfficerChats();
   </script>
 </body>

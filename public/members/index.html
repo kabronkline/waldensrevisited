@@ -359,10 +359,12 @@
         <div class="post-content">${renderWithMentions(post.content)}</div>
         ${imageHtml}
         <div class="post-engagement">
-          ${post.allow_comments !== 0 ? `<button class="engage-btn" onclick="toggleComments(${post.id}, this)">
+          ${isPending ? '<span style="font-size:0.8rem;color:var(--lichen);">Awaiting approval</span>'
+            : post.allow_comments !== 0 ? `<button class="engage-btn" onclick="toggleComments(${post.id}, this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             ${post.comment_count > 0 ? `${post.comment_count}` : ''} Comment${post.comment_count !== 1 ? 's' : ''}
           </button>` : '<span style="font-size:0.8rem;color:var(--lichen);">Comments off</span>'}
+          ${!isOwn ? `<button class="engage-btn" onclick="reportContent('post', ${post.id})" title="Report" style="margin-left:auto;color:var(--lichen);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>` : ''}
         </div>
         <div class="comments-section" id="comments-${post.id}"></div>
       `;
@@ -436,6 +438,21 @@
           loadPosts(true);
         } else { showToast(data.error, 'error'); }
       } catch (e) { showToast('Error editing post', 'error'); }
+    }
+
+    async function reportContent(type, id) {
+      const reason = prompt('Why are you reporting this? (optional)');
+      if (reason === null) return;
+      try {
+        const res = await fetch('/api/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content_type: type, content_id: id, reason: reason || null }),
+        });
+        const data = await res.json();
+        if (data.success) showToast('Reported. An admin will review.', 'success');
+        else showToast(data.error || 'Error', 'error');
+      } catch (e) { showToast('Error reporting', 'error'); }
     }
 
     async function deletePost(id) {
