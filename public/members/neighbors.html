@@ -647,15 +647,19 @@
       const body = { name, breed: document.getElementById('dogBreed').value, birthday: document.getElementById('dogBirthday').value, bio: document.getElementById('dogBio').value };
       try {
         let dogId = id;
-        if (id) await fetch(`/api/dogs/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-        else {
+        if (id) {
+          const r = await fetch(`/api/dogs/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+          if (!r.ok) { const e = await r.json(); showToast(e.error || 'Error saving', 'error'); return; }
+        } else {
           const r = await fetch('/api/dogs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-          const d = await r.json(); dogId = d.id;
+          const d = await r.json();
+          if (!r.ok) { showToast(d.error || 'Error adding dog', 'error'); return; }
+          dogId = d.id;
         }
         if (dogPhotoData && dogPhotoData.startsWith('data:')) {
           await fetch(`/api/dogs/${dogId}/picture`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ image: dogPhotoData }) });
         }
-        showToast('Saved', 'success');
+        showToast('Dog saved', 'success');
         document.getElementById('dogModal').style.display = 'none';
         loadMyDogs();
       } catch (e) { showToast('Error', 'error'); }

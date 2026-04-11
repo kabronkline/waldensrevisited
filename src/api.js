@@ -210,9 +210,12 @@ export async function handleApi(request, env, session) {
   }
 
   if (path === '/api/dogs' && method === 'POST') {
-    // Anonymous users cannot add dogs (needed for play date community building)
-    const user = await env.DB.prepare('SELECT is_anonymous, address_id FROM users WHERE id = ?').bind(userId).first();
-    if (user?.is_anonymous) return json({ error: 'Anonymous users cannot add dogs. Update your privacy settings first.' }, 403);
+    // Anonymous members cannot add dogs (needed for play date community building)
+    // System roles (admin, auditor) are exempt from this check
+    const user = await env.DB.prepare('SELECT is_anonymous, address_id, role FROM users WHERE id = ?').bind(userId).first();
+    if (user?.is_anonymous && user.role !== 'admin' && user.role !== 'auditor') {
+      return json({ error: 'Anonymous users cannot add dogs. Update your privacy settings first.' }, 403);
+    }
 
     const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM dogs WHERE user_id = ?').bind(userId).first();
     if (count.cnt >= MAX_DOGS) return json({ error: `Maximum of ${MAX_DOGS} dogs allowed` }, 400);
