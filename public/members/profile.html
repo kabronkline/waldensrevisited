@@ -384,10 +384,16 @@
       }
     });
 
-    // Remove profile picture
+    // Remove avatar (both uploaded photo and selected SVG)
     document.getElementById('removeAvatar').addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/me/profile-picture', { method: 'DELETE' });
+        // Clear both profile picture and avatar_id
+        await fetch('/api/me/profile-picture', { method: 'DELETE' });
+        const res = await fetch('/api/me', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar_id: null }),
+        });
         const data = await res.json();
         if (data.success) {
           const gPic = currentUser.google_picture;
