@@ -119,8 +119,9 @@ export async function handleCallback(request, env) {
     user = { ...existing, name, google_picture: picture };
     // Promote to admin if in admin list and not already admin
     if (isAdmin && existing.role !== 'admin') {
-      await env.DB.prepare("UPDATE users SET role = 'admin' WHERE id = ?").bind(existing.id).run();
+      await env.DB.prepare("UPDATE users SET role = 'admin', roles = 'admin,member' WHERE id = ?").bind(existing.id).run();
       user.role = 'admin';
+      user.roles = 'admin,member';
     }
   } else {
     const role = isAdmin ? 'admin' : 'pending';

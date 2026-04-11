@@ -1015,6 +1015,9 @@ export async function handleApi(request, env, session) {
          FROM users u LEFT JOIN addresses a ON u.address_id = a.id
          ORDER BY u.created_at DESC`
       ).all();
+      // Mark global admins (configured via ADMIN_EMAILS env var)
+      const globalAdmins = (env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+      results.forEach(u => { u.is_global_admin = globalAdmins.includes((u.email || '').toLowerCase()); });
       return json(results);
     }
 
@@ -1024,6 +1027,13 @@ export async function handleApi(request, env, session) {
     if (roleMatch && method === 'PUT') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const targetId = parseInt(roleMatch[1]);
+
+      // Protect global admins from role changes
+      const targetUser = await env.DB.prepare('SELECT email FROM users WHERE id = ?').bind(targetId).first();
+      const globalAdmins = (env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+      if (targetUser && globalAdmins.includes((targetUser.email || '').toLowerCase())) {
+        return json({ error: 'Global admin roles cannot be modified. They are configured in the deployment.' }, 400);
+      }
       const body = await request.json();
 
       // Support both old single-role and new multi-role format

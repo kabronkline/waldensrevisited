@@ -298,17 +298,15 @@
 
       let imageHtml = post.image ? `<img src="${escapeHtml(post.image)}" alt="" class="post-image">` : '';
 
-      let pendingBadge = isPending ? '<span class="approval-badge pending">Pending</span>' : '';
-
       div.innerHTML = `
         <div class="post-header">
           <div class="post-avatar">
             ${authorPic ? `<img src="${escapeHtml(authorPic)}" alt="">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="padding:8px;color:var(--lichen);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}
           </div>
           <div class="post-meta">
-            <span class="post-meta-name">${authorName} <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.65rem;vertical-align:middle;">${roleLabel}</span> ${pendingBadge}</span>
+            <span class="post-meta-name">${authorName} <span class="role-badge ${getRoleBadgeClass(post.author_role)}" style="font-size:0.65rem;vertical-align:middle;">${roleLabel}</span></span>
             <div class="post-meta-info">
-              ${timeAgo}
+              ${timeAgo}${isPending ? ' &middot; <span style="color:#92400e;">Awaiting approval</span>' : ''}
               <span class="vis-indicator">${visIcons[vis] || visIcons.everybody} ${vis === 'everybody' ? 'All' : vis === 'friends' ? 'Friends' : 'Officers'}</span>
             </div>
           </div>

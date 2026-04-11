@@ -554,6 +554,8 @@
             ? `<span class="approval-badge approved">Signed</span>`
             : `<span class="approval-badge pending">Not signed</span>`;
 
+          const globalTag = user.is_global_admin ? ' <span style="font-size:0.65rem;background:#ede9fe;color:#5b21b6;padding:1px 6px;border-radius:4px;font-weight:600;">GLOBAL</span>' : '';
+
           tr.innerHTML = `
             <td>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -562,14 +564,16 @@
                     ? `<img src="${escapeHtml(user.profile_picture || user.google_picture)}" alt="">`
                     : ''}
                 </div>
-                ${escapeHtml(user.name)}
+                ${escapeHtml(user.name)}${globalTag}
               </div>
             </td>
             <td>${escapeHtml(user.email)}</td>
             <td>${roleBadges}</td>
             <td>${agreementStatus}</td>
             <td>${new Date(user.created_at).toLocaleDateString()}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="openEditUser(${user.id})">Edit</button></td>
+            <td>${user.is_global_admin
+              ? '<span style="font-size:0.8rem;color:var(--lichen);">System</span>'
+              : `<button class="btn btn-secondary btn-sm" onclick="openEditUser(${user.id})">Edit</button>`}</td>
           `;
           tbody.appendChild(tr);
         });
