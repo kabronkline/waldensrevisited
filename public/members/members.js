@@ -109,6 +109,10 @@ function initMembersSidebar(activePage) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18"/><path d="M5 7l7-4 7 4"/><path d="M5 7v2l3 6H2l3-6V7"/><path d="M19 7v2l3 6h-6l3-6V7"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
         Legal
       </a>
+      <a href="/members/faq.html" class="sidebar-link ${activePage === 'faq' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        FAQ
+      </a>
     </div>
     ${isElevated ? `
     <div class="sidebar-divider"></div>

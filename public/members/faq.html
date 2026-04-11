@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — Walden's Revisited</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/members/members.css">
+  <style>
+    .faq-item { border-bottom: 1px solid rgba(139,115,85,0.08); }
+    .faq-question { padding: var(--space-sm) 0; font-weight: 500; color: var(--forest-deep); cursor: pointer; font-size: 0.95rem; list-style: none; }
+    .faq-question::-webkit-details-marker { display: none; }
+    .faq-question::before { content: '+'; margin-right: 8px; font-weight: 600; color: var(--pond-surface); }
+    details[open] .faq-question::before { content: '\2212'; }
+    .faq-answer { padding: 0 0 var(--space-sm) var(--space-md); font-size: 0.9rem; color: var(--charcoal); line-height: 1.7; }
+    .faq-ref { font-size: 0.8rem; color: var(--lichen); font-style: italic; margin-top: var(--space-xs); }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" fill="currentColor" opacity="0.2"/>
+          <path d="M16 4C16 4 8 10 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 10 16 4 16 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 14V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 17L16 14L19 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Walden's Revisited
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#history">History</a></li>
+        <li><a href="/#community">Community</a></li>
+        <li><a href="/#common-areas">Common Areas</a></li>
+        <li><a href="/#covenants">Covenants</a></li>
+        <li id="navSignIn"><a href="/members/" class="nav-signin">Sign In</a></li>
+        <li id="navMembers" style="display:none;" class="nav-user-profile">
+          <a href="/members/" class="nav-members-link">Members</a>
+          <a href="/members/profile.html" class="nav-avatar" id="navUserAvatar" title="Your Profile"></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="members-layout">
+    <nav class="members-sidebar" id="membersSidebar"></nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <main class="members-main">
+      <div class="container" style="max-width:800px;">
+
+        <div class="members-header">
+          <h1>Frequently Asked Questions</h1>
+          <p>A Plain-Language Guide to Your Community's Declaration of Covenants &amp; Code of Regulations (Bylaws). Based on the Restated Declaration dated March 9, 2019.</p>
+        </div>
+
+        <!-- UNDERSTANDING YOUR GOVERNING DOCUMENTS -->
+        <div class="profile-section">
+          <h2>Understanding Your Governing Documents</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">What is the "Declaration"?</summary>
+            <div class="faq-answer">
+              <p>The Declaration is the master legal document that created Walden's Revisited as a planned community. Formally titled the "Restated Declaration of Covenants, Conditions, Restrictions, and Easements," it was recorded with the Franklin County Recorder and runs with the land, meaning every current and future owner is bound by its terms. It establishes the Association, defines what you can and cannot do with your lot, sets up the assessment system, and grants the Association its enforcement powers.</p>
+              <p class="faq-ref">Ref: Declaration, Preamble and Article I</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What are the "Bylaws" (Code of Regulations)?</summary>
+            <div class="faq-answer">
+              <p>The Code of Regulations (commonly called the Bylaws) is the document that governs the internal operations of the Association itself -- how meetings are run, how the Board is elected, what officers do, and how the Association conducts its business. Think of the Declaration as the "constitution" and the Bylaws as the "operating manual."</p>
+              <p class="faq-ref">Ref: Declaration, Art. II(G); Bylaws, Art. I</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What are the "Association Governing Documents"?</summary>
+            <div class="faq-answer">
+              <p>This is the umbrella term for all of the community's binding legal documents taken together. It includes the Declaration, the Code of Regulations (Bylaws), the Articles of Incorporation, and any rules, regulations, or design guidelines that the Board of Directors adopts. When something says "as set forth in the Association Governing Documents," it means any or all of these sources may apply.</p>
+              <p class="faq-ref">Ref: Declaration, Art. II(E)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What law governs our community?</summary>
+            <div class="faq-answer">
+              <p>Walden's Revisited is a Planned Community organized under Chapter 5312 of the Ohio Revised Code (the Ohio Planned Community Act). This state statute provides the legal framework under which the Declaration was recorded and the Association operates. Where the Declaration is silent, Chapter 5312 fills in the gaps.</p>
+              <p class="faq-ref">Ref: Declaration, Preamble (A); Art. II(V)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- MEMBERSHIP & VOTING -->
+        <div class="profile-section">
+          <h2>Membership &amp; Voting</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Am I automatically a member of the Association?</summary>
+            <div class="faq-answer">
+              <p>Yes. Every owner of a lot in Walden's Revisited is automatically a member of the Walden's Revisited Homeowners Association. Membership is mandatory and inseparable from lot ownership -- you cannot opt out. If you own the lot, you are a member; if you sell the lot, your membership transfers to the new owner.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VII(A); Bylaws, Art. II, &sect;2.01</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How many votes does my lot get?</summary>
+            <div class="faq-answer">
+              <p>One vote per lot. If a lot is owned by more than one person, the co-owners share that single vote and must agree among themselves how to cast it. The total number of votes in the Association equals the total number of lots (currently 72).</p>
+              <p class="faq-ref">Ref: Bylaws, Art. II, &sect;2.02&ndash;2.03</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I vote by proxy?</summary>
+            <div class="faq-answer">
+              <p>Yes. You may appoint another person to vote on your behalf by signing a written proxy. Proxies are valid for the meeting or vote specified and cannot be used indefinitely. The proxy must be delivered to the Secretary before or at the meeting. This allows you to have your vote counted even if you cannot attend in person.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. II, &sect;2.05</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Association take action without a meeting?</summary>
+            <div class="faq-answer">
+              <p>Yes. The members may act without a formal meeting if written consent is obtained from at least 75% of the voting power of the Association. The written consent must describe the action taken and be signed by the requisite number of members. This mechanism allows the community to act quickly on urgent matters without convening a full meeting.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. III, &sect;3.09</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can my voting rights be suspended?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Board may suspend your voting rights if you are delinquent in paying assessments or if you are in violation of the Declaration, Bylaws, or rules and regulations. The suspension lasts until the delinquency is cured or the violation is corrected. This is one of the Association's tools for encouraging compliance without resorting to fines or legal action.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(G)(9); Bylaws, Art. IV, &sect;4.10(g)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- BOARD OF DIRECTORS & GOVERNANCE -->
+        <div class="profile-section">
+          <h2>Board of Directors &amp; Governance</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">How many directors serve on the Board?</summary>
+            <div class="faq-answer">
+              <p>The Board consists of not fewer than three (3) and not more than five (5) directors. The exact number within this range is set by the Board itself or by the members at a meeting. This flexible range allows the community to scale the Board's size to match current needs and the availability of willing volunteers.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.01</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How long do Board members serve?</summary>
+            <div class="faq-answer">
+              <p>Directors serve staggered two-year terms. Staggering ensures that not all seats are up for election in the same year, providing continuity of leadership. A director holds office until a successor is elected and qualified, or until the director resigns or is removed.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.02</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Who can serve on the Board?</summary>
+            <div class="faq-answer">
+              <p>Only members of the Association (lot owners) are eligible to serve as directors. If a lot is owned by an entity (such as a trust or LLC), a designated representative of that entity may serve. A director who ceases to be an owner automatically vacates the seat.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.03</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can a Board member be removed?</summary>
+            <div class="faq-answer">
+              <p>Yes. Any director may be removed with or without cause by a vote of the majority of the total voting power of the Association at a meeting called for that purpose. The notice of the meeting must state that removal of a director will be considered. The Board itself cannot remove one of its own members -- only the members (owners) can do so.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.05</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What happens if a Board seat becomes vacant?</summary>
+            <div class="faq-answer">
+              <p>If a vacancy occurs between elections (due to resignation, removal, death, or disqualification), the remaining directors may appoint a replacement to serve until the next annual meeting, at which point the members will elect someone to complete the unexpired term.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.06</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What officers does the Association have?</summary>
+            <div class="faq-answer">
+              <p>The Association must have at minimum a President, a Secretary, and a Treasurer. The Board may also appoint one or more Vice Presidents and such other officers as it deems necessary. Officers are appointed by the Board from among its members (or, for certain offices, from the membership at large). The same person may hold more than one office, except that the President may not also serve as Secretary.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. V, &sect;5.01&ndash;5.02</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What are the Board's general powers?</summary>
+            <div class="faq-answer">
+              <p>The Board manages the business and affairs of the Association. This includes adopting budgets, setting and collecting assessments, enforcing the Declaration and rules, maintaining common areas, entering into contracts, hiring professionals (such as attorneys or property managers), and performing all acts necessary to carry out the Association's purposes. However, the Board cannot take certain major actions (such as amending the Declaration or levying special assessments above a certain threshold) without a vote of the members.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. IV, &sect;4.10; Declaration, Art. IX</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- MEMBER MEETINGS -->
+        <div class="profile-section">
+          <h2>Member Meetings</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">When is the annual meeting?</summary>
+            <div class="faq-answer">
+              <p>The annual meeting of the members is held each year at a time and place determined by the Board of Directors. The purpose of the annual meeting is to elect directors, receive reports from the Board and officers, and transact any other business properly brought before the meeting. Notice must be sent to all members at least 10 but not more than 60 days before the meeting.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. III, &sect;3.01&ndash;3.02</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can special meetings be called?</summary>
+            <div class="faq-answer">
+              <p>Yes. Special meetings may be called by the President, by a majority of the Board of Directors, or by members holding at least 25% of the total voting power. The call must state the purpose(s) of the meeting, and only business related to those stated purposes may be transacted at the special meeting.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. III, &sect;3.03</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What is a quorum for a member meeting?</summary>
+            <div class="faq-answer">
+              <p>A quorum requires the presence, in person or by proxy, of members holding at least 40% of the total voting power of the Association. If a quorum is not present, the meeting may be adjourned to a later date. Once a quorum is established, business may continue even if some members leave, provided a quorum existed at the time the meeting was called to order.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. III, &sect;3.05</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How are votes counted at meetings?</summary>
+            <div class="faq-answer">
+              <p>Unless the Declaration or Bylaws specifically require a higher threshold, matters are decided by a majority of the votes cast at a meeting at which a quorum is present. Each lot gets one vote. Certain extraordinary actions -- such as amending the Declaration or removing a director -- require a higher percentage as specified in the governing documents.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. III, &sect;3.07</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- ASSESSMENTS (DUES & FEES) -->
+        <div class="profile-section">
+          <h2>Assessments (Dues &amp; Fees)</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">What are "assessments"?</summary>
+            <div class="faq-answer">
+              <p>Assessments are the charges levied against each lot to fund the Association's operations. They are essentially your HOA dues. The Declaration authorizes several types: annual assessments (regular dues), special assessments (for capital improvements or unexpected expenses), and individual assessments (charged to a specific owner for costs the Association incurs because of that owner's actions or inaction).</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(A)&ndash;(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How is the annual assessment determined?</summary>
+            <div class="faq-answer">
+              <p>The Board of Directors adopts an annual budget that estimates the Association's expenses for the coming year, including operating costs, reserves, insurance, and maintenance. The total budgeted amount is divided equally among all lots to produce the per-lot annual assessment. The Board must provide a copy of the budget to the members. If the Board fails to set a new assessment, the prior year's assessment continues in effect.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(A); Bylaws, Art. IV, &sect;4.10(a)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Board levy a special assessment?</summary>
+            <div class="faq-answer">
+              <p>Yes, but with limits. The Board may levy special assessments for capital improvements, emergency repairs, or other expenses not covered by the annual budget. However, any special assessment that exceeds a threshold set in the Declaration requires approval by a vote of the members. Special assessments are divided equally among all lots unless the governing documents provide otherwise.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(B)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What happens if I don't pay my assessments?</summary>
+            <div class="faq-answer">
+              <p>Delinquent assessments accrue interest at the rate specified in the Declaration and may also be subject to late fees. The Association has a lien on your lot for unpaid assessments, meaning it can ultimately foreclose on the lien just as a mortgage lender could foreclose for nonpayment. The Association may also suspend your voting rights and your right to use common area amenities until the delinquency is cured. Additionally, the Association may recover its costs of collection, including reasonable attorney fees.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(D)&ndash;(F)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Is there a lien on my property for unpaid assessments?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Declaration creates an automatic, continuing lien on every lot for any assessments (plus interest, late fees, fines, and collection costs) that remain unpaid. This lien is superior to most other liens except property-tax liens and first-mortgage liens recorded before the delinquency arose. The Association may enforce the lien by filing a certificate of lien with the county recorder and, if necessary, by foreclosure.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(D)&ndash;(E)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Association charge me individually for something?</summary>
+            <div class="faq-answer">
+              <p>Yes. If the Association incurs costs because of your specific actions or failure to act -- for example, if you fail to maintain your lot and the Association has to do it for you, or if you damage a common area -- the Board may levy an individual assessment against your lot for those costs. Individual assessments are treated the same as other assessments and are secured by the same lien.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are new owners responsible for the prior owner's unpaid assessments?</summary>
+            <div class="faq-answer">
+              <p>Yes. Because the lien runs with the land, a new owner takes the lot subject to any existing assessment lien. In practice, this means the new owner could be held responsible for the prior owner's unpaid assessments. Buyers should request an estoppel certificate (a statement of the account balance) from the Association before closing to confirm there are no outstanding amounts.</p>
+              <p class="faq-ref">Ref: Declaration, Art. IX(F); Art. XII(E)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- USE OF YOUR LOT -->
+        <div class="profile-section">
+          <h2>Use of Your Lot</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I use my lot for anything other than a single-family residence?</summary>
+            <div class="faq-answer">
+              <p>No. Each lot is restricted to use as a single-family residential dwelling. No commercial, industrial, or multi-family use is permitted. The Declaration defines "single family" to mean one family unit, so you cannot subdivide a lot or operate a business that generates customer traffic, signage, or commercial activity visible from the street.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(A)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I rent or lease my home?</summary>
+            <div class="faq-answer">
+              <p>Leasing is permitted, but the Declaration imposes conditions. The lease must be in writing, must be for the entire dwelling (no room-by-room or short-term vacation rentals), and must be for a minimum term specified in the Declaration. The tenant is bound by all of the Association's governing documents, and the owner remains responsible for the tenant's compliance and for all assessments.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(B)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are there rules about signs on my property?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Declaration restricts signs on lots. Generally, no signs are permitted except one "For Sale" or "For Rent" sign of a size and style that conforms to any rules the Board adopts. Political signs and other temporary signs may be further regulated by Board-adopted rules, subject to applicable law. No commercial advertising signs are permitted.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(H)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I operate a home-based business?</summary>
+            <div class="faq-answer">
+              <p>The Declaration requires each lot to be used for residential purposes. Incidental home-office use (where there is no client traffic, no signage, no employees coming and going, and no outward indication of business activity) is generally permissible, but any business use that is visible, generates traffic, or changes the residential character of the neighborhood is prohibited.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(A)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are there noise or nuisance restrictions?</summary>
+            <div class="faq-answer">
+              <p>Yes. No owner may engage in any activity on their lot that constitutes a nuisance or unreasonable annoyance to other residents. This includes excessive noise, noxious odors, and any activity that interferes with the peaceful enjoyment of neighboring lots. The Board has the authority to adopt specific rules regarding quiet hours and nuisance standards.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I store items outside my home?</summary>
+            <div class="faq-answer">
+              <p>Outdoor storage is restricted. No lot may be used for the open storage of materials, equipment, or personal property that is visible from the street or neighboring properties. Trash containers must be stored out of sight except on collection days. The Board may adopt additional rules governing outdoor storage, seasonal decorations, and the placement of items such as basketball hoops or play equipment.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(D)&ndash;(E)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are satellite dishes or antennas allowed?</summary>
+            <div class="faq-answer">
+              <p>Small satellite dishes (one meter or less in diameter) are permitted under federal law (the FCC's Over-the-Air Reception Devices rule), and the Declaration cannot prohibit them. However, the Association may adopt reasonable rules regarding placement (to the extent permitted by federal law) to minimize visual impact. Larger antennas or satellite dishes may require architectural approval.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(F); FCC OTARD Rule</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- PETS & ANIMALS -->
+        <div class="profile-section">
+          <h2>Pets &amp; Animals</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I keep pets?</summary>
+            <div class="faq-answer">
+              <p>Yes. A reasonable number of common household pets (such as dogs, cats, and small caged animals) are permitted. However, no animals may be kept for commercial purposes, and no livestock, poultry, or exotic animals are allowed. The Board may adopt rules specifying the maximum number of pets and other requirements.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(G)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Do I have to keep my pet on a leash?</summary>
+            <div class="faq-answer">
+              <p>Pets must be kept under the owner's control at all times. When outside the owner's lot, dogs must be leashed or otherwise physically restrained. Pet owners are responsible for immediately cleaning up after their animals on any common areas or other owners' lots. Failure to control a pet or clean up after it may result in fines.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(G); Board Rules</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What if my neighbor's pet is a nuisance?</summary>
+            <div class="faq-answer">
+              <p>If a pet creates a nuisance -- excessive barking, aggressive behavior, damage to property, or unsanitary conditions -- you may file a complaint with the Board. The Board has the authority to require the owner to remedy the situation and may impose fines for continued violations. In extreme cases, the Board may require the removal of the animal from the community.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(C), (G); Art. X</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Am I liable for damage caused by my pet?</summary>
+            <div class="faq-answer">
+              <p>Yes. Pet owners are fully responsible for any damage, injury, or nuisance caused by their animals. This includes damage to common areas, other owners' property, and injury to persons. The Association may levy an individual assessment against a pet owner's lot for the cost of repairing any damage caused by the pet to common areas.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(G); Art. IX(C)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- VEHICLES & PARKING -->
+        <div class="profile-section">
+          <h2>Vehicles &amp; Parking</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are there vehicle restrictions?</summary>
+            <div class="faq-answer">
+              <p>Yes. Commercial vehicles, boats, trailers, recreational vehicles (RVs), and inoperable vehicles may not be stored or parked on any lot where they are visible from the street or neighboring properties. These items must be kept in a garage or otherwise screened from view. The Board may adopt additional rules regarding parking, including restrictions on overnight street parking.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(I)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I park on the street?</summary>
+            <div class="faq-answer">
+              <p>Street parking may be subject to both local municipal ordinances and any rules the Board adopts. Generally, temporary guest parking on the street is acceptable, but long-term or overnight street parking may be restricted. No vehicle may be parked in a manner that blocks driveways, mailboxes, or fire hydrants. Check current Board rules for specific restrictions.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(I); Board Rules</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I work on my car in the driveway?</summary>
+            <div class="faq-answer">
+              <p>Minor, short-term vehicle maintenance (such as washing your car) is generally acceptable. However, major repairs, vehicle restoration projects, or any work that leaves a vehicle in a disassembled or inoperable state visible from the street is prohibited. No vehicle may be placed on blocks or jacks in a driveway or anywhere visible from the street or neighboring lots.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(I)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- ARCHITECTURAL REVIEW & IMPROVEMENTS -->
+        <div class="profile-section">
+          <h2>Architectural Review &amp; Improvements</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Do I need approval before making changes to my home's exterior?</summary>
+            <div class="faq-answer">
+              <p>Yes. No exterior modification, addition, alteration, or construction (including landscaping changes, painting, fencing, decks, patios, and outbuildings) may be started without prior written approval from the Architectural Review Committee (ARC) or the Board. You must submit plans and specifications describing the proposed work. The ARC/Board will review your request for compliance with the Declaration's standards and any adopted design guidelines.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What standards does the Architectural Review Committee apply?</summary>
+            <div class="faq-answer">
+              <p>The ARC considers whether the proposed improvement is consistent with the community's overall aesthetic, does not detract from the appearance of the neighborhood, is harmonious with existing structures, and complies with any design guidelines the Board has adopted. The ARC may approve, approve with conditions, or deny a request. Decisions are made in the ARC's reasonable discretion.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI(B)&ndash;(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What if I make changes without approval?</summary>
+            <div class="faq-answer">
+              <p>If you make exterior modifications without obtaining the required prior approval, the Board may require you to restore the property to its original condition at your own expense. The Board may also impose fines for the violation and may take legal action to compel removal or modification of the unapproved improvement. Even if the improvement would have been approved, failure to follow the approval process is itself a violation.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI(D); Art. X</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How long does the review process take?</summary>
+            <div class="faq-answer">
+              <p>The Declaration typically requires the ARC or Board to respond within a specified number of days after receiving a complete application. If the ARC/Board fails to respond within that timeframe, the application may be deemed approved (check the specific provision in your Declaration for the exact timeline and any conditions). Incomplete applications may delay the process, so submit all required information with your initial request.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI(C)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- FENCING, POOLS & OUTDOOR FEATURES -->
+        <div class="profile-section">
+          <h2>Fencing, Pools &amp; Outdoor Features</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I install a fence?</summary>
+            <div class="faq-answer">
+              <p>Fencing requires prior architectural approval. The Declaration and any Board-adopted design guidelines specify acceptable fence types, heights, materials, colors, and placement. Generally, fences must not exceed a stated maximum height and must be made of approved materials. Chain-link fencing may be restricted or prohibited. Fences in front yards are typically not permitted. All fence installations must also comply with local zoning and setback requirements.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI; Art. VIII(J)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I install a swimming pool?</summary>
+            <div class="faq-answer">
+              <p>Swimming pools (including above-ground pools beyond a certain size) require architectural approval. The Board and ARC will consider the pool's location, fencing and safety requirements, screening from neighbors, and compliance with local building codes and zoning ordinances. Permanent above-ground pools may be restricted. All pool installations must meet applicable safety-barrier requirements under local law.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI; Art. VIII(K)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What about sheds, play structures, or other outdoor features?</summary>
+            <div class="faq-answer">
+              <p>Any structure placed on a lot -- including sheds, playsets, trampolines, pergolas, gazebos, and similar features -- requires prior architectural approval. The ARC/Board will evaluate size, placement, materials, color, and visual impact on neighboring lots. Temporary structures (such as pop-up canopies) may be exempt if they are used only for short periods, but check the Board's current rules for specifics.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VI; Art. VIII(D)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- COMMON AREAS -->
+        <div class="profile-section">
+          <h2>Common Areas</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">What are the "Common Areas"?</summary>
+            <div class="faq-answer">
+              <p>Common Areas are the portions of the community owned or maintained by the Association for the benefit and use of all members. They typically include entranceways, signage, landscaped medians, retention ponds, walking paths, and any other real property designated as common area on the recorded plat or in the Declaration. Individual owners do not own the Common Areas; they share a common right to use them.</p>
+              <p class="faq-ref">Ref: Declaration, Art. II(H); Art. V</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Who maintains the Common Areas?</summary>
+            <div class="faq-answer">
+              <p>The Association is responsible for the maintenance, repair, and replacement of the Common Areas. This is funded through the assessments paid by all lot owners. The Board may hire contractors or a property management company to perform the actual maintenance work. Individual owners may not alter, damage, or encroach upon the Common Areas without Board approval.</p>
+              <p class="faq-ref">Ref: Declaration, Art. V(B); Art. IX(A)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I use the Common Areas for private events?</summary>
+            <div class="faq-answer">
+              <p>Common Areas are for the shared use of all members and their guests. Any exclusive or private use of a Common Area (such as reserving a space for a party) is subject to Board rules and may require advance permission. The Board may charge a fee for exclusive use and may require a deposit to cover potential damage. No use that excludes other members from a Common Area for an unreasonable period is permitted without Board authorization.</p>
+              <p class="faq-ref">Ref: Declaration, Art. V(C); Board Rules</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What if someone damages a Common Area?</summary>
+            <div class="faq-answer">
+              <p>If damage to a Common Area is caused by a specific owner, their family, tenants, or guests, the Association may levy an individual assessment against that owner's lot for the cost of repair. The owner is responsible for the actions of everyone on their lot or using the Common Areas at their invitation. If the responsible party cannot be identified, the cost of repair is borne by the Association through the general assessment budget.</p>
+              <p class="faq-ref">Ref: Declaration, Art. V(D); Art. IX(C)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- LOT MAINTENANCE & ASSOCIATION ENTRY -->
+        <div class="profile-section">
+          <h2>Lot Maintenance &amp; Association Entry</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Am I required to maintain my lot?</summary>
+            <div class="faq-answer">
+              <p>Yes. Every owner is responsible for keeping their lot and all improvements in good condition and repair. This includes regular lawn care (mowing, trimming, weed control), maintaining the exterior of the home in good repair, keeping driveways and walkways in good condition, and preventing the accumulation of debris or unsightly conditions. Failure to maintain your lot may result in a violation notice and fines.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(D)&ndash;(E)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Association enter my lot?</summary>
+            <div class="faq-answer">
+              <p>The Declaration grants the Association (and its agents) a limited right of entry onto any lot for purposes of inspection, maintenance, repair, or enforcement of the governing documents. This right is to be exercised in a reasonable manner and, except in emergencies, after reasonable notice to the owner. The Association may enter to perform work the owner has failed to do (after proper notice), and the cost is charged back to the owner as an individual assessment.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(E); Art. XI(A)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What if I fail to maintain my lot and the Association does it for me?</summary>
+            <div class="faq-answer">
+              <p>If you receive a violation notice for failure to maintain your lot and do not cure the violation within the time specified, the Association may enter your lot and perform the necessary maintenance. The cost of that work -- plus an administrative fee, if applicable -- will be charged to your lot as an individual assessment. This amount is secured by the same lien as regular assessments and accrues interest if unpaid.</p>
+              <p class="faq-ref">Ref: Declaration, Art. VIII(E); Art. IX(C); Art. XI(A)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- INSURANCE -->
+        <div class="profile-section">
+          <h2>Insurance</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">What insurance does the Association carry?</summary>
+            <div class="faq-answer">
+              <p>The Association is required to maintain certain insurance coverage, including general liability insurance covering the Common Areas and directors-and-officers (D&O) liability insurance protecting Board members and officers from personal liability for actions taken in their official capacity. The Board may also obtain fidelity bonds, property insurance on Association-owned structures, and any other coverage it deems prudent. Insurance costs are funded through assessments.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XI(B)&ndash;(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Do I still need my own homeowner's insurance?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Association's insurance covers the Common Areas and the Association's liability -- it does not cover your individual lot, your home, your personal property, or your personal liability. Every owner should maintain their own homeowner's insurance policy (including liability coverage) for their dwelling and personal belongings. Owners are also responsible for any deductible under the Association's policy if a claim arises from their lot.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XI(D)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- ENFORCEMENT, FINES & DISPUTES -->
+        <div class="profile-section">
+          <h2>Enforcement, Fines &amp; Disputes</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">How does the Association enforce the rules?</summary>
+            <div class="faq-answer">
+              <p>The Board has broad enforcement authority. It may send written violation notices, impose fines, suspend voting rights and common-area privileges, require corrective action, perform corrective work and charge the cost back to the owner, and pursue legal action (including injunctive relief and suits for damages). Before imposing a fine or suspension, the Board must provide the owner with notice and an opportunity to be heard (a hearing).</p>
+              <p class="faq-ref">Ref: Declaration, Art. X(A)&ndash;(B)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I be fined?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Board may impose fines for violations of the Declaration, Bylaws, or Board-adopted rules. Fines may be on a per-occurrence or per-day basis for continuing violations. Before a fine is imposed, you are entitled to written notice of the alleged violation and an opportunity to appear before the Board to present your side. Fines are treated as individual assessments and are secured by the assessment lien on your lot.</p>
+              <p class="faq-ref">Ref: Declaration, Art. X(B); Art. IX(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What is the hearing process for violations?</summary>
+            <div class="faq-answer">
+              <p>When the Board proposes to fine an owner or suspend privileges, it must first send a written notice describing the violation and informing the owner of the right to a hearing before the Board. The owner has a specified number of days to request the hearing. At the hearing, the owner may present evidence and arguments. After the hearing (or after the deadline to request one has passed), the Board issues its decision. This process protects your right to due process within the community.</p>
+              <p class="faq-ref">Ref: Declaration, Art. X(B); Ohio Revised Code &sect;5312.11</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I sue the Association or another owner?</summary>
+            <div class="faq-answer">
+              <p>Yes. Any owner or the Association may bring legal action to enforce the Declaration, Bylaws, or rules. The prevailing party in such an action is generally entitled to recover reasonable attorney fees and court costs from the non-prevailing party. Before filing suit, the Declaration may require (or the Board may encourage) use of informal dispute resolution such as mediation. Litigation should be considered a last resort after other remedies have been exhausted.</p>
+              <p class="faq-ref">Ref: Declaration, Art. X(C)&ndash;(D); Art. XII(A)</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- AMENDMENTS, DURATION & MISCELLANEOUS -->
+        <div class="profile-section">
+          <h2>Amendments, Duration &amp; Miscellaneous</h2>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Declaration be amended?</summary>
+            <div class="faq-answer">
+              <p>Yes, but it requires a supermajority. The Declaration may be amended by the affirmative vote or written consent of at least 75% of the total voting power of the Association. Certain provisions (such as those protecting the rights of first-mortgage holders) may require an even higher threshold or the consent of affected lenders. Any amendment must be recorded with the Franklin County Recorder to be effective.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XII(B)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can the Bylaws be amended?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Code of Regulations (Bylaws) may be amended, repealed, or new bylaws may be adopted by the affirmative vote of a majority of the voting power of the Association at any meeting at which a quorum is present, unless a higher threshold is specified for a particular provision. The Board may also recommend bylaw amendments for member approval. Bylaw amendments do not need to be recorded with the county recorder but should be distributed to all members.</p>
+              <p class="faq-ref">Ref: Bylaws, Art. VIII, &sect;8.01</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How long does the Declaration last?</summary>
+            <div class="faq-answer">
+              <p>The Declaration runs with the land and is binding for an initial term specified in the document (typically 30 or 40 years from the date of recording), after which it automatically renews for successive periods (typically 10 years each) unless a supermajority of the members votes to terminate it. As a practical matter, the Declaration is intended to be permanent and will continue to govern the community for the foreseeable future.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XII(C)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What is severability?</summary>
+            <div class="faq-answer">
+              <p>The Declaration contains a severability clause, which means that if any provision is found to be invalid or unenforceable by a court, that single provision is severed from the rest of the document and the remaining provisions continue in full force and effect. This protects the overall framework of the community's governance from being invalidated because of a problem with one specific rule.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XII(D)</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Where can I get a copy of the full Declaration and Bylaws?</summary>
+            <div class="faq-answer">
+              <p>The full text of the Restated Declaration and the Code of Regulations (Bylaws) are available on the Members &gt; Documents page of this website. The Declaration is also recorded with the Franklin County Recorder's Office and can be obtained from there. If you have questions about a specific provision, the Board encourages you to review the relevant document and, if needed, consult with a private attorney familiar with Ohio planned-community law.</p>
+              <p class="faq-ref">Ref: Declaration, Art. XII(E); <a href="/members/documents.html">Members &gt; Documents</a></p>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/members/avatars.js"></script>
+  <script src="/members/members.js"></script>
+  <script>
+    const session = window.__session;
+    if (!session) window.location.href = '/login.html';
+    initMembersSidebar('faq');
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>
