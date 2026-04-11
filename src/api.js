@@ -191,11 +191,29 @@ export async function handleApi(request, env, session) {
 
   // --- Dogs (no approval needed) ---
   if (path === '/api/dogs' && method === 'GET') {
-    const { results } = await env.DB.prepare('SELECT * FROM dogs WHERE user_id = ? ORDER BY created_at').bind(userId).all();
+    // Get own dogs + dogs at the same property by other residents
+    const user = await env.DB.prepare('SELECT address_id FROM users WHERE id = ?').bind(userId).first();
+    let results;
+    if (user?.address_id) {
+      const { results: dogs } = await env.DB.prepare(
+        `SELECT d.*, u.name as added_by_name, CASE WHEN d.user_id = ? THEN 1 ELSE 0 END as is_mine
+         FROM dogs d JOIN users u ON d.user_id = u.id
+         WHERE d.user_id = ? OR d.address_id = ?
+         ORDER BY d.created_at`
+      ).bind(userId, userId, user.address_id).all();
+      results = dogs;
+    } else {
+      const { results: dogs } = await env.DB.prepare('SELECT *, 1 as is_mine FROM dogs WHERE user_id = ? ORDER BY created_at').bind(userId).all();
+      results = dogs;
+    }
     return json(results);
   }
 
   if (path === '/api/dogs' && method === 'POST') {
+    // Anonymous users cannot add dogs (needed for play date community building)
+    const user = await env.DB.prepare('SELECT is_anonymous, address_id FROM users WHERE id = ?').bind(userId).first();
+    if (user?.is_anonymous) return json({ error: 'Anonymous users cannot add dogs. Update your privacy settings first.' }, 403);
+
     const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM dogs WHERE user_id = ?').bind(userId).first();
     if (count.cnt >= MAX_DOGS) return json({ error: `Maximum of ${MAX_DOGS} dogs allowed` }, 400);
 
@@ -203,8 +221,8 @@ export async function handleApi(request, env, session) {
     if (!body.name || !body.name.trim()) return json({ error: 'Dog name is required' }, 400);
 
     const result = await env.DB.prepare(
-      'INSERT INTO dogs (user_id, name, breed, age, birthday, bio) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(userId, body.name.trim(), body.breed || null, body.age || null, body.birthday || null, body.bio || null).run();
+      'INSERT INTO dogs (user_id, address_id, name, breed, age, birthday, bio) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(userId, user?.address_id || null, body.name.trim(), body.breed || null, body.age || null, body.birthday || null, body.bio || null).run();
     return json({ id: result.meta.last_row_id, success: true }, 201);
   }
 
