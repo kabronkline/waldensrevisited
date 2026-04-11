@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "preview": "wrangler dev --local"
+    "preview": "wrangler dev --local",
+    "seed": "node scripts/seed.js",
+    "seed:local": "node scripts/seed.js --local",
+    "seed:beta": "node scripts/seed.js --env beta",
+    "create-baseline": "node scripts/create-baseline.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +25,7 @@
   },
   "homepage": "https://github.com/kabronkline/waldensrevisited#readme",
   "devDependencies": {
+    "jszip": "^3.10.1",
     "wrangler": "^4.75.0"
   }
 }

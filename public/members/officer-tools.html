@@ -60,6 +60,9 @@
         <button class="admin-tab" data-tab="users">Users</button>
         <button class="admin-tab" data-tab="moderation">Moderation</button>
         <button class="admin-tab" data-tab="officer-chats">Officer Group Chat</button>
+        <button class="admin-tab" data-tab="voting-events">Voting Events</button>
+        <button class="admin-tab" data-tab="documents">Documents</button>
+        <button class="admin-tab" data-tab="faqs">FAQ</button>
       </div>
 
       <!-- Approvals Tab -->
@@ -137,6 +140,57 @@
         </div>
       </div>
 
+      <!-- Voting Events Tab -->
+      <div class="tab-content" id="tab-voting-events" style="display:none;">
+        <div class="profile-section">
+          <h2>Voting Events</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage voting events, records, candidates, and attached documents.</p>
+          <button class="btn btn-primary btn-sm" onclick="showCreateEventModal()" style="margin-bottom:var(--space-sm);">Create Voting Event</button>
+          <div id="votingEventsList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+        <div class="profile-section" id="votingRecordsSection" style="display:none;">
+          <h2 id="votingRecordsTitle">Voting Records</h2>
+          <div id="votingRecordsList"></div>
+        </div>
+        <div class="profile-section" id="eventDocsSection" style="display:none;">
+          <h2 id="eventDocsTitle">Event Documents</h2>
+          <div id="eventDocsList"></div>
+          <div style="margin-top:var(--space-sm);padding:var(--space-sm);background:var(--mist);border-radius:6px;">
+            <p style="font-size:0.8rem;color:var(--stone);margin-bottom:8px;">Attach a document to this event:</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;">
+              <input type="text" id="eventDocLabel" placeholder="Label (e.g. Meeting Notice)" style="flex:1;min-width:150px;padding:6px 10px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.85rem;">
+              <input type="file" id="eventDocFile" accept=".pdf,.png,.jpg,.jpeg" style="font-size:0.8rem;">
+              <select id="eventDocType" style="padding:6px 10px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.85rem;">
+                <option value="pdf_viewer">PDF Viewer</option>
+                <option value="download">Download</option>
+                <option value="link">Link</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="uploadEventDoc()">Upload & Attach</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents Tab -->
+      <div class="tab-content" id="tab-documents" style="display:none;">
+        <div class="profile-section">
+          <h2>Governance Documents</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage governing documents, corporate filings, legal references, and historical records.</p>
+          <button class="btn btn-primary btn-sm" onclick="showCreateDocModal()" style="margin-bottom:var(--space-sm);">Add Document</button>
+          <div id="adminDocsList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- FAQ Tab -->
+      <div class="tab-content" id="tab-faqs" style="display:none;">
+        <div class="profile-section">
+          <h2>FAQ Management</h2>
+          <p style="font-size:0.9rem;color:var(--stone);margin-bottom:var(--space-sm);">Manage frequently asked questions. Entries are grouped by category on the FAQ page.</p>
+          <button class="btn btn-primary btn-sm" onclick="showCreateFaqModal()" style="margin-bottom:var(--space-sm);">Add FAQ Entry</button>
+          <div id="adminFaqList"><p style="color:var(--stone);">Loading...</p></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -144,6 +198,80 @@
       <div class="modal" style="max-width:520px;">
         <h2 id="editUserTitle">Edit User</h2>
         <div id="editUserContent"></div>
+      </div>
+    </div>
+
+    <!-- Create Voting Event Modal -->
+    <div class="modal-overlay" id="createEventModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+      <div class="modal" style="max-width:600px;">
+        <h2>Create Voting Event</h2>
+        <form id="createEventForm" onsubmit="return submitCreateEvent(event)" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Title *</label><input name="title" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Short Title</label><input name="short_title" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Type *</label><select name="type" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"><option value="board_election">Board Election</option><option value="declaration_amendment">Declaration Amendment</option><option value="bylaw_amendment">Bylaw Amendment</option><option value="other">Other</option></select></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Event Date *</label><input name="event_date" type="date" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Description</label><textarea name="description" rows="3" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;resize:vertical;"></textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Status</label><select name="status" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"><option value="upcoming">Upcoming</option><option value="active">Active</option><option value="completed">Completed</option></select></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Threshold %</label><input name="threshold_percent" type="number" step="0.1" placeholder="e.g. 75" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Total Parcels</label><input name="total_parcels" type="number" value="25" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Show Voting Register</label><select name="has_voting_register" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"><option value="1">Yes</option><option value="0" selected>No</option></select></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">URL Prefix</label><input name="url_prefix" placeholder="/governance/my-event" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('createEventModal').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="createEventBtn">Create Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Document Modal -->
+    <div class="modal-overlay" id="createDocModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+      <div class="modal" style="max-width:600px;">
+        <h2>Add Document</h2>
+        <form id="createDocForm" onsubmit="return submitCreateDoc(event)" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Title *</label><input name="title" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Category *</label><select name="category" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"><option value="governing">Governing</option><option value="corporate">Corporate</option><option value="legal">Legal</option><option value="historical">Historical</option></select></div>
+          </div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Description</label><textarea name="description" rows="2" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;resize:vertical;"></textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Date</label><input name="date" type="date" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+            <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">External URL (optional)</label><input name="external_url" placeholder="https://..." style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          </div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Upload File (PDF)</label><input type="file" name="file" accept=".pdf,.png,.jpg" style="font-size:0.85rem;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('createDocModal').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="createDocBtn">Add Document</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create FAQ Modal -->
+    <div class="modal-overlay" id="createFaqModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+      <div class="modal" style="max-width:600px;">
+        <h2 id="faqModalTitle">Add FAQ Entry</h2>
+        <form id="createFaqForm" onsubmit="return submitFaq(event)" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" name="faq_id" value="">
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Category *</label><input name="category" required list="faqCategories" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;" placeholder="e.g. Membership & Voting">
+            <datalist id="faqCategories"></datalist>
+          </div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Question *</label><input name="question" required style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Answer *</label><textarea name="answer" required rows="5" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;resize:vertical;"></textarea></div>
+          <div><label style="font-size:0.75rem;color:var(--stone);display:block;margin-bottom:4px;">Reference (e.g. Declaration, Art. VII)</label><input name="reference" style="width:100%;padding:8px;border:1px solid rgba(139,115,85,0.2);border-radius:4px;font-size:0.9rem;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('createFaqModal').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="faqSubmitBtn">Save</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -763,6 +891,426 @@
       loadOfficerChats();
       refreshOfficerChatBadge();
     }, 30000);
+
+    // --- Voting Events Management ---
+    let votingEvents = [];
+    let selectedEventId = null;
+
+    async function loadVotingEvents() {
+      const el = document.getElementById('votingEventsList');
+      try {
+        const res = await fetch('/api/voting-events');
+        if (!res.ok) throw new Error();
+        votingEvents = await res.json();
+        if (!votingEvents.length) { el.innerHTML = '<p style="color:var(--stone);">No voting events found.</p>'; return; }
+        let html = '<table class="users-table"><thead><tr><th>Date</th><th>Title</th><th>Type</th><th>Status</th><th>Votes</th><th></th></tr></thead><tbody>';
+        for (const ev of votingEvents) {
+          const voteCount = ev.stats ? ev.stats.find(s => s.label === 'Voted Yes' || s.label === 'Ballots Cast') : null;
+          html += `<tr>
+            <td style="white-space:nowrap;">${esc(ev.event_date)}</td>
+            <td>${esc(ev.short_title || ev.title)}</td>
+            <td><span style="font-size:0.75rem;padding:2px 6px;background:var(--mist);border-radius:3px;">${esc(ev.type.replace(/_/g, ' '))}</span></td>
+            <td><span style="font-size:0.75rem;padding:2px 6px;background:${ev.status === 'completed' ? 'rgba(46,80,56,0.12)' : ev.status === 'upcoming' ? 'rgba(180,130,40,0.14)' : 'var(--mist)'};border-radius:3px;">${esc(ev.status)}</span></td>
+            <td>${voteCount ? esc(voteCount.value) : '—'}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="viewVotingRecords(${ev.id}, '${esc(ev.slug)}', '${esc(ev.short_title || ev.title)}')">Records</button>
+              <button class="btn btn-sm btn-secondary" onclick="viewEventDocs(${ev.id}, '${esc(ev.short_title || ev.title)}')">Docs</button>
+              <button class="btn btn-sm btn-secondary" onclick="editEventStatus(${ev.id}, '${esc(ev.status)}')">Status</button>
+            </td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<p style="color:var(--clay);">Failed to load voting events.</p>';
+      }
+    }
+
+    async function viewVotingRecords(eventId, slug, title) {
+      selectedEventId = eventId;
+      const section = document.getElementById('votingRecordsSection');
+      const titleEl = document.getElementById('votingRecordsTitle');
+      const listEl = document.getElementById('votingRecordsList');
+      titleEl.textContent = 'Voting Records — ' + title;
+      section.style.display = '';
+      listEl.innerHTML = '<p style="color:var(--stone);">Loading...</p>';
+      try {
+        const res = await fetch(`/api/voting-events/${slug}/records`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const records = data.records || [];
+        if (!records.length) { listEl.innerHTML = '<p style="color:var(--stone);">No records.</p>'; return; }
+        let html = '<table class="users-table"><thead><tr><th>Tract/Lot</th><th>Owner</th><th>Vote</th><th></th></tr></thead><tbody>';
+        for (const r of records) {
+          const voteBadge = r.vote === 'yes' ? '<span style="color:var(--forest-deep);font-weight:600;">Yes</span>'
+            : r.vote === 'no' ? '<span style="color:var(--clay);font-weight:600;">No</span>'
+            : r.vote === 'abstain' ? '<span style="color:var(--stone);">Abstain</span>'
+            : '<span style="color:var(--stone);font-style:italic;">—</span>';
+          html += `<tr>
+            <td>${esc(r.tract_lot)}</td>
+            <td>${esc(r.owner_name_at_vote)}</td>
+            <td>${voteBadge}</td>
+            <td>
+              <select onchange="updateVoteRecord(${r.id}, this.value)" style="font-size:0.8rem;padding:4px 8px;border:1px solid rgba(139,115,85,0.2);border-radius:3px;">
+                <option value=""${!r.vote ? ' selected' : ''}>Not voted</option>
+                <option value="yes"${r.vote === 'yes' ? ' selected' : ''}>Yes</option>
+                <option value="no"${r.vote === 'no' ? ' selected' : ''}>No</option>
+                <option value="abstain"${r.vote === 'abstain' ? ' selected' : ''}>Abstain</option>
+              </select>
+            </td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        listEl.innerHTML = html;
+      } catch (e) {
+        listEl.innerHTML = '<p style="color:var(--clay);">Failed to load records.</p>';
+      }
+    }
+
+    async function updateVoteRecord(recordId, vote) {
+      try {
+        const res = await fetch(`/api/admin/voting-events/${selectedEventId}/records/${recordId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote: vote || null, voted_at: vote ? new Date().toISOString().split('T')[0] : null })
+        });
+        if (!res.ok) throw new Error();
+      } catch (e) {
+        alert('Failed to update vote record.');
+      }
+    }
+
+    async function editEventStatus(eventId, currentStatus) {
+      const newStatus = prompt('Enter new status (upcoming, active, completed):', currentStatus);
+      if (!newStatus || newStatus === currentStatus) return;
+      if (!['upcoming', 'active', 'completed'].includes(newStatus)) { alert('Invalid status.'); return; }
+      try {
+        const res = await fetch(`/api/admin/voting-events/${eventId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error();
+        loadVotingEvents();
+      } catch (e) {
+        alert('Failed to update event status.');
+      }
+    }
+
+    function esc(s) { if (!s) return ''; const el = document.createElement('span'); el.textContent = s; return el.innerHTML; }
+
+    // Load voting events when tab is shown
+    document.querySelector('.admin-tab[data-tab="voting-events"]').addEventListener('click', loadVotingEvents);
+    // Also load if tab was selected via URL parameter
+    if (new URLSearchParams(window.location.search).get('tab') === 'voting-events') loadVotingEvents();
+
+    // --- File Upload Helper ---
+    async function uploadFile(file, category) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (category) formData.append('category', category);
+      const res = await fetch('/api/admin/files/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      return await res.json();
+    }
+
+    // --- Create Voting Event ---
+    function showCreateEventModal() {
+      document.getElementById('createEventForm').reset();
+      document.getElementById('createEventModal').style.display = '';
+    }
+
+    async function submitCreateEvent(e) {
+      e.preventDefault();
+      const form = document.getElementById('createEventForm');
+      const fd = new FormData(form);
+      const title = fd.get('title');
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const body = {
+        slug,
+        title,
+        short_title: fd.get('short_title') || null,
+        type: fd.get('type'),
+        event_date: fd.get('event_date'),
+        description: fd.get('description') || null,
+        status: fd.get('status'),
+        total_parcels: parseInt(fd.get('total_parcels')) || 25,
+        threshold_percent: fd.get('threshold_percent') ? parseFloat(fd.get('threshold_percent')) : null,
+        has_voting_register: fd.get('has_voting_register') === '1' ? 1 : 0,
+        url_prefix: fd.get('url_prefix') || '/governance/' + slug
+      };
+      const btn = document.getElementById('createEventBtn');
+      btn.disabled = true; btn.textContent = 'Creating...';
+      try {
+        const res = await fetch('/api/admin/voting-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed'); }
+        document.getElementById('createEventModal').style.display = 'none';
+        loadVotingEvents();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Event';
+      }
+    }
+
+    // --- Event Documents ---
+    let selectedEventIdForDocs = null;
+
+    async function viewEventDocs(eventId, title) {
+      selectedEventIdForDocs = eventId;
+      const section = document.getElementById('eventDocsSection');
+      document.getElementById('eventDocsTitle').textContent = 'Documents — ' + title;
+      section.style.display = '';
+      const listEl = document.getElementById('eventDocsList');
+      listEl.innerHTML = '<p style="color:var(--stone);">Loading...</p>';
+      try {
+        const ev = votingEvents.find(e => e.id === eventId);
+        const docs = ev ? (ev.documents || []) : [];
+        if (!docs.length) { listEl.innerHTML = '<p style="color:var(--stone);">No documents attached.</p>'; return; }
+        let html = '<table class="users-table"><thead><tr><th>Label</th><th>Type</th><th>URL</th><th></th></tr></thead><tbody>';
+        for (const d of docs) {
+          html += `<tr>
+            <td>${esc(d.label)}</td>
+            <td><span style="font-size:0.75rem;padding:2px 6px;background:var(--mist);border-radius:3px;">${esc(d.type)}</span></td>
+            <td style="font-size:0.8rem;word-break:break-all;">${esc(d.url)}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="deleteEventDoc(${d.id})">Remove</button></td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        listEl.innerHTML = html;
+      } catch (e) {
+        listEl.innerHTML = '<p style="color:var(--clay);">Failed to load documents.</p>';
+      }
+    }
+
+    async function uploadEventDoc() {
+      const label = document.getElementById('eventDocLabel').value.trim();
+      const file = document.getElementById('eventDocFile').files[0];
+      const type = document.getElementById('eventDocType').value;
+      if (!label) { alert('Label is required.'); return; }
+      if (!file) { alert('Select a file to upload.'); return; }
+      try {
+        const uploaded = await uploadFile(file, 'voting');
+        await fetch(`/api/admin/voting-events/${selectedEventIdForDocs}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label, url: uploaded.url, type, file_hash: uploaded.hash })
+        });
+        document.getElementById('eventDocLabel').value = '';
+        document.getElementById('eventDocFile').value = '';
+        await loadVotingEvents();
+        viewEventDocs(selectedEventIdForDocs, document.getElementById('eventDocsTitle').textContent.replace('Documents — ', ''));
+      } catch (e) {
+        alert('Upload failed: ' + e.message);
+      }
+    }
+
+    async function deleteEventDoc(docId) {
+      if (!confirm('Remove this document?')) return;
+      await fetch(`/api/admin/voting-events/${selectedEventIdForDocs}/documents/${docId}`, { method: 'DELETE' });
+      await loadVotingEvents();
+      viewEventDocs(selectedEventIdForDocs, document.getElementById('eventDocsTitle').textContent.replace('Documents — ', ''));
+    }
+
+    // --- Admin Documents Management ---
+    async function loadAdminDocs() {
+      const el = document.getElementById('adminDocsList');
+      try {
+        const res = await fetch('/api/documents');
+        if (!res.ok) throw new Error();
+        const docs = await res.json();
+        if (!docs.length) { el.innerHTML = '<p style="color:var(--stone);">No documents found.</p>'; return; }
+        const cats = { governing: 'Governing', corporate: 'Corporate', legal: 'Legal', historical: 'Historical' };
+        let html = '<table class="users-table"><thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Source</th><th></th></tr></thead><tbody>';
+        for (const d of docs) {
+          const source = d.file_url ? 'R2' : d.external_url ? 'URL' : 'Static';
+          html += `<tr>
+            <td>${esc(d.title)}</td>
+            <td><span style="font-size:0.75rem;padding:2px 6px;background:var(--mist);border-radius:3px;">${esc(cats[d.category] || d.category)}</span></td>
+            <td style="white-space:nowrap;">${esc(d.date || '')}</td>
+            <td style="font-size:0.8rem;">${source}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="deleteAdminDoc(${d.id})">Delete</button></td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<p style="color:var(--clay);">Failed to load documents.</p>';
+      }
+    }
+
+    function showCreateDocModal() {
+      document.getElementById('createDocForm').reset();
+      document.getElementById('createDocModal').style.display = '';
+    }
+
+    async function submitCreateDoc(e) {
+      e.preventDefault();
+      const form = document.getElementById('createDocForm');
+      const fd = new FormData(form);
+      const title = fd.get('title');
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const file = fd.get('file');
+      const btn = document.getElementById('createDocBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        let fileHash = null;
+        if (file && file.size > 0) {
+          const uploaded = await uploadFile(file, fd.get('category'));
+          fileHash = uploaded.hash;
+        }
+        const body = {
+          slug,
+          title,
+          description: fd.get('description') || null,
+          category: fd.get('category'),
+          file_hash: fileHash,
+          external_url: fd.get('external_url') || null,
+          date: fd.get('date') || null
+        };
+        const res = await fetch('/api/admin/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed'); }
+        document.getElementById('createDocModal').style.display = 'none';
+        loadAdminDocs();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Add Document';
+      }
+    }
+
+    async function deleteAdminDoc(docId) {
+      if (!confirm('Delete this document?')) return;
+      await fetch(`/api/admin/documents/${docId}`, { method: 'DELETE' });
+      loadAdminDocs();
+    }
+
+    // Load documents tab
+    document.querySelector('.admin-tab[data-tab="documents"]').addEventListener('click', loadAdminDocs);
+    if (new URLSearchParams(window.location.search).get('tab') === 'documents') loadAdminDocs();
+
+    // --- FAQ Management ---
+    let allFaqs = [];
+
+    async function loadAdminFaqs() {
+      const el = document.getElementById('adminFaqList');
+      try {
+        const res = await fetch('/api/faqs');
+        if (!res.ok) throw new Error();
+        allFaqs = await res.json();
+        if (!allFaqs.length) { el.innerHTML = '<p style="color:var(--stone);">No FAQ entries.</p>'; return; }
+
+        // Populate datalist for category autocomplete
+        const cats = [...new Set(allFaqs.map(f => f.category))];
+        document.getElementById('faqCategories').innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
+
+        // Group by category
+        const groups = {};
+        const catOrder = [];
+        for (const faq of allFaqs) {
+          if (!groups[faq.category]) { groups[faq.category] = []; catOrder.push(faq.category); }
+          groups[faq.category].push(faq);
+        }
+
+        let html = '';
+        for (const cat of catOrder) {
+          html += '<div style="margin-bottom:var(--space-md);">';
+          html += '<h3 style="font-size:0.95rem;color:var(--forest-deep);margin-bottom:8px;">' + esc(cat) + ' (' + groups[cat].length + ')</h3>';
+          html += '<table class="users-table"><thead><tr><th>Question</th><th>Ref</th><th></th></tr></thead><tbody>';
+          for (const faq of groups[cat]) {
+            html += '<tr>';
+            html += '<td style="max-width:400px;white-space:normal;line-height:1.4;">' + esc(faq.question) + '</td>';
+            html += '<td style="font-size:0.8rem;color:var(--stone);white-space:nowrap;">' + esc(faq.reference || '') + '</td>';
+            html += '<td style="white-space:nowrap;">';
+            html += '<button class="btn btn-sm btn-secondary" onclick="editFaq(' + faq.id + ')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-secondary" onclick="deleteFaq(' + faq.id + ')">Delete</button>';
+            html += '</td></tr>';
+          }
+          html += '</tbody></table></div>';
+        }
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<p style="color:var(--clay);">Failed to load FAQ entries.</p>';
+      }
+    }
+
+    function showCreateFaqModal() {
+      document.getElementById('faqModalTitle').textContent = 'Add FAQ Entry';
+      document.getElementById('faqSubmitBtn').textContent = 'Add Entry';
+      const form = document.getElementById('createFaqForm');
+      form.reset();
+      form.faq_id.value = '';
+      document.getElementById('createFaqModal').style.display = '';
+    }
+
+    function editFaq(id) {
+      const faq = allFaqs.find(f => f.id === id);
+      if (!faq) return;
+      document.getElementById('faqModalTitle').textContent = 'Edit FAQ Entry';
+      document.getElementById('faqSubmitBtn').textContent = 'Save Changes';
+      const form = document.getElementById('createFaqForm');
+      form.faq_id.value = id;
+      form.category.value = faq.category;
+      form.question.value = faq.question;
+      form.answer.value = faq.answer;
+      form.reference.value = faq.reference || '';
+      document.getElementById('createFaqModal').style.display = '';
+    }
+
+    async function submitFaq(e) {
+      e.preventDefault();
+      const form = document.getElementById('createFaqForm');
+      const fd = new FormData(form);
+      const faqId = fd.get('faq_id');
+      const body = {
+        category: fd.get('category'),
+        question: fd.get('question'),
+        answer: fd.get('answer'),
+        reference: fd.get('reference') || null
+      };
+      const btn = document.getElementById('faqSubmitBtn');
+      btn.disabled = true;
+      try {
+        let res;
+        if (faqId) {
+          res = await fetch('/api/admin/faqs/' + faqId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        } else {
+          res = await fetch('/api/admin/faqs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        }
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed'); }
+        document.getElementById('createFaqModal').style.display = 'none';
+        loadAdminFaqs();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteFaq(id) {
+      if (!confirm('Delete this FAQ entry?')) return;
+      await fetch('/api/admin/faqs/' + id, { method: 'DELETE' });
+      loadAdminFaqs();
+    }
+
+    document.querySelector('.admin-tab[data-tab="faqs"]').addEventListener('click', loadAdminFaqs);
+    if (new URLSearchParams(window.location.search).get('tab') === 'faqs') loadAdminFaqs();
   </script>
 </body>
 </html>

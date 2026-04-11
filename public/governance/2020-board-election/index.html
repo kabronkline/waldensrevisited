@@ -20,155 +20,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/members/members.css">
-  <style>
-    .vr-hero {
-      padding: calc(var(--space-xl) + 20px) 0 var(--space-md);
-      background: var(--mist);
-      border-bottom: 1px solid rgba(139, 115, 85, 0.12);
-    }
-    .vr-hero .section-tag { margin-bottom: var(--space-xs); }
-    .vr-hero h1 {
-      font-family: var(--font-display);
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      color: var(--forest-deep);
-      margin-bottom: var(--space-xs);
-    }
-    .vr-hero p { color: var(--stone); line-height: 1.8; margin: 0; }
-    .back-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.85rem; color: var(--forest-mid);
-      margin-bottom: var(--space-sm); transition: color 0.2s;
-    }
-    .back-link:hover { color: var(--forest-deep); }
-    .vr-hero .section-tag {
-      display: block; padding: 0; margin-bottom: var(--space-xs);
-    }
-    .vr-hero .section-tag::before,
-    .vr-hero .section-tag::after { display: none; }
-
-    body .section { padding: var(--space-md) 0 var(--space-md); }
-
-    .election-stats {
-      display: flex;
-      gap: var(--space-sm);
-      flex-wrap: wrap;
-      margin-bottom: var(--space-md);
-    }
-    .election-stat {
-      background: var(--parchment);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: 4px;
-      text-align: center;
-      flex: 1;
-      min-width: 120px;
-    }
-    .election-stat .num {
-      font-family: var(--font-display);
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: var(--forest-deep);
-      line-height: 1.2;
-    }
-    .election-stat .label {
-      font-size: 0.75rem;
-      color: var(--stone);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 2px;
-    }
-
-    .subsection {
-      margin-bottom: var(--space-md);
-    }
-    .subsection h2 {
-      font-family: var(--font-display);
-      font-size: clamp(1.3rem, 3vw, 1.8rem);
-      color: var(--forest-deep);
-      margin-bottom: var(--space-sm);
-    }
-    .subsection p {
-      color: var(--stone);
-      line-height: 1.8;
-    }
-
-    .nominees-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: var(--space-sm);
-      margin-bottom: var(--space-sm);
-    }
-    .nominee-card {
-      background: var(--parchment);
-      padding: var(--space-md);
-      border-radius: 4px;
-      border-top: 3px solid var(--forest-mid);
-    }
-    .nominee-card.elected {
-      border-top: 3px solid var(--pond-reflect);
-    }
-    .nominee-card .nominee-name {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--forest-deep);
-      margin-bottom: 4px;
-    }
-    .nominee-card .nominee-detail {
-      font-size: 0.85rem;
-      color: var(--stone);
-      line-height: 1.6;
-    }
-    .nominee-card .elected-badge {
-      display: inline-block;
-      margin-top: 8px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--pond-reflect);
-    }
-
-    .callers-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 var(--space-sm);
-    }
-    .callers-list li {
-      padding: var(--space-xs) 0;
-      border-bottom: 1px solid rgba(139,115,85,0.1);
-      color: var(--stone);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-    .callers-list li:last-child { border-bottom: none; }
-    .callers-list li strong {
-      color: var(--earth);
-    }
-
-    .info-note {
-      margin-top: var(--space-md);
-      padding: var(--space-md);
-      background: var(--linen);
-      border-radius: 4px;
-      border-left: 3px solid var(--stone);
-    }
-    .info-note p {
-      font-size: 0.9rem;
-      color: var(--stone);
-      line-height: 1.7;
-      margin: 0;
-    }
-    .info-note p + p { margin-top: var(--space-xs); }
-
-    @media (max-width: 768px) {
-      .nominees-grid { grid-template-columns: 1fr; }
-      .election-stats { flex-direction: row; }
-    }
-  </style>
+  <link rel="stylesheet" href="/governance/voting-event.css">
 </head>
 <body>
 
-  <!-- Navigation -->
   <nav class="nav" id="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
@@ -203,105 +58,41 @@
     <button class="sidebar-toggle" id="sidebarToggle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <main class="members-main">
 
-  <!-- Hero -->
-  <section class="vr-hero">
-    <div class="container">
-      <a href="/governance.html" class="back-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Governance
-      </a>
-      <span class="section-tag">2020 Board Election</span>
-      <h1>Board of Directors Election</h1>
-      <p>In September 2020, the Association conducted its first Board of Directors election by mail ballot, electing three Directors from a field of six candidates.</p>
+  <div id="eventContent">
+    <div style="text-align:center;padding:var(--space-xl) 0;color:var(--stone);">Loading...</div>
+  </div>
+
+  <!-- Signature Modal (shared template) -->
+  <div class="sig-modal-overlay" id="sigModal">
+    <div class="sig-modal">
+      <div class="sig-modal-header">
+        <div><h3 id="modalTitle"></h3><div class="modal-badge"><span class="signed-badge" id="modalBadge">Signed</span></div></div>
+        <button class="sig-modal-close" onclick="closeModal()" aria-label="Close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="sig-modal-body">
+        <div class="sig-modal-details">
+          <div class="sig-modal-detail"><label>Tract / Lot</label><span id="modalTract"></span></div>
+          <div class="sig-modal-detail"><label>Parcel Number</label><span id="modalParcel"></span></div>
+          <div class="sig-modal-detail"><label>Address</label><span id="modalAddress"></span></div>
+          <div class="sig-modal-detail"><label>Owner (at time of vote)</label><span id="modalOwner"></span></div>
+          <div class="sig-modal-detail full-width"><label>Document Signed</label><span id="modalDocName"></span></div>
+        </div>
+        <div class="sig-modal-image"><img id="modalSigImg" src="" alt=""/><div class="sig-modal-image-label" id="modalImageLabel"></div></div>
+        <div class="sig-modal-share"><label>Direct Link to This Record</label><div class="share-url-row"><input type="text" id="modalShareUrl" readonly /><button class="copy-url-btn" id="copyUrlBtn" onclick="copyShareUrl()"><svg id="copyIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg id="checkIcon" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span id="copyLabel">Copy</span></button></div></div>
+        <div class="modal-pdf-actions" id="modalPdfActions"></div>
+        <div class="sig-modal-agreed" id="modalAgreed"></div>
+        <button class="sig-modal-close-bottom" onclick="closeModal()">Close</button>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Content -->
-  <section class="section">
-    <div class="container">
-
-      <!-- Key Numbers -->
-      <div class="election-stats">
-        <div class="election-stat">
-          <div class="num">25</div>
-          <div class="label">Voting Parcels</div>
-        </div>
-        <div class="election-stat">
-          <div class="num">21</div>
-          <div class="label">Ballots Cast</div>
-        </div>
-        <div class="election-stat">
-          <div class="num">84%</div>
-          <div class="label">Participation</div>
-        </div>
-        <div class="election-stat">
-          <div class="num">6</div>
-          <div class="label">Candidates</div>
-        </div>
-        <div class="election-stat">
-          <div class="num">3</div>
-          <div class="label">Director Seats</div>
-        </div>
-      </div>
-
-      <!-- Election Method -->
-      <div class="subsection">
-        <h2>Election Method</h2>
-        <p>Ballots were distributed by mail to all 25 voting parcels. Each voter could select up to three candidates from the six nominees. The three candidates receiving the most votes were elected to serve staggered terms of one, two, and three years per Bylaws &sect;4.01. Twenty-one of twenty-five parcels returned ballots, resulting in 84% voter participation.</p>
-      </div>
-
-      <!-- Elected Directors -->
-      <div class="subsection">
-        <h2>Elected Board</h2>
-        <p>The following three candidates were elected to the Board of Directors and subsequently elected officers:</p>
-        <div class="nominees-grid">
-          <div class="nominee-card elected">
-            <div class="nominee-name">Scott Gregory</div>
-            <div class="nominee-detail">431 Brindle Rd (Lot 4)</div>
-            <span class="elected-badge">President</span>
-          </div>
-          <div class="nominee-card elected">
-            <div class="nominee-name">Mark Potts</div>
-            <div class="nominee-detail">563 Brindle Rd (Tract 5)</div>
-            <span class="elected-badge">Treasurer</span>
-          </div>
-          <div class="nominee-card elected">
-            <div class="nominee-name">Michael Williams</div>
-            <div class="nominee-detail">6670 Houseman Rd (Tract 15)</div>
-            <span class="elected-badge">Secretary</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Info Note -->
-      <div class="info-note">
-        <p>Official ballots and detailed vote counts are available to members of the Association upon request. Individual voting records are not shared publicly for privacy reasons.</p>
-        <p>Questions? Contact <a href="mailto:elections@waldensrevisited.org">elections@waldensrevisited.org</a>.</p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Footer -->
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
-        <div class="footer-brand">
-          <span class="footer-logo">Walden's Revisited</span>
-          <p>A covenant-protected community in Delaware County, Ohio.</p>
-        </div>
-        <div class="footer-links">
-          <a href="/">Home</a>
-          <a href="/#history">History</a>
-          <a href="/#community">Community</a>
-          <a href="/#common-areas">Common Areas</a>
-          <a href="/#covenants">Covenants</a>
-          <a href="/governance.html">Governance</a>
-        </div>
+        <div class="footer-brand"><span class="footer-logo">Walden's Revisited</span><p>A covenant-protected community in Delaware County, Ohio.</p></div>
+        <div class="footer-links"><a href="/">Home</a><a href="/#history">History</a><a href="/#community">Community</a><a href="/#common-areas">Common Areas</a><a href="/#covenants">Covenants</a><a href="/governance.html">Governance</a></div>
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 Walden's Revisited. All rights reserved.</p>
-      </div>
+      <div class="footer-bottom"><p>&copy; 2026 Walden's Revisited. All rights reserved.</p></div>
     </div>
   </footer>
 
@@ -309,8 +100,10 @@
   </div>
 
   <script src="/script.js"></script>
+  <script src="/pdf-viewer.js" type="module"></script>
   <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>initMembersSidebar('events');</script>
+  <script src="/governance/voting-event.js"></script>
 </body>
 </html>

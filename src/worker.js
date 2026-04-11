@@ -4,32 +4,6 @@ import { handleLogin, handleCallback, handleLogout } from './auth.js';
 import { getSession } from './session.js';
 import { handleApi } from './api.js';
 
-// Signer data for dynamic OG tags on individual vote record URLs
-const signerData = {
-  'lot-1-snyder':        { type:'Lot',   num:'1',     owner:'David & Corey Snyder',           address:'423 Brindle Road' },
-  'tract-1-mull':        { type:'Tract', num:'1',     owner:'Jim & Stacia Mull',              address:'475 Brindle Road' },
-  'lot-2-3-boles':       { type:'Lot',   num:'2/3',   owner:'Ryan & Betsy Boles',             address:'427 Brindle Road' },
-  'tract-3-tryon':       { type:'Tract', num:'3',     owner:'Steve & Tammy Tryon',            address:'505 Brindle Road' },
-  'lot-4-gregory':       { type:'Lot',   num:'4',     owner:'Scott & Kimberly Gregory',       address:'431 Brindle Road' },
-  'tract-5-potts':       { type:'Tract', num:'5',     owner:'Mark Potts',                     address:'Brindle Road' },
-  'tract-7-dye':         { type:'Tract', num:'7',     owner:'Greg & Kim Dye (Isaly)',         address:'Brindle Road' },
-  'tract-8-heath':       { type:'Tract', num:'8',     owner:'Craig & Kathy Heath (Anderson)', address:'623 Brindle Road' },
-  'tract-9-towers':      { type:'Tract', num:'9',     owner:'Ken & Mary Lynn Towers',         address:'661 Brindle Road' },
-  'tract-10-11-sieger':  { type:'Tract', num:'10/11', owner:'Brian & Mandy Sieger',           address:'675 Brindle Road' },
-  'tract-12-childers':   { type:'Tract', num:'12',    owner:'Clayton & Leah Childers',        address:'6810 Houseman Rd' },
-  'tract-13-colvin':     { type:'Tract', num:'13',    owner:'Ben & Joy Colvin',               address:'6724 Houseman Rd' },
-  'tract-14-upper':      { type:'Tract', num:'14',    owner:'Jake & Tammy Upper',             address:'6720 Houseman Rd' },
-  'tract-20-rickard':    { type:'Tract', num:'20',    owner:'Larry & Danielle Rickard',       address:'7070 Slocum Road' },
-  'tract-21-wolford':    { type:'Tract', num:'21',    owner:'Brian & Janet Wolford',          address:'7058 Slocum Road' },
-  'tract-22-fussichen':  { type:'Tract', num:'22',    owner:'Bobbie Fussichen',               address:'554 Brindle Road' },
-  'tract-23-gourley':    { type:'Tract', num:'23',    owner:'Dan & Rachel Gourley',           address:'510 Brindle Road' },
-  'tract-24-dranschak':  { type:'Tract', num:'24',    owner:'John & Paula Dranschak',         address:'494 Brindle Road' },
-  'tract-26-walton':     { type:'Tract', num:'26',    owner:'Spencer & Melissa Walton',       address:'440 Brindle Road' },
-  'tract-27-avner':      { type:'Tract', num:'27',    owner:'Stacie & Sean Avner',            address:'420 Brindle Road' },
-};
-
-const VOTE_BASE = '/votes/2019-restated-declaration';
-
 // Protected paths that require authentication
 const PROTECTED_PREFIXES = [
   '/governance',
@@ -110,9 +84,26 @@ export default {
       return handleApi(request, env, session);
     }
 
-    // --- Legacy redirect ---
+    // --- R2 file serving (content-addressed, public, immutable cache) ---
+    if (pathname.startsWith('/r2/')) {
+      const key = pathname.slice(4);
+      if (!key) return new Response('Not found', { status: 404 });
+      const object = await env.UPLOADS.get(key);
+      if (!object) return new Response('Not found', { status: 404 });
+      const headers = new Headers();
+      headers.set('Content-Type', object.httpMetadata?.contentType || 'application/octet-stream');
+      headers.set('Content-Length', object.size);
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      headers.set('ETag', `"${key.split('.')[0]}"`);
+      return new Response(object.body, { headers });
+    }
+
+    // --- Legacy redirects ---
     if (pathname === '/voting-records.html' || pathname === '/voting-records') {
       return Response.redirect(new URL('/governance.html', url.origin).toString(), 301);
+    }
+    if (pathname === '/voting-register.html' || pathname === '/voting-register') {
+      return Response.redirect(new URL('/votes/2019-restated-declaration/', url.origin).toString(), 301);
     }
 
     // --- Protected pages ---
@@ -146,21 +137,29 @@ export default {
         return Response.redirect(new URL('/members/agreement.html', url.origin).toString(), 302);
       }
 
-      // Dynamic signer URL handling (within protected section)
-      if (pathname.startsWith(VOTE_BASE + '/') && pathname !== VOTE_BASE) {
-        const signerKey = pathname.substring(VOTE_BASE.length + 1);
-        const signer = signerData[signerKey];
+      // Dynamic signer URL handling — DB-driven (within protected section)
+      if (pathname.startsWith('/votes/') || pathname.startsWith('/governance/')) {
+        const signerRecord = await env.DB.prepare(
+          `SELECT vr.signer_key, vr.owner_name_at_vote, a.tract_lot, a.street_address,
+                  ve.url_prefix, ve.title, ve.short_title, ve.event_date
+           FROM voting_records vr
+           JOIN voting_events ve ON vr.event_id = ve.id
+           JOIN addresses a ON vr.address_id = a.id
+           WHERE ve.has_signatures = 1 AND vr.signer_key IS NOT NULL
+             AND ? = ve.url_prefix || '/' || vr.signer_key`
+        ).bind(pathname).first();
 
-        if (signer) {
-          const baseUrl = new URL(VOTE_BASE + '/', url.origin);
+        if (signerRecord) {
+          const baseUrl = new URL(signerRecord.url_prefix + '/', url.origin);
           const response = await env.ASSETS.fetch(new Request(baseUrl.toString(), request));
 
-          const ownerName = signer.owner;
-          const tractLabel = signer.type + ' ' + signer.num;
-          const newTitle = `${ownerName} (${tractLabel}) — 2019 Restated Declaration Vote — Walden's Revisited`;
-          const newOgTitle = `${ownerName} — Signed the 2019 Restated Declaration`;
-          const newOgDesc = `${ownerName} (${tractLabel}, ${signer.address}) voted to adopt the Restated Declaration of Protective Covenants & Restrictions for Walden's Revisited on March 9, 2019.`;
-          const newOgUrl = `https://waldensrevisited.org${VOTE_BASE}/${signerKey}`;
+          const ownerName = signerRecord.owner_name_at_vote;
+          const tractLabel = signerRecord.tract_lot;
+          const eventTitle = signerRecord.short_title || signerRecord.title;
+          const newTitle = `${ownerName} (${tractLabel}) — ${eventTitle} — Walden's Revisited`;
+          const newOgTitle = `${ownerName} — Signed the ${eventTitle}`;
+          const newOgDesc = `${ownerName} (${tractLabel}, ${signerRecord.street_address}) voted to adopt the ${signerRecord.title} for Walden's Revisited on ${signerRecord.event_date}.`;
+          const newOgUrl = `https://waldensrevisited.org${pathname}`;
 
           return new HTMLRewriter()
             .on('title', new TitleRewriter(newTitle))
@@ -168,7 +167,7 @@ export default {
             .on('meta[property="og:description"]', new OGMetaRewriter({ 'og:description': newOgDesc }))
             .on('meta[property="og:url"]', new OGMetaRewriter({ 'og:url': newOgUrl }))
             .on('meta[name="description"]', new OGMetaRewriter({ 'description': newOgDesc }))
-            .on('body', new BodyEndRewriter(signerKey))
+            .on('body', new BodyEndRewriter(signerRecord.signer_key))
             .on('body', new SessionInjector(session))
             .transform(response);
         }

@@ -239,7 +239,134 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+-- R2-backed file registry with SHA-256 dedup
+CREATE TABLE IF NOT EXISTS files (
+  hash TEXT PRIMARY KEY,
+  filename TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  r2_key TEXT NOT NULL UNIQUE,
+  category TEXT DEFAULT 'general',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Governance and legal documents (replaces hardcoded documents.html/legal.html)
+CREATE TABLE IF NOT EXISTS documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  file_hash TEXT REFERENCES files(hash),
+  external_url TEXT,
+  date TEXT,
+  metadata TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- FAQ entries (officer-managed, grouped by category)
+CREATE TABLE IF NOT EXISTS faqs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  reference TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Voting events (board elections, declaration amendments, etc.)
+CREATE TABLE IF NOT EXISTS voting_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT UNIQUE NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  short_title TEXT,
+  description TEXT,
+  event_date TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'upcoming',
+  total_parcels INTEGER NOT NULL DEFAULT 25,
+  threshold_percent REAL,
+  threshold_label TEXT,
+  result_label TEXT,
+  has_voting_register INTEGER DEFAULT 0,
+  has_signatures INTEGER DEFAULT 0,
+  filing_instrument TEXT,
+  filing_details TEXT,
+  filing_office TEXT,
+  filing_date TEXT,
+  metadata TEXT,
+  url_prefix TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Per-parcel voting records for each event
+CREATE TABLE IF NOT EXISTS voting_records (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES voting_events(id) ON DELETE CASCADE,
+  address_id INTEGER NOT NULL REFERENCES addresses(id),
+  owner_name_at_vote TEXT NOT NULL,
+  vote TEXT,
+  signer_key TEXT,
+  parcel_number TEXT,
+  signature_image_url TEXT,
+  voted_at TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(event_id, address_id)
+);
+
+-- Candidates/nominees for board elections
+CREATE TABLE IF NOT EXISTS voting_event_candidates (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES voting_events(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  address_label TEXT,
+  address_id INTEGER REFERENCES addresses(id),
+  elected INTEGER DEFAULT 0,
+  position TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Documents (PDFs, downloads, links) attached to voting events
+CREATE TABLE IF NOT EXISTS voting_event_documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES voting_events(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  url TEXT NOT NULL,
+  type TEXT DEFAULT 'link',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Flexible per-event stat display (different labels per event type)
+CREATE TABLE IF NOT EXISTS voting_event_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES voting_events(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  value TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0
+);
+
 -- Indexes
+CREATE INDEX IF NOT EXISTS idx_faqs_category ON faqs(category);
+CREATE INDEX IF NOT EXISTS idx_files_category ON files(category);
+CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
+CREATE INDEX IF NOT EXISTS idx_documents_slug ON documents(slug);
+CREATE INDEX IF NOT EXISTS idx_voting_events_slug ON voting_events(slug);
+CREATE INDEX IF NOT EXISTS idx_voting_events_status ON voting_events(status);
+CREATE INDEX IF NOT EXISTS idx_vr_event ON voting_records(event_id);
+CREATE INDEX IF NOT EXISTS idx_vr_signer_key ON voting_records(signer_key);
+CREATE INDEX IF NOT EXISTS idx_vr_event_address ON voting_records(event_id, address_id);
+CREATE INDEX IF NOT EXISTS idx_vec_event ON voting_event_candidates(event_id);
+CREATE INDEX IF NOT EXISTS idx_ved_event ON voting_event_documents(event_id);
+CREATE INDEX IF NOT EXISTS idx_ves_event ON voting_event_stats(event_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_dogs_user_id ON dogs(user_id);

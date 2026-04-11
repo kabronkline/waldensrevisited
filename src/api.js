@@ -1257,6 +1257,137 @@ export async function handleApi(request, env, session) {
     }
   }
 
+  // --- Documents (public, authenticated) ---
+  if (path === '/api/documents' && method === 'GET') {
+    const category = url.searchParams.get('category');
+    let sql = `SELECT d.*, f.r2_key, f.filename as file_name, f.content_type as file_content_type, f.size as file_size
+               FROM documents d LEFT JOIN files f ON d.file_hash = f.hash`;
+    const params = [];
+    if (category) { sql += ' WHERE d.category = ?'; params.push(category); }
+    sql += ' ORDER BY d.category, d.sort_order, d.date DESC';
+    const { results } = await env.DB.prepare(sql).bind(...params).all();
+    for (const doc of results) {
+      doc.metadata = doc.metadata ? JSON.parse(doc.metadata) : null;
+      if (doc.r2_key) doc.file_url = '/r2/' + doc.r2_key;
+    }
+    return json(results);
+  }
+
+  const docSlugMatch = path.match(/^\/api\/documents\/([a-z0-9-]+)$/);
+  if (docSlugMatch && method === 'GET') {
+    const slug = docSlugMatch[1];
+    const doc = await env.DB.prepare(
+      `SELECT d.*, f.r2_key, f.filename as file_name, f.content_type as file_content_type, f.size as file_size
+       FROM documents d LEFT JOIN files f ON d.file_hash = f.hash WHERE d.slug = ?`
+    ).bind(slug).first();
+    if (!doc) return json({ error: 'Document not found' }, 404);
+    doc.metadata = doc.metadata ? JSON.parse(doc.metadata) : null;
+    if (doc.r2_key) doc.file_url = '/r2/' + doc.r2_key;
+    return json(doc);
+  }
+
+  // --- FAQs (public, authenticated) ---
+  if (path === '/api/faqs' && method === 'GET') {
+    const category = url.searchParams.get('category');
+    let sql = 'SELECT * FROM faqs';
+    const params = [];
+    if (category) { sql += ' WHERE category = ?'; params.push(category); }
+    sql += ' ORDER BY category, sort_order, id';
+    const { results } = await env.DB.prepare(sql).bind(...params).all();
+    return json(results);
+  }
+
+  // --- Voting Events (public, authenticated) ---
+  if (path === '/api/voting-events' && method === 'GET') {
+    const status = url.searchParams.get('status');
+    let sql = `SELECT ve.*, GROUP_CONCAT(ves.label || '::' || ves.value || '::' || ves.sort_order, '||') as stats_raw
+               FROM voting_events ve
+               LEFT JOIN voting_event_stats ves ON ves.event_id = ve.id`;
+    const params = [];
+    if (status) { sql += ' WHERE ve.status = ?'; params.push(status); }
+    sql += ' GROUP BY ve.id ORDER BY ve.sort_order DESC, ve.event_date DESC';
+    const { results } = await env.DB.prepare(sql).bind(...params).all();
+    const events = results.map(e => {
+      const stats = e.stats_raw ? e.stats_raw.split('||').map(s => {
+        const [label, value, sort_order] = s.split('::');
+        return { label, value, sort_order: parseInt(sort_order) };
+      }).sort((a, b) => a.sort_order - b.sort_order) : [];
+      delete e.stats_raw;
+      e.metadata = e.metadata ? JSON.parse(e.metadata) : null;
+      e.stats = stats;
+      return e;
+    });
+    // Attach documents to each event
+    const { results: docs } = await env.DB.prepare(
+      'SELECT * FROM voting_event_documents ORDER BY event_id, sort_order'
+    ).all();
+    for (const ev of events) {
+      ev.documents = docs.filter(d => d.event_id === ev.id);
+    }
+    // Attach filing info string
+    for (const ev of events) {
+      if (ev.filing_instrument) {
+        ev.filing_display = `${ev.filing_instrument} — Filed with the ${ev.filing_office}, ${ev.filing_date}` +
+          (ev.filing_details ? ` — ${ev.filing_details}` : '');
+      }
+    }
+    return json(events);
+  }
+
+  const eventSlugMatch = path.match(/^\/api\/voting-events\/([a-z0-9-]+)$/);
+  if (eventSlugMatch && method === 'GET') {
+    const slug = eventSlugMatch[1];
+    const event = await env.DB.prepare('SELECT * FROM voting_events WHERE slug = ?').bind(slug).first();
+    if (!event) return json({ error: 'Event not found' }, 404);
+    event.metadata = event.metadata ? JSON.parse(event.metadata) : null;
+    // Stats
+    const { results: stats } = await env.DB.prepare(
+      'SELECT label, value, sort_order FROM voting_event_stats WHERE event_id = ? ORDER BY sort_order'
+    ).bind(event.id).all();
+    event.stats = stats;
+    // Candidates
+    const { results: candidates } = await env.DB.prepare(
+      'SELECT * FROM voting_event_candidates WHERE event_id = ? ORDER BY sort_order'
+    ).bind(event.id).all();
+    event.candidates = candidates;
+    // Documents
+    const { results: docs } = await env.DB.prepare(
+      'SELECT * FROM voting_event_documents WHERE event_id = ? ORDER BY sort_order'
+    ).bind(event.id).all();
+    event.documents = docs;
+    // Live vote tallies
+    const tallies = await env.DB.prepare(
+      `SELECT COUNT(*) as total_records,
+              SUM(CASE WHEN vote IS NOT NULL THEN 1 ELSE 0 END) as votes_cast,
+              SUM(CASE WHEN vote = 'yes' THEN 1 ELSE 0 END) as yes_votes,
+              SUM(CASE WHEN vote = 'no' THEN 1 ELSE 0 END) as no_votes,
+              SUM(CASE WHEN vote = 'abstain' THEN 1 ELSE 0 END) as abstain_votes
+       FROM voting_records WHERE event_id = ?`
+    ).bind(event.id).first();
+    event.tallies = tallies;
+    // Filing display
+    if (event.filing_instrument) {
+      event.filing_display = `${event.filing_instrument} — Filed with the ${event.filing_office}, ${event.filing_date}` +
+        (event.filing_details ? ` — ${event.filing_details}` : '');
+    }
+    return json(event);
+  }
+
+  const eventRecordsMatch = path.match(/^\/api\/voting-events\/([a-z0-9-]+)\/records$/);
+  if (eventRecordsMatch && method === 'GET') {
+    const slug = eventRecordsMatch[1];
+    const event = await env.DB.prepare('SELECT id, has_voting_register FROM voting_events WHERE slug = ?').bind(slug).first();
+    if (!event) return json({ error: 'Event not found' }, 404);
+    const { results } = await env.DB.prepare(
+      `SELECT vr.*, a.tract_lot, a.street_address, a.full_label as address_label
+       FROM voting_records vr
+       JOIN addresses a ON vr.address_id = a.id
+       WHERE vr.event_id = ?
+       ORDER BY a.id`
+    ).bind(event.id).all();
+    return json({ event_id: event.id, has_voting_register: event.has_voting_register, records: results });
+  }
+
   // --- Admin/Officer endpoints ---
   if (path.startsWith('/api/admin/')) {
     const userRole = session.user.role;
@@ -1797,10 +1928,13 @@ export async function handleApi(request, env, session) {
       const includeBlobs = url.searchParams.get('includeBlobs') === 'true';
 
       const tables = [
-        'addresses', 'properties', 'users', 'dogs', 'posts', 'surveys',
+        'addresses', 'properties', 'files', 'users', 'dogs', 'posts', 'surveys',
         'survey_responses', 'comments', 'playdate_dogs', 'playdate_swipes',
         'playdate_matches', 'playdate_messages', 'friend_requests', 'friendships',
-        'chat_threads', 'chat_participants', 'chat_messages', 'content_history', 'audit_log'
+        'chat_threads', 'chat_participants', 'chat_messages', 'content_reports',
+        'content_history', 'address_requests', 'audit_log',
+        'voting_events', 'voting_records', 'voting_event_candidates',
+        'voting_event_documents', 'voting_event_stats', 'documents', 'faqs'
       ];
 
       const backup = {
@@ -1824,50 +1958,391 @@ export async function handleApi(request, env, session) {
       return json(backup);
     }
 
-    // POST /api/admin/backup/import — Restore database from JSON (WARNING: overwrites all tables)
+    // POST /api/admin/backup/import — Restore database from JSON
+    // Uses INSERT OR IGNORE to avoid duplicating existing data on re-restore
+    // Set ?mode=overwrite to destructively replace all data (legacy behavior)
     if (path === '/api/admin/backup/import' && method === 'POST') {
       if (userRole !== 'admin') return json({ error: 'Admin access required' }, 403);
       const data = await request.json();
       if (!data.tables) return json({ error: 'Invalid backup format' }, 400);
+      const overwrite = url.searchParams.get('mode') === 'overwrite';
 
       const tables = [
-        'addresses', 'properties', 'users', 'dogs', 'posts', 'surveys',
+        'addresses', 'properties', 'files', 'users', 'dogs', 'posts', 'surveys',
         'survey_responses', 'comments', 'playdate_dogs', 'playdate_swipes',
         'playdate_matches', 'playdate_messages', 'friend_requests', 'friendships',
-        'chat_threads', 'chat_participants', 'chat_messages', 'content_history', 'audit_log'
+        'chat_threads', 'chat_participants', 'chat_messages', 'content_reports',
+        'content_history', 'address_requests', 'audit_log',
+        'voting_events', 'voting_records', 'voting_event_candidates',
+        'voting_event_documents', 'voting_event_stats', 'documents', 'faqs'
       ];
 
-      const batch = [];
+      // D1 batch limit is 100 statements — chunk into multiple batches
+      const allStatements = [];
 
-      // 1. Delete all existing data in reverse dependency order
-      const reverseTables = [...tables].reverse();
-      for (const table of reverseTables) {
-        batch.push(env.DB.prepare(`DELETE FROM ${table}`));
-      }
-
-      // 2. Insert backup data in dependency order
-      for (const table of tables) {
-        const rows = data.tables[table];
-        if (!rows || rows.length === 0) continue;
-
-        const columns = Object.keys(rows[0]);
-        const placeholders = columns.map(() => '?').join(', ');
-        const sql = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
-
-        for (const row of rows) {
-          const values = columns.map(c => row[c]);
-          batch.push(env.DB.prepare(sql).bind(...values));
+      if (overwrite) {
+        const reverseTables = [...tables].reverse();
+        for (const table of reverseTables) {
+          allStatements.push(env.DB.prepare(`DELETE FROM ${table}`));
         }
       }
 
-      // 3. Execute everything in a single transaction
-      await env.DB.batch(batch);
+      for (const table of tables) {
+        const rows = data.tables[table];
+        if (!rows || rows.length === 0) continue;
+        const columns = Object.keys(rows[0]);
+        const placeholders = columns.map(() => '?').join(', ');
+        const verb = overwrite ? 'INSERT' : 'INSERT OR IGNORE';
+        const sql = `${verb} INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
+        for (const row of rows) {
+          const values = columns.map(c => row[c] !== undefined ? row[c] : null);
+          allStatements.push(env.DB.prepare(sql).bind(...values));
+        }
+      }
 
-      // 4. Log the action
+      // Execute in chunks of 95 statements (under D1's 100 limit)
+      for (let i = 0; i < allStatements.length; i += 95) {
+        const chunk = allStatements.slice(i, i + 95);
+        await env.DB.batch(chunk);
+      }
+
       await env.DB.prepare(
         'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
-      ).bind(userId, 'backup_restore', null, `Restored backup from ${data.exported_at}`).run();
+      ).bind(userId, 'backup_restore', null, `Restored backup from ${data.exported_at || 'unknown'} (mode=${overwrite ? 'overwrite' : 'merge'})`).run();
 
+      return json({ success: true });
+    }
+
+    // --- Admin File Management ---
+
+    // Upload file (multipart/form-data)
+    if (path === '/api/admin/files/upload' && method === 'POST') {
+      const formData = await request.formData();
+      const file = formData.get('file');
+      if (!file || !(file instanceof File)) return json({ error: 'No file provided' }, 400);
+      if (file.size > 25 * 1024 * 1024) return json({ error: 'File too large (max 25MB)' }, 400);
+      const category = formData.get('category') || 'general';
+      const arrayBuffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      // Dedup check
+      const existing = await env.DB.prepare('SELECT * FROM files WHERE hash = ?').bind(hash).first();
+      if (existing) return json({ success: true, created: false, hash: existing.hash, r2_key: existing.r2_key, url: '/r2/' + existing.r2_key, filename: existing.filename, content_type: existing.content_type, size: existing.size });
+      const ext = file.name.split('.').pop().toLowerCase();
+      const r2Key = hash + '.' + ext;
+      await env.UPLOADS.put(r2Key, arrayBuffer, { httpMetadata: { contentType: file.type || 'application/octet-stream' } });
+      await env.DB.prepare(
+        'INSERT INTO files (hash, filename, content_type, size, r2_key, category) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(hash, file.name, file.type || 'application/octet-stream', file.size, r2Key, category).run();
+      return json({ success: true, created: true, hash, r2_key: r2Key, url: '/r2/' + r2Key, filename: file.name, content_type: file.type, size: file.size }, 201);
+    }
+
+    // Upload file (raw binary — for programmatic restore)
+    if (path === '/api/admin/files/upload-raw' && method === 'POST') {
+      const hash = request.headers.get('x-file-hash');
+      const filename = request.headers.get('x-file-name') || 'unknown';
+      const contentType = request.headers.get('x-content-type') || 'application/octet-stream';
+      const category = request.headers.get('x-category') || 'general';
+      if (!hash) return json({ error: 'x-file-hash header required' }, 400);
+      // Dedup check
+      const existing = await env.DB.prepare('SELECT hash FROM files WHERE hash = ?').bind(hash).first();
+      if (existing) return json({ success: true, created: false, hash });
+      const arrayBuffer = await request.arrayBuffer();
+      const ext = filename.split('.').pop().toLowerCase();
+      const r2Key = hash + '.' + ext;
+      await env.UPLOADS.put(r2Key, arrayBuffer, { httpMetadata: { contentType } });
+      await env.DB.prepare(
+        'INSERT INTO files (hash, filename, content_type, size, r2_key, category) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(hash, filename, contentType, arrayBuffer.byteLength, r2Key, category).run();
+      return json({ success: true, created: true, hash, r2_key: r2Key }, 201);
+    }
+
+    // List files
+    if (path === '/api/admin/files' && method === 'GET') {
+      const category = url.searchParams.get('category');
+      let sql = 'SELECT * FROM files';
+      const params = [];
+      if (category) { sql += ' WHERE category = ?'; params.push(category); }
+      sql += ' ORDER BY created_at DESC';
+      const { results } = await env.DB.prepare(sql).bind(...params).all();
+      return json(results);
+    }
+
+    // Delete file
+    const adminFileMatch = path.match(/^\/api\/admin\/files\/([a-f0-9]{64})$/);
+    if (adminFileMatch && method === 'DELETE') {
+      const hash = adminFileMatch[1];
+      const file = await env.DB.prepare('SELECT r2_key FROM files WHERE hash = ?').bind(hash).first();
+      if (!file) return json({ error: 'File not found' }, 404);
+      // Check for FK references
+      const docRef = await env.DB.prepare('SELECT id FROM documents WHERE file_hash = ? LIMIT 1').bind(hash).first();
+      const vedRef = await env.DB.prepare('SELECT id FROM voting_event_documents WHERE file_hash = ? LIMIT 1').bind(hash).first();
+      const vrRef = await env.DB.prepare("SELECT id FROM voting_records WHERE signature_image_url LIKE '%' || ? || '%' LIMIT 1").bind(file.r2_key).first();
+      if (docRef || vedRef || vrRef) return json({ error: 'File is referenced by other records and cannot be deleted' }, 409);
+      await env.UPLOADS.delete(file.r2_key);
+      await env.DB.prepare('DELETE FROM files WHERE hash = ?').bind(hash).run();
+      return json({ success: true });
+    }
+
+    // --- Admin Voting Event CRUD ---
+    if (path === '/api/admin/voting-events' && method === 'POST') {
+      const body = await request.json();
+      if (!body.slug || !body.type || !body.title || !body.event_date) {
+        return json({ error: 'slug, type, title, and event_date are required' }, 400);
+      }
+      const meta = body.metadata ? (typeof body.metadata === 'string' ? body.metadata : JSON.stringify(body.metadata)) : null;
+      const result = await env.DB.prepare(
+        `INSERT INTO voting_events (slug, type, title, short_title, description, event_date, status, total_parcels,
+          threshold_percent, threshold_label, result_label, has_voting_register, has_signatures,
+          filing_instrument, filing_details, filing_office, filing_date, metadata, url_prefix, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        body.slug, body.type, body.title, body.short_title || null, body.description || null,
+        body.event_date, body.status || 'upcoming', body.total_parcels || 25,
+        body.threshold_percent || null, body.threshold_label || null, body.result_label || null,
+        body.has_voting_register ? 1 : 0, body.has_signatures ? 1 : 0,
+        body.filing_instrument || null, body.filing_details || null, body.filing_office || null,
+        body.filing_date || null, meta, body.url_prefix || `/governance/${body.slug}`,
+        body.sort_order || 0
+      ).run();
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'voting_event_create', null, `Created voting event: ${body.slug}`).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminEventMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)$/);
+    if (adminEventMatch && method === 'PUT') {
+      const eventId = parseInt(adminEventMatch[1]);
+      const body = await request.json();
+      const fields = [];
+      const values = [];
+      const allowedFields = [
+        'slug', 'type', 'title', 'short_title', 'description', 'event_date', 'status',
+        'total_parcels', 'threshold_percent', 'threshold_label', 'result_label',
+        'has_voting_register', 'has_signatures', 'filing_instrument', 'filing_details',
+        'filing_office', 'filing_date', 'url_prefix', 'sort_order'
+      ];
+      for (const f of allowedFields) {
+        if (body[f] !== undefined) {
+          fields.push(`${f} = ?`);
+          values.push(body[f]);
+        }
+      }
+      if (body.metadata !== undefined) {
+        fields.push('metadata = ?');
+        values.push(typeof body.metadata === 'string' ? body.metadata : JSON.stringify(body.metadata));
+      }
+      if (fields.length === 0) return json({ error: 'No fields to update' }, 400);
+      fields.push("updated_at = datetime('now')");
+      values.push(eventId);
+      await env.DB.prepare(`UPDATE voting_events SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'voting_event_update', null, `Updated voting event id=${eventId}`).run();
+      return json({ success: true });
+    }
+
+    if (adminEventMatch && method === 'DELETE') {
+      const eventId = parseInt(adminEventMatch[1]);
+      await env.DB.prepare('DELETE FROM voting_events WHERE id = ?').bind(eventId).run();
+      await env.DB.prepare(
+        'INSERT INTO audit_log (admin_user_id, action, target_user_id, details) VALUES (?, ?, ?, ?)'
+      ).bind(userId, 'voting_event_delete', null, `Deleted voting event id=${eventId}`).run();
+      return json({ success: true });
+    }
+
+    // Voting records CRUD
+    const adminRecordsMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/records$/);
+    if (adminRecordsMatch && method === 'POST') {
+      const eventId = parseInt(adminRecordsMatch[1]);
+      const body = await request.json();
+      if (!body.address_id || !body.owner_name_at_vote) {
+        return json({ error: 'address_id and owner_name_at_vote required' }, 400);
+      }
+      await env.DB.prepare(
+        `INSERT INTO voting_records (event_id, address_id, owner_name_at_vote, vote, signer_key, parcel_number, signature_image_url, voted_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(event_id, address_id) DO UPDATE SET
+           owner_name_at_vote = excluded.owner_name_at_vote,
+           vote = excluded.vote,
+           signer_key = excluded.signer_key,
+           parcel_number = excluded.parcel_number,
+           signature_image_url = excluded.signature_image_url,
+           voted_at = excluded.voted_at,
+           updated_at = datetime('now')`
+      ).bind(
+        eventId, body.address_id, body.owner_name_at_vote,
+        body.vote || null, body.signer_key || null, body.parcel_number || null,
+        body.signature_image_url || null, body.voted_at || null
+      ).run();
+      return json({ success: true });
+    }
+
+    const adminRecordMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/records\/(\d+)$/);
+    if (adminRecordMatch && method === 'PUT') {
+      const [, , recordId] = adminRecordMatch;
+      const body = await request.json();
+      const fields = [];
+      const values = [];
+      for (const f of ['owner_name_at_vote', 'vote', 'signer_key', 'parcel_number', 'signature_image_url', 'voted_at']) {
+        if (body[f] !== undefined) {
+          fields.push(`${f} = ?`);
+          values.push(body[f]);
+        }
+      }
+      if (fields.length === 0) return json({ error: 'No fields to update' }, 400);
+      fields.push("updated_at = datetime('now')");
+      values.push(parseInt(recordId));
+      await env.DB.prepare(`UPDATE voting_records SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+      return json({ success: true });
+    }
+
+    // Candidates CRUD
+    const adminCandidatesMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/candidates$/);
+    if (adminCandidatesMatch && method === 'POST') {
+      const eventId = parseInt(adminCandidatesMatch[1]);
+      const body = await request.json();
+      if (!body.name) return json({ error: 'name required' }, 400);
+      const result = await env.DB.prepare(
+        `INSERT INTO voting_event_candidates (event_id, name, address_label, address_id, elected, position, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(eventId, body.name, body.address_label || null, body.address_id || null,
+        body.elected ? 1 : 0, body.position || null, body.sort_order || 0).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminCandidateMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/candidates\/(\d+)$/);
+    if (adminCandidateMatch && method === 'PUT') {
+      const candidateId = parseInt(adminCandidateMatch[2]);
+      const body = await request.json();
+      const fields = [];
+      const values = [];
+      for (const f of ['name', 'address_label', 'address_id', 'elected', 'position', 'sort_order']) {
+        if (body[f] !== undefined) {
+          fields.push(`${f} = ?`);
+          values.push(body[f]);
+        }
+      }
+      if (fields.length === 0) return json({ error: 'No fields to update' }, 400);
+      values.push(candidateId);
+      await env.DB.prepare(`UPDATE voting_event_candidates SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+      return json({ success: true });
+    }
+
+    if (adminCandidateMatch && method === 'DELETE') {
+      const candidateId = parseInt(adminCandidateMatch[2]);
+      await env.DB.prepare('DELETE FROM voting_event_candidates WHERE id = ?').bind(candidateId).run();
+      return json({ success: true });
+    }
+
+    // Documents CRUD
+    const adminDocsMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/documents$/);
+    if (adminDocsMatch && method === 'POST') {
+      const eventId = parseInt(adminDocsMatch[1]);
+      const body = await request.json();
+      if (!body.label || !body.url) return json({ error: 'label and url required' }, 400);
+      const result = await env.DB.prepare(
+        `INSERT INTO voting_event_documents (event_id, label, url, type, sort_order) VALUES (?, ?, ?, ?, ?)`
+      ).bind(eventId, body.label, body.url, body.type || 'link', body.sort_order || 0).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminDocMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/documents\/(\d+)$/);
+    if (adminDocMatch && method === 'DELETE') {
+      const docId = parseInt(adminDocMatch[2]);
+      await env.DB.prepare('DELETE FROM voting_event_documents WHERE id = ?').bind(docId).run();
+      return json({ success: true });
+    }
+
+    // Stats CRUD
+    const adminStatsMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/stats$/);
+    if (adminStatsMatch && method === 'POST') {
+      const eventId = parseInt(adminStatsMatch[1]);
+      const body = await request.json();
+      if (!body.label || !body.value) return json({ error: 'label and value required' }, 400);
+      const result = await env.DB.prepare(
+        `INSERT INTO voting_event_stats (event_id, label, value, sort_order) VALUES (?, ?, ?, ?)`
+      ).bind(eventId, body.label, body.value, body.sort_order || 0).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminStatMatch = path.match(/^\/api\/admin\/voting-events\/(\d+)\/stats\/(\d+)$/);
+    if (adminStatMatch && method === 'DELETE') {
+      const statId = parseInt(adminStatMatch[2]);
+      await env.DB.prepare('DELETE FROM voting_event_stats WHERE id = ?').bind(statId).run();
+      return json({ success: true });
+    }
+
+    // --- Admin FAQ CRUD ---
+    if (path === '/api/admin/faqs' && method === 'POST') {
+      const body = await request.json();
+      if (!body.category || !body.question || !body.answer) return json({ error: 'category, question, and answer required' }, 400);
+      const result = await env.DB.prepare(
+        'INSERT INTO faqs (category, question, answer, reference, sort_order) VALUES (?, ?, ?, ?, ?)'
+      ).bind(body.category, body.question, body.answer, body.reference || null, body.sort_order || 0).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminFaqMatch = path.match(/^\/api\/admin\/faqs\/(\d+)$/);
+    if (adminFaqMatch && method === 'PUT') {
+      const faqId = parseInt(adminFaqMatch[1]);
+      const body = await request.json();
+      const fields = [];
+      const values = [];
+      for (const f of ['category', 'question', 'answer', 'reference', 'sort_order']) {
+        if (body[f] !== undefined) { fields.push(`${f} = ?`); values.push(body[f]); }
+      }
+      if (fields.length === 0) return json({ error: 'No fields to update' }, 400);
+      fields.push("updated_at = datetime('now')");
+      values.push(faqId);
+      await env.DB.prepare(`UPDATE faqs SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+      return json({ success: true });
+    }
+
+    if (adminFaqMatch && method === 'DELETE') {
+      const faqId = parseInt(adminFaqMatch[1]);
+      await env.DB.prepare('DELETE FROM faqs WHERE id = ?').bind(faqId).run();
+      return json({ success: true });
+    }
+
+    // --- Admin Documents CRUD ---
+    if (path === '/api/admin/documents' && method === 'POST') {
+      const body = await request.json();
+      if (!body.slug || !body.title || !body.category) return json({ error: 'slug, title, and category required' }, 400);
+      const meta = body.metadata ? (typeof body.metadata === 'string' ? body.metadata : JSON.stringify(body.metadata)) : null;
+      const result = await env.DB.prepare(
+        `INSERT INTO documents (slug, title, description, category, file_hash, external_url, date, metadata, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(body.slug, body.title, body.description || null, body.category,
+        body.file_hash || null, body.external_url || null, body.date || null,
+        meta, body.sort_order || 0).run();
+      return json({ success: true, id: result.meta.last_row_id }, 201);
+    }
+
+    const adminDocumentMatch = path.match(/^\/api\/admin\/documents\/(\d+)$/);
+    if (adminDocumentMatch && method === 'PUT') {
+      const docId = parseInt(adminDocumentMatch[1]);
+      const body = await request.json();
+      const fields = [];
+      const values = [];
+      for (const f of ['slug', 'title', 'description', 'category', 'file_hash', 'external_url', 'date', 'sort_order']) {
+        if (body[f] !== undefined) { fields.push(`${f} = ?`); values.push(body[f]); }
+      }
+      if (body.metadata !== undefined) {
+        fields.push('metadata = ?');
+        values.push(typeof body.metadata === 'string' ? body.metadata : JSON.stringify(body.metadata));
+      }
+      if (fields.length === 0) return json({ error: 'No fields to update' }, 400);
+      fields.push("updated_at = datetime('now')");
+      values.push(docId);
+      await env.DB.prepare(`UPDATE documents SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+      return json({ success: true });
+    }
+
+    if (adminDocumentMatch && method === 'DELETE') {
+      const docId = parseInt(adminDocumentMatch[1]);
+      await env.DB.prepare('DELETE FROM documents WHERE id = ?').bind(docId).run();
       return json({ success: true });
     }
   }

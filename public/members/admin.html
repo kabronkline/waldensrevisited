@@ -251,18 +251,26 @@
           <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:var(--space-md);">
             <div style="flex:1;min-width:300px;padding:16px;border:1px solid var(--sage);border-radius:8px;background:var(--cream);">
               <h3 style="margin-bottom:8px;">Export</h3>
-              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Download a complete backup of all tables.</p>
-              <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:12px;cursor:pointer;">
-                <input type="checkbox" id="exportBlobs" checked style="accent-color:var(--forest-deep);"> Include images (blobs) — will make file much larger
+              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Download a complete backup (database + R2 files) as a zip archive.</p>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:8px;cursor:pointer;">
+                <input type="checkbox" id="exportBlobs" checked style="accent-color:var(--forest-deep);"> Include profile images (blobs)
               </label>
-              <button class="btn btn-primary" onclick="exportBackup()">Export Database</button>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:12px;cursor:pointer;">
+                <input type="checkbox" id="exportFiles" checked style="accent-color:var(--forest-deep);"> Include R2 files (PDFs, signatures)
+              </label>
+              <button class="btn btn-primary" onclick="exportBackup()" id="exportBtn">Export Full Backup (.zip)</button>
+              <div id="exportProgress" style="display:none;margin-top:8px;font-size:0.8rem;color:var(--stone);"></div>
             </div>
-            
+
             <div style="flex:1;min-width:300px;padding:16px;border:1px solid var(--sage);border-radius:8px;background:var(--cream);">
               <h3 style="margin-bottom:8px;">Restore</h3>
-              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Upload a JSON backup file to restore the database.</p>
-              <input type="file" id="restoreFile" accept=".json" style="margin-bottom:12px;display:block;font-size:0.85rem;width:100%;">
-              <button class="btn btn-danger" onclick="importBackup()" id="restoreBtn">Restore Database</button>
+              <p style="font-size:0.85rem;margin-bottom:12px;color:var(--charcoal);">Upload a .zip or legacy .json backup to restore data and files.</p>
+              <input type="file" id="restoreFile" accept=".json,.zip" style="margin-bottom:8px;display:block;font-size:0.85rem;width:100%;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:12px;cursor:pointer;">
+                <input type="checkbox" id="restoreOverwrite" style="accent-color:var(--forest-deep);"> Overwrite existing data (destructive)
+              </label>
+              <button class="btn btn-danger" onclick="importBackup()" id="restoreBtn">Restore from Backup</button>
+              <div id="restoreProgress" style="display:none;margin-top:8px;font-size:0.8rem;color:var(--stone);"></div>
             </div>
           </div>
         </div>
@@ -283,6 +291,7 @@
     </main>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="/members/avatars.js"></script>
   <script src="/members/members.js"></script>
   <script>
@@ -1086,73 +1095,161 @@
 
     async function exportBackup() {
       const includeBlobs = document.getElementById('exportBlobs').checked;
+      const includeFiles = document.getElementById('exportFiles').checked;
+      const btn = document.getElementById('exportBtn');
+      const progress = document.getElementById('exportProgress');
+      btn.disabled = true;
+      progress.style.display = '';
+      progress.textContent = 'Fetching database...';
+
       try {
-        showToast('Preparing backup...', 'info');
+        // 1. Get DB export
         const res = await fetch(`/api/admin/backup/export?includeBlobs=${includeBlobs}`);
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
+
+        // 2. Build zip
+        const zip = new JSZip();
+        zip.file('data/tables.json', JSON.stringify(data, null, 2));
+
+        // 3. Fetch R2 files if requested
+        const files = data.tables.files || [];
+        if (includeFiles && files.length) {
+          let fetched = 0;
+          for (const f of files) {
+            progress.textContent = `Downloading files... ${++fetched} / ${files.length}`;
+            try {
+              const fileRes = await fetch('/r2/' + f.r2_key);
+              if (fileRes.ok) {
+                const blob = await fileRes.blob();
+                zip.file('files/' + f.r2_key, blob);
+              }
+            } catch (e) { /* skip missing files */ }
+          }
+        }
+
+        // 4. Add manifest
+        zip.file('manifest.json', JSON.stringify({
+          version: 2,
+          exported_at: new Date().toISOString(),
+          table_count: Object.keys(data.tables).length,
+          file_count: includeFiles ? files.length : 0
+        }, null, 2));
+
+        // 5. Generate and download
+        progress.textContent = 'Generating zip...';
+        const zipBlob = await zip.generateAsync({ type: 'blob' }, (meta) => {
+          progress.textContent = `Generating zip... ${Math.round(meta.percent)}%`;
+        });
+        const url = URL.createObjectURL(zipBlob);
         const a = document.createElement('a');
         const date = new Date().toISOString().split('T')[0];
         a.href = url;
-        a.download = `waldens-revisited-backup-${date}${includeBlobs ? '-with-blobs' : ''}.json`;
+        a.download = `waldensrevisited-backup-${date}.zip`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('Backup downloaded successfully', 'success');
       } catch (e) {
         console.error(e);
         showToast('Export failed: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        progress.style.display = 'none';
       }
     }
 
     async function importBackup() {
       const fileInput = document.getElementById('restoreFile');
-      if (!fileInput.files.length) {
-        showToast('Please select a backup file first', 'error');
-        return;
-      }
+      if (!fileInput.files.length) { showToast('Please select a backup file first', 'error'); return; }
+      const overwrite = document.getElementById('restoreOverwrite').checked;
 
-      if (!confirm('CRITICAL WARNING: This will DELETE all current data and restore from the backup file. This cannot be undone. Are you absolutely sure?')) {
-        return;
-      }
+      const warning = overwrite
+        ? 'WARNING: This will DELETE all current data and replace it with the backup. This cannot be undone. Proceed?'
+        : 'This will merge backup data into the existing database (existing records are preserved). Proceed?';
+      if (!confirm(warning)) return;
 
       const file = fileInput.files[0];
       const btn = document.getElementById('restoreBtn');
+      const progress = document.getElementById('restoreProgress');
       const originalText = btn.textContent;
-      
+      btn.disabled = true;
+      progress.style.display = '';
+
       try {
-        btn.disabled = true;
-        btn.textContent = 'Restoring...';
-        showToast('Reading file...', 'info');
-        
-        const text = await file.text();
-        const data = JSON.parse(text);
-        
-        if (!data.tables) {
-          throw new Error('Invalid backup file format');
+        const isZip = file.name.endsWith('.zip');
+
+        if (isZip) {
+          // --- ZIP restore ---
+          progress.textContent = 'Reading zip...';
+          const zip = await JSZip.loadAsync(file);
+
+          // Restore DB
+          const tablesFile = zip.file('data/tables.json');
+          if (!tablesFile) throw new Error('Invalid zip: missing data/tables.json');
+          progress.textContent = 'Restoring database...';
+          const tablesJson = await tablesFile.async('string');
+          const data = JSON.parse(tablesJson);
+          if (!data.tables) throw new Error('Invalid backup format in tables.json');
+
+          const modeParam = overwrite ? '?mode=overwrite' : '';
+          const dbRes = await fetch('/api/admin/backup/import' + modeParam, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: tablesJson
+          });
+          if (!dbRes.ok) { const err = await dbRes.json(); throw new Error(err.error || 'DB restore failed'); }
+
+          // Restore R2 files
+          const fileEntries = [];
+          zip.folder('files').forEach((path, entry) => { if (!entry.dir) fileEntries.push(entry); });
+
+          if (fileEntries.length) {
+            let uploaded = 0;
+            for (const entry of fileEntries) {
+              progress.textContent = `Uploading files... ${++uploaded} / ${fileEntries.length}`;
+              const name = entry.name.split('/').pop();
+              const hash = name.split('.')[0];
+              const ext = name.split('.').pop();
+              const blob = await entry.async('blob');
+              const contentTypes = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', ics: 'text/calendar' };
+              await fetch('/api/admin/files/upload-raw', {
+                method: 'POST',
+                headers: {
+                  'x-file-hash': hash,
+                  'x-file-name': name,
+                  'x-content-type': contentTypes[ext] || 'application/octet-stream',
+                  'x-category': 'restore'
+                },
+                body: blob
+              });
+            }
+          }
+        } else {
+          // --- Legacy JSON restore ---
+          progress.textContent = 'Reading JSON...';
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (!data.tables) throw new Error('Invalid backup file format');
+
+          progress.textContent = 'Restoring database...';
+          const modeParam = overwrite ? '?mode=overwrite' : '';
+          const res = await fetch('/api/admin/backup/import' + modeParam, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: text
+          });
+          if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Restore failed'); }
         }
 
-        showToast('Uploading backup (this may take a while)...', 'info');
-        const res = await fetch('/api/admin/backup/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: text
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Server error during restore');
-        }
-
-        showToast('Database restored successfully! Reloading...', 'success');
+        showToast('Backup restored successfully! Reloading...', 'success');
         setTimeout(() => window.location.reload(), 2000);
       } catch (e) {
         console.error(e);
         showToast('Restore failed: ' + e.message, 'error');
         btn.disabled = false;
         btn.textContent = originalText;
+      } finally {
+        progress.style.display = 'none';
       }
     }
 
