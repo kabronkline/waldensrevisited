@@ -270,53 +270,12 @@ function initMembersSidebar(activePage) {
     });
   }
 
-  // Top nav: show Members + avatar for logged-in users
+  // Top nav: show Members link for logged-in users
   const navSignIn = document.getElementById('navSignIn');
   const navMembers = document.getElementById('navMembers');
-  const navAvatar = document.getElementById('navUserAvatar');
   if (session && navSignIn && navMembers) {
     navSignIn.style.display = 'none';
     navMembers.style.display = 'flex';
-
-    // Set avatar from session immediately, then refresh from API for latest
-    function setNavAvatar(pic, avatarId, googlePic, name) {
-      if (!navAvatar) return;
-      navAvatar.innerHTML = '';
-      navAvatar.style.backgroundImage = '';
-      navAvatar.style.backgroundColor = '';
-      navAvatar.style.color = '';
-      navAvatar.style.padding = '';
-      navAvatar.textContent = '';
-      if (pic) {
-        navAvatar.style.backgroundImage = 'url(' + pic + ')';
-      } else if (avatarId && typeof getAvatarSvg === 'function') {
-        navAvatar.innerHTML = getAvatarSvg(avatarId);
-        navAvatar.style.padding = '2px';
-        navAvatar.style.backgroundColor = 'var(--parchment)';
-      } else if (googlePic) {
-        navAvatar.style.backgroundImage = 'url(' + googlePic + ')';
-      } else {
-        // Initials: use dark background with white text
-        navAvatar.style.backgroundColor = 'var(--forest-deep)';
-        navAvatar.style.color = 'white';
-        navAvatar.textContent = (name || '').split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-      }
-    }
-
-    // Use cached avatar data first (instant, no flash), then refresh from API
-    try {
-      const cached = JSON.parse(sessionStorage.getItem('wr_user_avatar') || 'null');
-      if (cached) setNavAvatar(cached.pp, cached.av, cached.gp, cached.nm);
-      else setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
-    } catch (e) {
-      setNavAvatar(session.profilePicture, session.avatarId, session.picture, session.name);
-    }
-
-    // Refresh from API and cache
-    fetch('/api/me').then(r => r.json()).then(me => {
-      setNavAvatar(me.profile_picture, me.avatar_id, me.google_picture, me.name);
-      sessionStorage.setItem('wr_user_avatar', JSON.stringify({ pp: me.profile_picture, av: me.avatar_id, gp: me.google_picture, nm: me.name }));
-    }).catch(() => {});
   }
 }
 

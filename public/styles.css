@@ -204,29 +204,6 @@ h1, h2, h3, h4 {
 
 .nav-members-link:hover { color: var(--pond-surface); }
 
-.nav-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--parchment);
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--forest-deep);
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-decoration: none !important;
-  border: 2px solid rgba(139, 115, 85, 0.15);
-  box-shadow: 0 2px 8px rgba(45, 74, 62, 0.1);
-  transition: transform 0.2s;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.nav-avatar:hover { transform: scale(1.1); cursor: pointer; }
-
 .nav-icon {
   width: 28px;
   height: 28px;
@@ -251,7 +228,7 @@ h1, h2, h3, h4 {
   text-decoration: none;
 }
 
-.nav-links a:not(.nav-avatar):not(.nav-signin):not(.nav-members-link)::after {
+.nav-links a:not(.nav-signin):not(.nav-members-link)::after {
   content: '';
   position: absolute;
   bottom: -4px;
@@ -276,9 +253,9 @@ h1, h2, h3, h4 {
 .nav-links a:hover,
 .nav-links a:active,
 .nav-links a:focus { color: var(--forest-deep); cursor: pointer; text-decoration: none; outline: none; }
-.nav-links a:not(.nav-avatar):not(.nav-signin):hover::after,
-.nav-links a:not(.nav-avatar):not(.nav-signin):active::after,
-.nav-links a:not(.nav-avatar):not(.nav-signin):focus::after { width: 100%; }
+.nav-links a:not(.nav-signin):hover::after,
+.nav-links a:not(.nav-signin):active::after,
+.nav-links a:not(.nav-signin):focus::after { width: 100%; }
 
 .nav-toggle {
   display: none;
