@@ -24,9 +24,10 @@ database_id = "2c1a9add-eed7-45ca-87f3-adf18a268764"
 binding = "SESSIONS"
 id = "f52131d68309439a9a1b321113493321"
 
-[[r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "waldensrevisited-uploads"
+# R2 disabled until enabled in Cloudflare Dashboard
+# [[r2_buckets]]
+# binding = "UPLOADS"
+# bucket_name = "waldensrevisited-uploads"
 
 # Daily chat message purge at 3:17 AM UTC
 [triggers]
@@ -48,6 +49,7 @@ database_id = "2c1a9add-eed7-45ca-87f3-adf18a268764"
 binding = "SESSIONS"
 id = "f52131d68309439a9a1b321113493321"
 
-[[env.beta.r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "waldensrevisited-uploads"
+# R2 disabled until enabled in Cloudflare Dashboard
+# [[env.beta.r2_buckets]]
+# binding = "UPLOADS"
+# bucket_name = "waldensrevisited-uploads"

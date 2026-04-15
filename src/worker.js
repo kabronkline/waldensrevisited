@@ -86,6 +86,7 @@ export default {
 
     // --- R2 file serving (content-addressed, public, immutable cache) ---
     if (pathname.startsWith('/r2/')) {
+      if (!env.UPLOADS) return new Response('File storage not configured', { status: 503 });
       const key = pathname.slice(4);
       if (!key) return new Response('Not found', { status: 404 });
       const object = await env.UPLOADS.get(key);

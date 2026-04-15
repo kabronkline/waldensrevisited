@@ -2017,6 +2017,7 @@ export async function handleApi(request, env, session) {
 
     // Upload file (multipart/form-data)
     if (path === '/api/admin/files/upload' && method === 'POST') {
+      if (!env.UPLOADS) return json({ error: 'File storage (R2) not configured' }, 503);
       const formData = await request.formData();
       const file = formData.get('file');
       if (!file || !(file instanceof File)) return json({ error: 'No file provided' }, 400);
@@ -2038,6 +2039,9 @@ export async function handleApi(request, env, session) {
     }
 
     // Upload file (raw binary — for programmatic restore)
+    if (path === '/api/admin/files/upload-raw' && method === 'POST' && !env.UPLOADS) {
+      return json({ error: 'File storage (R2) not configured' }, 503);
+    }
     if (path === '/api/admin/files/upload-raw' && method === 'POST') {
       const hash = request.headers.get('x-file-hash');
       const filename = request.headers.get('x-file-name') || 'unknown';
@@ -2079,7 +2083,7 @@ export async function handleApi(request, env, session) {
       const vedRef = await env.DB.prepare('SELECT id FROM voting_event_documents WHERE file_hash = ? LIMIT 1').bind(hash).first();
       const vrRef = await env.DB.prepare("SELECT id FROM voting_records WHERE signature_image_url LIKE '%' || ? || '%' LIMIT 1").bind(file.r2_key).first();
       if (docRef || vedRef || vrRef) return json({ error: 'File is referenced by other records and cannot be deleted' }, 409);
-      await env.UPLOADS.delete(file.r2_key);
+      if (env.UPLOADS) await env.UPLOADS.delete(file.r2_key);
       await env.DB.prepare('DELETE FROM files WHERE hash = ?').bind(hash).run();
       return json({ success: true });
     }
